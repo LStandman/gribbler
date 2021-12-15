@@ -1,14 +1,13 @@
-# Paranoia
+# Gribbler
 Someday this will be an ncurses-based password manager.
 
-Currently what is here is a Haskell implementation of some popular cryptographic functions (AES256, SHA256, PBKDF2-HMAC), 
-and a testing suite which uses some well known test-vectors.
+Already includes in-house implementations of some popular cryptographic functions (AES256, SHA256, PBKDF2-HMAC) 
+and a testing suite that uses some common test-vectors.
 
-# Why should anybody trust this project?
-They shouldn't. 
+# Should anybody trust this project?
+No. 
 
 However, this project does have some pros:
-* FOSS - four freedoms, yadda yadda.
 * Small code base - small attack surface.
-* Minimal dependencies - a short chain of trust (more so for me :]).
-* Functional programming - might be more of a taste thing, but the lack of side-effects *should* help in reducing unexpected behavior.
+* Minimal dependencies - short chain of trust (more so for me :]).
+* Functional programming - the lack of side-effects *should* help to reduce unexpected behavior.
