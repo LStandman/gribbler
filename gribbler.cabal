@@ -1,0 +1,66 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           gribbler
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/LStandman/gribbler#README.md>
+homepage:       https://github.com/LStandman/gribbler#readme
+bug-reports:    https://github.com/LStandman/gribbler/issues
+author:         LStandman
+maintainer:     65296484+LStandman@users.noreply.github.com
+copyright:      2022 LStandman
+license:        GPLv3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/LStandman/gribbler
+
+library
+  exposed-modules:
+      AES256
+      KDF
+      MooMoo
+      SHA2
+  other-modules:
+      Paths_gribbler
+  hs-source-dirs:
+      src
+  build-depends:
+      array
+    , base >=4.7 && <5
+  default-language: Haskell2010
+
+executable gribbler-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_gribbler
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , gribbler
+  default-language: Haskell2010
+
+test-suite gribbler-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_gribbler
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      array
+    , base >=4.7 && <5
+    , gribbler
+  default-language: Haskell2010
