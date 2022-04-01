@@ -1,10 +1,8 @@
-module AES256
-  (
+module AES256(
     size_block,
     size_key,
     encrypt,
-    decrypt
-  )
+    decrypt)
   where
 
 import Data.Array.Unboxed
@@ -107,8 +105,7 @@ sub a = sub' sbox a where
     0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94,
     0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
     0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68,
-    0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
-    ] :: Mat
+    0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16] :: Mat
 
 sub_bytes :: Mat -> Mat
 
@@ -127,8 +124,7 @@ mix_columns' vv f = array bounds_state
       f (vv!(i,                        j))
         (vv!((i + 1) `mod` size_side,  j))
         (vv!((i + 2) `mod` size_side,  j))
-        (vv!((i + 3) `mod` size_side,  j))
-    )
+        (vv!((i + 3) `mod` size_side,  j)))
     | (i,j) <- range bounds_state]
 
 mix_columns :: Mat -> Mat
@@ -138,19 +134,20 @@ mix_columns vv = mix_columns' vv mix_byte
 
 add_round_key :: Mat -> Mat -> Mat
 
-add_round_key vv uu = listArray bounds_state $ zipWith (xor) (elems vv) (elems uu)
+add_round_key vv uu =
+  listArray bounds_state $ zipWith (xor) (elems vv) (elems uu)
 
 key_expansion :: Mat -> Mat -> Word8 -> Mat
 
-key_expansion key1 key2 n = from_cols $ drop 1 $ scanl (zipWith (xor)) key2' (to_cols key1)
+key_expansion key1 key2 n =
+  from_cols $ drop 1 $ scanl (zipWith (xor)) key2' (to_cols key1)
   where
     size_rcon = 7
     rcon      = listArray ((0,1),(size_side - 1, size_rcon)) [
       0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-      ] :: Mat
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] :: Mat
     key2' = [ f i | i <- range bounds_side]
     f i
       | (n `mod` 2) == 0  = (sub $ rot_word) `xor` (rcon!(i, n `div` 2))
@@ -210,8 +207,7 @@ inv_sub_bytes vv = amap (sub' inv_sbox) vv where
     0xA0, 0xE0, 0x3B, 0x4D, 0xAE, 0x2A, 0xF5, 0xB0,
     0xC8, 0xEB, 0xBB, 0x3C, 0x83, 0x53, 0x99, 0x61,
     0x17, 0x2B, 0x04, 0x7E, 0xBA, 0x77, 0xD6, 0x26,
-    0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D
-    ] :: Mat
+    0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D] :: Mat
 
 inv_shift_rows :: Mat -> Mat
 
@@ -221,13 +217,17 @@ inv_shift_rows vv = ixmap bounds_state f vv
 inv_mix_columns :: Mat -> Mat
 
 inv_mix_columns vv = mix_columns' vv mix_byte
-  where mix_byte a b c d = (0x0E `dot` a) `xor` (0x0B `dot` b) `xor` (0x0D `dot` c) `xor` (0x09 `dot` d)
+  where
+    mix_byte a b c d =
+      (0x0E `dot` a) `xor` (0x0B `dot` b) `xor`
+        (0x0D `dot` c) `xor` (0x09 `dot` d)
 
 inv_cipher' :: Mat -> Mat -> Mat -> Word8 -> Mat
 
 inv_cipher' ctext key1 key2 14 = add_round_key ctext key2
 
-inv_cipher' ctext key1 key2 n = inv_mix_columns $ add_round_key (inv_sub_bytes $ inv_shift_rows ctext') key2
+inv_cipher' ctext key1 key2 n =
+  inv_mix_columns $ add_round_key (inv_sub_bytes $ inv_shift_rows ctext') key2
   where
     m       = n + 1
     ctext'  = inv_cipher' ctext key2 key3 m
@@ -235,13 +235,16 @@ inv_cipher' ctext key1 key2 n = inv_mix_columns $ add_round_key (inv_sub_bytes $
 
 inv_cipher :: Mat -> Mat -> Mat -> Mat
 
-inv_cipher ctext key1 key2 = add_round_key (inv_sub_bytes $ inv_shift_rows ctext') key1
+inv_cipher ctext key1 key2 =
+  add_round_key (inv_sub_bytes $ inv_shift_rows ctext') key1
   where ctext' = inv_cipher' ctext key1 key2 1
 
 -- public
 
-encrypt ptext key = to_list $ cipher (from_list ptext) (from_list $ key1) (from_list $ key2)
+encrypt ptext key =
+  to_list $ cipher (from_list ptext) (from_list $ key1) (from_list $ key2)
   where (key1, key2) = splitAt size_state key
 
-decrypt ctext key = to_list $ inv_cipher (from_list ctext) (from_list $ key1) (from_list $ key2)
+decrypt ctext key =
+  to_list $ inv_cipher (from_list ctext) (from_list $ key1) (from_list $ key2)
   where (key1, key2) = splitAt size_state key

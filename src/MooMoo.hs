@@ -1,17 +1,18 @@
-module MooMoo
-  (
+module MooMoo(
     cbc_encrypt,
     cbc_encrypt1,
-    cbc_decrypt
-  )
+    cbc_decrypt)
   where
 
 import Data.Bits
 import Data.Word
 
-cbc_encrypt   :: ([Word8] -> [Word8] -> [Word8]) -> [Word8] -> [Word8] -> [Word8] -> Int -> [Word8]
-cbc_encrypt1  :: ([Word8] -> [Word8] -> [Word8]) -> [Word8] -> [Word8] -> [Word8] -> Int -> ([Word8], [Word8])
-cbc_decrypt   :: ([Word8] -> [Word8] -> [Word8]) -> [Word8] -> [Word8] -> [Word8] -> Int -> [Word8]
+cbc_encrypt   ::
+  ([Word8] -> [Word8] -> [Word8]) -> [Word8] -> [Word8] -> [Word8] -> Int -> [Word8]
+cbc_encrypt1  ::
+  ([Word8] -> [Word8] -> [Word8]) -> [Word8] -> [Word8] -> [Word8] -> Int -> ([Word8], [Word8])
+cbc_decrypt   ::
+  ([Word8] -> [Word8] -> [Word8]) -> [Word8] -> [Word8] -> [Word8] -> Int -> [Word8]
 
 cbc_encrypt1 _ iv [] _ _ = ([], iv)
 
@@ -27,7 +28,8 @@ cbc_encrypt f iv ptext key block_size = ctext
 
 cbc_decrypt _ _ [] _ _ = []
 
-cbc_decrypt f iv ctext key block_size = ptext ++ (cbc_decrypt f ctext1 ctext2 key block_size)
+cbc_decrypt f iv ctext key block_size =
+  ptext ++ (cbc_decrypt f ctext1 ctext2 key block_size)
   where
     (ctext1, ctext2)  = splitAt block_size ctext
     ptext'            = f ctext1 key
