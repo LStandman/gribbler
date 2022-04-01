@@ -45,7 +45,8 @@ pbkdf2 h h_len p p_size s s_size c dk_len
       | k <- [n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n]]
     u1 j  = h p p_size (s ++ (g j)) (s_size + 4)
     f j   =
-      foldl1 (zipWith (xor)) $ take c $ iterate (\ v -> h p p_size v h_len) (u1 j)
+      foldl1 (zipWith (xor)) $ take c $
+        iterate (\ v -> h p p_size v h_len) (u1 j)
     l     = dk_len `div1` h_len
 
 pbkdf2' h h_len p s c dk_len = pbkdf2 h h_len p (length p) s (length s) c dk_len

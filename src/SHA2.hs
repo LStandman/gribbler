@@ -78,8 +78,7 @@ sha256sched' v 16 = v
 sha256sched' v n = sha256sched' v' (n + 2)
   where
     v'      = v//[
-      (
-        i,
+      ( i,
         (lil_sigma1 $ deref (i - 2)) + (deref (i - 7)) +
           (lil_sigma0 $ deref (i - 15)) + (deref (i - 16)))
       | i <- [n, n + 1]]
