@@ -1,3 +1,7 @@
+-- SPDX-License-Identifier: GPL-3.0-or-later
+-- SHA2.hs: SHA2 module
+-- Copyright (C) 2021 LStandman
+
 module SHA2(
     sha256_size_block,
     sha256_size_digest,

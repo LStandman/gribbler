@@ -1,7 +1,7 @@
 name:                gribbler
 version:             0.1.0.0
 github:              "LStandman/gribbler"
-license:             GPLv3
+license:             GPL-3.0-or-later
 author:              "LStandman"
 maintainer:          "65296484+LStandman@users.noreply.github.com"
 copyright:           "2022 LStandman"

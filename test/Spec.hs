@@ -1,3 +1,7 @@
+-- SPDX-License-Identifier: GPL-3.0-or-later
+-- Spec.hs: Unit tests for cryptographic suite
+-- Copyright (C) 2021 LStandman
+
 import Data.Array
 import Data.Word
 
