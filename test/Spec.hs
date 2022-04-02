@@ -803,7 +803,8 @@ test_pbkdf2_hmac_sha256 = do
     pbkdf2_hmac_sha256 pass psize salt ssize c dk_len =
       KDF.pbkdf2 prf SHA2.sha256_size_digest pass psize salt ssize c dk_len
       where
-        prf k k_size text text_size = KDF.hmac k k_size text text_size SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
+        prf k k_size text text_size = KDF.hmac k k_size text text_size
+          SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
     --  From RFC 7914
     t1_pass = from_str "passwd"
     t1_psize = 6
