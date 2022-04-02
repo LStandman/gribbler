@@ -6,20 +6,67 @@ import KDF
 import MooMoo
 import SHA2
 
---TODO: Make a formal testing suite to keep the code DRY.
+test' :: [IO Bool] -> IO Bool
 
-test_aes256' :: Bool -> [Word8] -> [Word8] -> [Word8] -> Bool
+test' [] = return True
 
-test_aes256' _ [] [] _ = True
+test' (e:es) =
+  e >>= \ x -> if not x then return False else test' es
 
-test_aes256' is_enc ptext ctext key =
-  (actual == expected) && (test_aes256' is_enc ptext'' ctext'' key)
+test :: String -> [IO Bool] -> IO Bool
+
+test name es =
+  print ("[ RUN      ] " ++ name) >>
+  test' es >>=
+  \ x ->
+    print ((if not x then "[  FAILED  ] " else "[       OK ] ") ++ name) >>
+    return x
+
+testsuite' :: [IO Bool] -> IO Bool
+
+testsuite' [] = return True
+
+testsuite' (t:ts) = t >>= \ x -> testsuite' ts >>= \ y -> return (x && y)
+
+testsuite :: String -> [IO Bool] -> IO Bool
+
+testsuite name tests =
+  print ("[----------] tests from " ++ name) >>
+  testsuite' tests >>=
+  \ x -> print "[----------]" >> return x
+
+expect_that :: a -> (a -> IO Bool) -> IO Bool
+
+expect_that val matcher = matcher val
+
+memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
+
+memeq varname actual expected =
+  if actual == expected
+    then
+      return True
+    else
+      print ("Value of: " ++ varname) >>
+      print ("  Actual: " ++ (show actual)) >>
+      print ("Expected: " ++ (show expected)) >>
+      return False
+
+expect_memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
+
+expect_memeq varname actual expected =
+  expect_that actual (\ u -> memeq varname u expected)
+
+nomod_aes256 :: Bool -> [Word8] -> [Word8] -> [Word8]
+
+nomod_aes256 _ [] _ = []
+
+nomod_aes256 is_enc text key =
+  out ++ (nomod_aes256 is_enc text'' key)
   where
-    (ptext', ptext'') = splitAt AES256.size_block ptext
-    (ctext', ctext'') = splitAt AES256.size_block ctext
-    (actual, expected)
-      | is_enc    = (AES256.encrypt ptext' key, ctext')
-      | otherwise = (AES256.decrypt ctext' key, ptext')
+    (text', text'') = splitAt AES256.size_block text
+    out
+      | is_enc    = AES256.encrypt text' key
+      | otherwise = AES256.decrypt text' key
 
 from_str :: String -> [Word8]
 
@@ -173,25 +220,15 @@ test_aes256 = do
       0x88, 0xE6, 0x68, 0x47, 0xE3, 0x2B, 0xC5, 0xFF,
       0x09, 0x79, 0xA0, 0x43, 0x5C, 0x0D, 0x08, 0x58,
       0x17, 0xBB, 0xC0, 0x6B, 0x62, 0x3F, 0x56, 0xE9]
-  print "TEST AES256"
-  print "  FROM FIPS-197"
-  let
-    res = if (test_aes256' True t1_ptext t1_ctext t1_key)
-      then "PASSED" else "FAILED"
-  print ("    ENC: " ++ res)
-  let
-    res = if (test_aes256' False t1_ptext t1_ctext t1_key)
-      then "PASSED" else "FAILED"
-  print ("    DEC: " ++ res)
-  print "  FROM Linux/crypto/testmgr"
-  let
-    res = if (test_aes256' True t2_ptext t2_ctext t2_key)
-      then "PASSED" else "FAILED"
-  print ("    ENC: " ++ res)
-  let
-    res = if (test_aes256' False t2_ptext t2_ctext t2_key)
-      then "PASSED" else "FAILED"
-  print ("    DEC: " ++ res)
+  testsuite "AES256NoMod" [
+    test "EncryptFIPS197" [
+      expect_memeq "t1_ctext" (nomod_aes256 True t1_ptext t1_key) t1_ctext],
+    test "EncryptTestmgr" [
+      expect_memeq "t2_ctext" (nomod_aes256 True t2_ptext t2_key) t2_ctext],
+    test "DecryptFIPS197" [
+      expect_memeq "t1_ptext" (nomod_aes256 False t1_ctext t1_key) t1_ptext],
+    test "DecryptTestmgr" [
+      expect_memeq "t2_ptext" (nomod_aes256 False t2_ctext t2_key) t2_ptext]]
 
 test_aes256_cbc = do
   let
@@ -365,29 +402,23 @@ test_aes256_cbc = do
       0xBC, 0x06, 0x41, 0xE3, 0x01, 0xB4, 0x4E, 0x0A,
       0xE0, 0x1F, 0x91, 0xF8, 0x82, 0x96, 0x2D, 0x65,
       0xA3, 0xAA, 0x13, 0xCC, 0x50, 0xFF, 0x7B, 0x02]
-  print "TEST AES256-CBC"
-  print "  FROM NIST SP800-38A"
-  let
-    (out_ctext, out_iv) = (
-      MooMoo.cbc_encrypt1 AES256.encrypt t1_iv t1_ptext t1_key AES256.size_block)
-    res = if (out_ctext == t1_ctext) && (out_iv == t1_iv_out)
-      then "PASSED" else "FAILED"
-  print ("    ENC: " ++ res)
-  let
-    res = if ((MooMoo.cbc_decrypt AES256.decrypt t1_iv t1_ctext t1_key AES256.size_block) == t1_ptext)
-      then "PASSED" else "FAILED"
-  print ("    DEC: " ++ res)
-  print "  FROM Linux/crypto/testmgr"
-  let
-    (out_ctext,out_iv) =
-      (MooMoo.cbc_encrypt1 AES256.encrypt t2_iv t2_ptext t2_key AES256.size_block)
-    res = if (out_ctext == t2_ctext) && (out_iv == t2_iv_out)
-      then "PASSED" else "FAILED"
-  print ("    ENC: " ++ res)
-  let
-    res = if ((MooMoo.cbc_decrypt AES256.decrypt t2_iv t2_ctext t2_key AES256.size_block) == t2_ptext)
-      then "PASSED" else "FAILED"
-  print ("    DEC: " ++ res)
+  testsuite "AES256CBC" [
+    test "EncryptNISTSP80038A" [
+      expect_memeq "t1_ctext"
+        (MooMoo.cbc_encrypt1 AES256.encrypt
+          t1_iv t1_ptext t1_key AES256.size_block) (t1_ctext, t1_iv_out)],
+    test "EncryptTestmgr" [
+      expect_memeq "t2_ctext"
+        (MooMoo.cbc_encrypt1 AES256.encrypt
+          t2_iv t2_ptext t2_key AES256.size_block) (t2_ctext, t2_iv_out)],
+    test "DecryptNISTSP80038A" [
+      expect_memeq "t1_ptext"
+        (MooMoo.cbc_decrypt AES256.decrypt
+          t1_iv t1_ctext t1_key AES256.size_block) t1_ptext],
+    test "DecryptTestmgr" [
+      expect_memeq "t2_ptext"
+        (MooMoo.cbc_decrypt AES256.decrypt
+          t2_iv t2_ctext t2_key AES256.size_block) t2_ptext]]
 
 test_sha256 = do
   let
@@ -414,7 +445,8 @@ test_sha256 = do
       0xE5, 0xC0, 0x26, 0x93, 0x0C, 0x3E, 0x60, 0x39,
       0xA3, 0x3C, 0xE4, 0x59, 0x64, 0xFF, 0x21, 0x67,
       0xF6, 0xEC, 0xED, 0xD4, 0x19, 0xDB, 0x06, 0xC1]
-    t4_message = from_str "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-"
+    t4_message = from_str $ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" ++
+      "abcdefghijklmnopqrstuvwxyz0123456789+-"
     t4_size = 64
     t4_digest = [
       0xB5, 0xFE, 0xAD, 0x56, 0x7D, 0xFF, 0xCB, 0xA4,
@@ -556,28 +588,23 @@ test_sha256 = do
       0x32, 0x32, 0x17, 0xCC, 0xD4, 0x6A, 0x71, 0xA9,
       0xF3, 0xED, 0x50, 0x10, 0x64, 0x8E, 0x06, 0xBE,
       0x9B, 0x4A, 0xA6, 0xBB, 0x05, 0x89, 0x59, 0x51]
-  print "TEST SHA256"
-  print "  FROM NIST"
-  let res = if ((SHA2.sha256sum t1_message t1_size) == t1_digest)
-      then "PASSED" else "FAILED"
-  print ("    0000: " ++ res)
-  let res = if ((SHA2.sha256sum t2_message t2_size) == t2_digest)
-      then "PASSED" else "FAILED"
-  print ("    0003: " ++ res)
-  let res = if ((SHA2.sha256sum t3_message t3_size) == t3_digest)
-      then "PASSED" else "FAILED"
-  print ("    0056: " ++ res)
-  let res = if ((SHA2.sha256sum t4_message t4_size) == t4_digest)
-      then "PASSED" else "FAILED"
-  print ("    0064: " ++ res)
-  let res = if ((SHA2.sha256sum t5_message t5_size) == t5_digest)
-      then "PASSED" else "FAILED"
-  print ("    1023: " ++ res)
+  testsuite "SHA256" [
+    test "NIST0000" [
+      expect_memeq "t1_digest" (SHA2.sha256sum t1_message t1_size) t1_digest],
+    test "NIST0003" [
+      expect_memeq "t2_digest" (SHA2.sha256sum t2_message t2_size) t2_digest],
+    test "NIST0056" [
+      expect_memeq "t3_digest" (SHA2.sha256sum t3_message t3_size) t3_digest],
+    test "NIST0064" [
+      expect_memeq "t4_digest" (SHA2.sha256sum t4_message t4_size) t4_digest],
+    test "NIST1023" [
+      expect_memeq "t5_digest" (SHA2.sha256sum t5_message t5_size) t5_digest]]
 
 test_hmac_sha256 = do
   let
     hmac_sha256 key ksize ptext psize =
-      KDF.hmac key ksize ptext psize SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
+      KDF.hmac key ksize ptext psize
+      SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
     --  From draft-ietf-ipsec-ciph-sha-256-01.txt
     t01_key = [
       0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -739,38 +766,37 @@ test_hmac_sha256 = do
       0xC8, 0x48, 0x1A, 0x5C, 0xA4, 0x82, 0x5B, 0xC8,
       0x84, 0xD3, 0xE7, 0xA1, 0xFF, 0x98, 0xA2, 0xFC,
       0x2A, 0xC7, 0xD8, 0xE0, 0x64, 0xC3, 0xB2, 0xE6]
-  print "TEST HMAC-SHA256"
-  print "  FROM draft-ietf-ipsec-ciph-sha-256-01.txt"
-  let res =if ((hmac_sha256 t01_key t01_ksize t01_ptext t01_psize) == t01_digest)
-      then "PASSED" else "FAILED"
-  print ("    003: " ++ res)
-  let res = if ((hmac_sha256 t02_key t02_ksize t02_ptext t02_psize) == t02_digest)
-      then "PASSED" else "FAILED"
-  print ("    056: " ++ res)
-  let res = if ((hmac_sha256 t03_key t03_ksize t03_ptext t03_psize) == t03_digest)
-      then "PASSED" else "FAILED"
-  print ("    112: " ++ res)
-  let res = if ((hmac_sha256 t04_key t04_ksize t04_ptext t04_psize) == t04_digest)
-      then "PASSED" else "FAILED"
-  print ("    008: " ++ res)
-  let res = if ((hmac_sha256 t05_key t05_ksize t05_ptext t05_psize) == t05_digest)
-      then "PASSED" else "FAILED"
-  print ("    028: " ++ res)
-  let res = if ((hmac_sha256 t06_key t06_ksize t06_ptext t06_psize) == t06_digest)
-      then "PASSED" else "FAILED"
-  print ("    050/32: " ++ res)
-  let res = if ((hmac_sha256 t07_key t07_ksize t07_ptext t07_psize) == t07_digest)
-      then "PASSED" else "FAILED"
-  print ("    050/37: " ++ res)
-  let res = if ((hmac_sha256 t08_key t08_ksize t08_ptext t08_psize) == t08_digest)
-      then "PASSED" else "FAILED"
-  print ("    020: " ++ res)
-  let res = if ((hmac_sha256 t09_key t09_ksize t09_ptext t09_psize) == t09_digest)
-      then "PASSED" else "FAILED"
-  print ("    054: " ++ res)
-  let res = if ((hmac_sha256 t10_key t10_ksize t10_ptext t10_psize) == t10_digest)
-      then "PASSED" else "FAILED"
-  print ("    073: " ++ res)
+  testsuite "HMACxSHA256" [
+    test "IETFDraft003" [
+      expect_memeq "t01_digest"
+        (hmac_sha256 t01_key t01_ksize t01_ptext t01_psize) t01_digest],
+    test "IETFDraft056" [
+      expect_memeq "t02_digest"
+        (hmac_sha256 t02_key t02_ksize t02_ptext t02_psize) t02_digest],
+    test "IETFDraft112" [
+      expect_memeq "t03_digest"
+        (hmac_sha256 t03_key t03_ksize t03_ptext t03_psize) t03_digest],
+    test "IETFDraft008" [
+      expect_memeq "t04_digest"
+        (hmac_sha256 t04_key t04_ksize t04_ptext t04_psize) t04_digest],
+    test "IETFDraft028" [
+      expect_memeq "t05_digest"
+        (hmac_sha256 t05_key t05_ksize t05_ptext t05_psize) t05_digest],
+    test "IETFDraft050x32" [
+      expect_memeq "t06_digest"
+        (hmac_sha256 t06_key t06_ksize t06_ptext t06_psize) t06_digest],
+    test "IETFDraft050x37" [
+      expect_memeq "t07_digest"
+        (hmac_sha256 t07_key t07_ksize t07_ptext t07_psize) t07_digest],
+    test "IETFDraft020" [
+      expect_memeq "t08_digest"
+        (hmac_sha256 t08_key t08_ksize t08_ptext t08_psize) t08_digest],
+    test "IETFDraft054" [
+      expect_memeq "t09_digest"
+        (hmac_sha256 t09_key t09_ksize t09_ptext t09_psize) t09_digest],
+    test "IETFDraft073" [
+      expect_memeq "t10_digest"
+        (hmac_sha256 t10_key t10_ksize t10_ptext t10_psize) t10_digest]]
 
 test_pbkdf2_hmac_sha256 = do
   let
@@ -810,7 +836,8 @@ test_pbkdf2_hmac_sha256 = do
       0x6A, 0x27, 0x2B, 0xDE, 0xBB, 0xA1, 0xD0, 0x78,
       0x47, 0x8F, 0x62, 0xB3, 0x97, 0xF3, 0x3C, 0x8D]
     -- from cryptsetup
-    t3_pass = from_str "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    t3_pass = from_str $ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ++
+      "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     t3_psize = 65
     t3_salt = from_str "pass phrase exceeds block size"
     t3_ssize = 30
@@ -821,23 +848,25 @@ test_pbkdf2_hmac_sha256 = do
       0xA8, 0x09, 0x0F, 0x3E, 0xA8, 0x0B, 0xE0, 0x1D,
       0x5F, 0x95, 0x12, 0x6A, 0x2C, 0xDD, 0xC3, 0xFA,
       0xCC, 0x4A, 0x5E, 0x6D, 0xCA, 0x04, 0xEC, 0x58]
-  print "TEST PBKDF2-HMAC-SHA256"
-  print "  FROM RFC 7914"
-  let res = if ((pbkdf2_hmac_sha256 t1_pass t1_psize t1_salt t1_ssize t1_c t1_dk_len) == t1_derived)
-      then "PASSED" else "FAILED"
-  print ("    00001: " ++ res)
-  let res = if ((pbkdf2_hmac_sha256 t2_pass t2_psize t2_salt t2_ssize t2_c t2_dk_len) == t2_derived)
-      then "PASSED" else "FAILED"
-  print ("    80000: " ++ res)
-  print "  FROM cryptsetup"
-  let res = if ((pbkdf2_hmac_sha256 t3_pass t3_psize t3_salt t3_ssize t3_c t3_dk_len) == t3_derived)
-      then "PASSED" else "FAILED"
-  print ("    01200: " ++ res)
+  testsuite "PBKDF2xHMACxSHA256" [
+    test "RFC7914x00001" [
+      expect_memeq "t1_derived"
+        (pbkdf2_hmac_sha256 t1_pass t1_psize t1_salt t1_ssize t1_c t1_dk_len)
+        t1_derived],
+    test "RFC7914x80000" [
+      expect_memeq "t2_derived"
+        (pbkdf2_hmac_sha256 t2_pass t2_psize t2_salt t2_ssize t2_c t2_dk_len)
+        t2_derived],
+    test "Cryptsetup01200" [
+      expect_memeq "t3_derived"
+        (pbkdf2_hmac_sha256 t3_pass t3_psize t3_salt t3_ssize t3_c t3_dk_len)
+        t3_derived]]
 
 main :: IO ()
-main = do
-  test_aes256
-  test_aes256_cbc
-  test_sha256
-  test_hmac_sha256
-  test_pbkdf2_hmac_sha256
+main =
+  test_aes256 >>
+  test_aes256_cbc >>
+  test_sha256 >>
+  test_hmac_sha256 >>
+  test_pbkdf2_hmac_sha256 >>
+  return ()
