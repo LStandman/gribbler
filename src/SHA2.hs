@@ -84,7 +84,7 @@ sha256sched' v n = sha256sched' v' (n + 2)
     v'      = v//[
       ( i,
         (lil_sigma1 $ deref (i - 2)) + (deref (i - 7)) +
-          (lil_sigma0 $ deref (i - 15)) + (deref (i - 16)))
+        (lil_sigma0 $ deref (i - 15)) + (deref (i - 16)))
       | i <- [n, n + 1]]
     deref j = v!((j + size_block) `mod` size_block)
 

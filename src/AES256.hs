@@ -31,7 +31,7 @@ size_key      = 32
 size_side     = 4
 size_state    = 16
 
--- preliminary functions
+-- PRELIMINARY FUNCTIONS
 
 xtime :: Word8 -> Word8
 
@@ -71,7 +71,7 @@ to_cols :: Mat -> [[Word8]]
 
 to_cols mat = [[mat!(i,j) | i <- range bounds_side] | j <- range bounds_side]
 
--- cipher
+-- CIPHER OPERATIONS
 
 sub :: Word8 -> Word8
 
@@ -136,44 +136,7 @@ mix_columns :: Mat -> Mat
 mix_columns vv = mix_columns' vv mix_byte
   where mix_byte a b c d = (0x02 `dot` a) `xor` (0x03 `dot` b) `xor` c `xor` d
 
-add_round_key :: Mat -> Mat -> Mat
-
-add_round_key vv uu =
-  listArray bounds_state $ zipWith (xor) (elems vv) (elems uu)
-
-key_expansion :: Mat -> Mat -> Word8 -> Mat
-
-key_expansion key1 key2 n =
-  from_cols $ drop 1 $ scanl (zipWith (xor)) key2' (to_cols key1)
-  where
-    size_rcon = 7
-    rcon      = listArray ((0,1),(size_side - 1, size_rcon)) [
-      0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] :: Mat
-    key2' = [ f i | i <- range bounds_side]
-    f i
-      | (n `mod` 2) == 0  = (sub $ rot_word) `xor` (rcon!(i, n `div` 2))
-      | otherwise         = sub (key2!(i, size_side - 1))
-      where rot_word = key2!((i+1) `mod` size_side, size_side - 1)
-
-cipher' :: Mat -> Mat -> Mat -> Word8 -> Mat
-
-cipher' ptext key1 key2 14 = add_round_key (shift_rows $ sub_bytes ptext) key2
-
-cipher' ptext key1 key2 n = cipher' ptext' key2 key3 m
-  where
-    m       = n + 1
-    ptext'  = add_round_key (mix_columns $ shift_rows $ sub_bytes ptext) key2
-    key3    = key_expansion key1 key2 m
-
-cipher :: Mat -> Mat -> Mat -> Mat
-
-cipher ptext key1 key2 = cipher' ptext' key1 key2 1
-  where ptext' = add_round_key ptext key1
-
--- inverse cipher
+-- INVERSE CIPHER OPERATIONS
 
 inv_sub_bytes :: Mat -> Mat
 
@@ -224,26 +187,73 @@ inv_mix_columns vv = mix_columns' vv mix_byte
   where
     mix_byte a b c d =
       (0x0E `dot` a) `xor` (0x0B `dot` b) `xor`
-        (0x0D `dot` c) `xor` (0x09 `dot` d)
+      (0x0D `dot` c) `xor` (0x09 `dot` d)
 
-inv_cipher' :: Mat -> Mat -> Mat -> Word8 -> Mat
+-- KEY SCHEDULE ALGORITHM
 
-inv_cipher' ctext key1 key2 14 = add_round_key ctext key2
+add_round_key :: Mat -> Mat -> Mat
 
-inv_cipher' ctext key1 key2 n =
-  inv_mix_columns $ add_round_key (inv_sub_bytes $ inv_shift_rows ctext') key2
+add_round_key vv uu =
+  listArray bounds_state $ zipWith (xor) (elems vv) (elems uu)
+
+key_expansion'' :: Mat -> [Word8] -> Mat
+
+key_expansion'' key1 col2  =
+  from_cols $ tail $ scanl (zipWith (xor)) col2 (to_cols key1)
+
+key_expansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
+
+key_expansion' (key1, key2) rcon = (key3, key4)
   where
-    m       = n + 1
-    ctext'  = inv_cipher' ctext key2 key3 m
-    key3    = key_expansion key1 key2 m
+    -- even rounds
+    rot_word =
+      [key2!((i+1) `mod` size_side, size_side - 1) | i <- range bounds_side]
+    col2     =
+      [(sub $ head rot_word) `xor` rcon] ++ (map (sub) $ tail rot_word)
+    key3     = key_expansion'' key1 col2
+    -- odd rounds
+    col3     = [sub (key3!(i, size_side - 1)) | i <- range bounds_side]
+    key4     = key_expansion'' key2 col3
+
+key_expansion :: (Mat, Mat) -> [Mat]
+
+-- this recursion on key pairs inevitably produces one key too many,
+-- so we drop it.
+key_expansion key = init $ concat [[a, b] | (a, b) <- schedule]
+  where
+    schedule =
+      scanl (key_expansion') key [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40]
+
+-- CIPHER ALGORITHM
+
+cipher :: Mat -> Mat -> Mat -> Mat
+
+cipher ptext key1 key2 = add_round_key (shift_rows $ sub_bytes ptext'') key15
+  where
+    -- drop duplicate of key1 from schedule
+    schedule  = tail $ key_expansion (key1, key2)
+    schedule' = init schedule
+    key15     = last schedule
+    ptext'    = add_round_key ptext key1
+    ptext''   = foldl (f) ptext' schedule'
+      where f p k = add_round_key (mix_columns $ shift_rows $ sub_bytes p) k
 
 inv_cipher :: Mat -> Mat -> Mat -> Mat
 
 inv_cipher ctext key1 key2 =
-  add_round_key (inv_sub_bytes $ inv_shift_rows ctext') key1
-  where ctext' = inv_cipher' ctext key1 key2 1
+  add_round_key (inv_sub_bytes $ inv_shift_rows ctext'') key1
+  where
+    -- drop duplicate of key1 from schedule
+    schedule  = tail $ key_expansion (key1, key2)
+    schedule' = init schedule
+    key15     = last schedule
+    ctext'    = add_round_key ctext key15
+    ctext''   = foldr (f) ctext' schedule'
+      where
+        f k c =
+          inv_mix_columns $ add_round_key (inv_sub_bytes $ inv_shift_rows c) k
 
--- public
+-- PUBLIC WRAPPERS
 
 encrypt ptext key =
   to_list $ cipher (from_list ptext) (from_list $ key1) (from_list $ key2)
