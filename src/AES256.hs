@@ -61,11 +61,11 @@ from_list v = array bounds_state (zip [(j,i) | (i,j) <- range bounds_state] v)
 
 from_cols :: [[Word8]] -> Mat
 
-from_cols vv = from_list $ concat vv
+from_cols vv = from_list . concat $ vv
 
 to_list :: Mat -> [Word8]
 
-to_list mat = concat $ to_cols mat
+to_list mat = concat . to_cols $ mat
 
 to_cols :: Mat -> [[Word8]]
 
@@ -201,7 +201,7 @@ add_round_key vv uu =
 key_expansion'' :: Mat -> [Word8] -> Mat
 
 key_expansion'' key1 col2  =
-  from_cols $ tail $ scanl (zipWith (xor)) col2 (to_cols key1)
+  from_cols . tail $ scanl (zipWith (xor)) col2 (to_cols key1)
 
 key_expansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
 
@@ -221,7 +221,7 @@ key_expansion :: (Mat, Mat) -> [Mat]
 
 -- this recursion on key pairs inevitably produces one key too many,
 -- so we drop it.
-key_expansion key = init $ concat [[a, b] | (a, b) <- schedule]
+key_expansion key = init . concat $ [[a, b] | (a, b) <- schedule]
   where
     schedule =
       scanl (key_expansion') key [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40]
@@ -230,30 +230,30 @@ key_expansion key = init $ concat [[a, b] | (a, b) <- schedule]
 
 cipher :: Mat -> Mat -> Mat -> Mat
 
-cipher ptext key1 key2 = add_round_key (shift_rows $ sub_bytes ptext'') key15
+cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
   where
     -- drop duplicate of key1 from schedule
-    schedule  = tail $ key_expansion (key1, key2)
+    schedule  = tail . key_expansion $ (key1, key2)
     schedule' = init schedule
     key15     = last schedule
     ptext'    = add_round_key ptext key1
     ptext''   = foldl (f) ptext' schedule'
-      where f p k = add_round_key (mix_columns $ shift_rows $ sub_bytes p) k
+      where f p k = add_round_key (mix_columns . shift_rows . sub_bytes $ p) k
 
 inv_cipher :: Mat -> Mat -> Mat -> Mat
 
 inv_cipher ctext key1 key2 =
-  add_round_key (inv_sub_bytes $ inv_shift_rows ctext'') key1
+  add_round_key (inv_sub_bytes . inv_shift_rows $ ctext'') key1
   where
     -- drop duplicate of key1 from schedule
-    schedule  = tail $ key_expansion (key1, key2)
+    schedule  = tail . key_expansion $ (key1, key2)
     schedule' = init schedule
     key15     = last schedule
     ctext'    = add_round_key ctext key15
     ctext''   = foldr (f) ctext' schedule'
       where
         f k c =
-          inv_mix_columns $ add_round_key (inv_sub_bytes $ inv_shift_rows c) k
+          inv_mix_columns $ add_round_key (inv_sub_bytes . inv_shift_rows $ c) k
 
 -- PUBLIC WRAPPERS
 
