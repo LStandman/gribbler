@@ -4,6 +4,7 @@
 
 import Data.Array
 import Data.Word
+import System.Exit
 
 import AES256
 import KDF
@@ -76,7 +77,7 @@ from_str :: String -> [Word8]
 
 from_str s = [fromIntegral (fromEnum c)::Word8 | c <- s]
 
-test_aes256 = do
+test_aes256 =
   let
     --  From FIPS-197
     t1_key = [
@@ -224,7 +225,7 @@ test_aes256 = do
       0x88, 0xE6, 0x68, 0x47, 0xE3, 0x2B, 0xC5, 0xFF,
       0x09, 0x79, 0xA0, 0x43, 0x5C, 0x0D, 0x08, 0x58,
       0x17, 0xBB, 0xC0, 0x6B, 0x62, 0x3F, 0x56, 0xE9]
-  testsuite "AES256NoMod" [
+  in testsuite "AES256NoMod" [
     test "EncryptFIPS197" [
       expect_memeq "t1_ctext" (nomod_aes256 True t1_ptext t1_key) t1_ctext],
     test "EncryptTestmgr" [
@@ -234,7 +235,7 @@ test_aes256 = do
     test "DecryptTestmgr" [
       expect_memeq "t2_ptext" (nomod_aes256 False t2_ctext t2_key) t2_ptext]]
 
-test_aes256_cbc = do
+test_aes256_cbc =
   let
     --  From NIST SP800-38A
     t1_key = [
@@ -406,7 +407,7 @@ test_aes256_cbc = do
       0xBC, 0x06, 0x41, 0xE3, 0x01, 0xB4, 0x4E, 0x0A,
       0xE0, 0x1F, 0x91, 0xF8, 0x82, 0x96, 0x2D, 0x65,
       0xA3, 0xAA, 0x13, 0xCC, 0x50, 0xFF, 0x7B, 0x02]
-  testsuite "AES256CBC" [
+  in testsuite "AES256CBC" [
     test "EncryptNISTSP80038A" [
       expect_memeq "t1_ctext"
         (MooMoo.cbc_encrypt1 AES256.encrypt
@@ -424,7 +425,7 @@ test_aes256_cbc = do
         (MooMoo.cbc_decrypt AES256.decrypt
           t2_iv t2_ctext t2_key AES256.size_block) t2_ptext]]
 
-test_sha256 = do
+test_sha256 =
   let
     --  SHA256 test vectors from NIST
     t1_message = from_str ""
@@ -592,7 +593,7 @@ test_sha256 = do
       0x32, 0x32, 0x17, 0xCC, 0xD4, 0x6A, 0x71, 0xA9,
       0xF3, 0xED, 0x50, 0x10, 0x64, 0x8E, 0x06, 0xBE,
       0x9B, 0x4A, 0xA6, 0xBB, 0x05, 0x89, 0x59, 0x51]
-  testsuite "SHA256" [
+  in testsuite "SHA256" [
     test "NIST0000" [
       expect_memeq "t1_digest" (SHA2.sha256sum t1_message t1_size) t1_digest],
     test "NIST0003" [
@@ -604,7 +605,7 @@ test_sha256 = do
     test "NIST1023" [
       expect_memeq "t5_digest" (SHA2.sha256sum t5_message t5_size) t5_digest]]
 
-test_hmac_sha256 = do
+test_hmac_sha256 =
   let
     hmac_sha256 key ksize ptext psize =
       KDF.hmac key ksize ptext psize
@@ -770,7 +771,7 @@ test_hmac_sha256 = do
       0xC8, 0x48, 0x1A, 0x5C, 0xA4, 0x82, 0x5B, 0xC8,
       0x84, 0xD3, 0xE7, 0xA1, 0xFF, 0x98, 0xA2, 0xFC,
       0x2A, 0xC7, 0xD8, 0xE0, 0x64, 0xC3, 0xB2, 0xE6]
-  testsuite "HMACxSHA256" [
+  in testsuite "HMACxSHA256" [
     test "IETFDraft003" [
       expect_memeq "t01_digest"
         (hmac_sha256 t01_key t01_ksize t01_ptext t01_psize) t01_digest],
@@ -802,7 +803,7 @@ test_hmac_sha256 = do
       expect_memeq "t10_digest"
         (hmac_sha256 t10_key t10_ksize t10_ptext t10_psize) t10_digest]]
 
-test_pbkdf2_hmac_sha256 = do
+test_pbkdf2_hmac_sha256 =
   let
     pbkdf2_hmac_sha256 pass psize salt ssize c dk_len =
       KDF.pbkdf2 prf SHA2.sha256_size_digest pass psize salt ssize c dk_len
@@ -853,7 +854,7 @@ test_pbkdf2_hmac_sha256 = do
       0xA8, 0x09, 0x0F, 0x3E, 0xA8, 0x0B, 0xE0, 0x1D,
       0x5F, 0x95, 0x12, 0x6A, 0x2C, 0xDD, 0xC3, 0xFA,
       0xCC, 0x4A, 0x5E, 0x6D, 0xCA, 0x04, 0xEC, 0x58]
-  testsuite "PBKDF2xHMACxSHA256" [
+  in testsuite "PBKDF2xHMACxSHA256" [
     test "RFC7914x00001" [
       expect_memeq "t1_derived"
         (pbkdf2_hmac_sha256 t1_pass t1_psize t1_salt t1_ssize t1_c t1_dk_len)
@@ -867,11 +868,18 @@ test_pbkdf2_hmac_sha256 = do
         (pbkdf2_hmac_sha256 t3_pass t3_psize t3_salt t3_ssize t3_c t3_dk_len)
         t3_derived]]
 
+testmain :: [IO Bool] -> IO Bool
+
+testmain [] = return True
+
+testmain (t:ts) = t >>= \ x -> testmain ts >>= \ y -> return (x && y)
+
 main :: IO ()
 main =
-  test_aes256 >>
-  test_aes256_cbc >>
-  test_sha256 >>
-  test_hmac_sha256 >>
-  test_pbkdf2_hmac_sha256 >>
-  return ()
+  testmain [
+    test_aes256,
+    test_aes256_cbc,
+    test_sha256,
+    test_hmac_sha256,
+    test_pbkdf2_hmac_sha256] >>=
+  \ x -> if x then exitSuccess else exitFailure
