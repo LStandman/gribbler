@@ -20,11 +20,11 @@ sha256_size_digest  :: Int
 sha256sum           :: [Word8] -> Int -> [Word8]
 sha256sum1          :: [Word8] -> [Word8]
 
-bounds_message      = (0,15)
-sha256_size_block   = 64
-sha256_size_digest  = 32
-size_block          = 16
-size_hash           = 8
+bounds_message     = (0,15)
+sha256_size_block  = 64
+sha256_size_digest = 32
+size_block         = 16
+size_hash          = 8
 
 ch :: Word32 -> Word32 -> Word32 -> Word32
 
@@ -55,14 +55,14 @@ sha256round :: Word32 -> Word32 -> Hash -> Hash
 sha256round k w (h0, h1, h2, h3, h4, h5, h6, h7) =
   (a', b', c', d', e', f', g', h')
   where
-    a = h0
-    b = h1
-    c = h2
-    d = h3
-    e = h4
-    f = h5
-    g = h6
-    h = h7
+    a  = h0
+    b  = h1
+    c  = h2
+    d  = h3
+    e  = h4
+    f  = h5
+    g  = h6
+    h  = h7
     --
     t1 = h + (big_sigma1 e) + (ch e f g) + k + w
     t2 = (big_sigma0 a) + (maj a b c)
