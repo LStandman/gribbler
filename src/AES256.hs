@@ -11,6 +11,7 @@ module AES256(
 
 import Data.Array.Unboxed
 import Data.Bits
+import Data.Maybe
 import Data.Word
 
 infixl 7 `dot`
@@ -228,17 +229,22 @@ key_expansion key = init . concat $ [[a, b] | (a, b) <- schedule]
 
 -- CIPHER ALGORITHM
 
+runcons :: [a] -> Maybe (a, [a])
+
+runcons [] = Nothing
+
+runcons (x:xs) =
+  Just (maybe (x, []) (\ r -> (fst r, [x] ++ (snd r))) $ runcons xs)
+
 cipher :: Mat -> Mat -> Mat -> Mat
 
 cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
   where
-    -- Drop duplicate of key1 from schedule.
-    schedule  = tail . key_expansion $ (key1, key2)
-    -- TODO: Combine these into a function to be more concise.
-    schedule' = init schedule
-    key15     = last schedule
+    -- `tail` drops a duplicate of key1 from schedule.
+    (key15, schedule) =
+      fromJust . runcons . tail . key_expansion $ (key1, key2)
     ptext'    = add_round_key ptext key1
-    ptext''   = foldl (f) ptext' schedule'
+    ptext''   = foldl (f) ptext' schedule
       where f p k = add_round_key (mix_columns . shift_rows . sub_bytes $ p) k
 
 inv_cipher :: Mat -> Mat -> Mat -> Mat
@@ -246,12 +252,11 @@ inv_cipher :: Mat -> Mat -> Mat -> Mat
 inv_cipher ctext key1 key2 =
   add_round_key (inv_sub_bytes . inv_shift_rows $ ctext'') key1
   where
-    -- Drop duplicate of key1 from schedule.
-    schedule  = tail . key_expansion $ (key1, key2)
-    schedule' = init schedule
-    key15     = last schedule
+    -- `tail` drops a duplicate of key1 from schedule.
+    (key15, schedule) =
+      fromJust . runcons . tail . key_expansion $ (key1, key2)
     ctext'    = add_round_key ctext key15
-    ctext''   = foldr (f) ctext' schedule'
+    ctext''   = foldr (f) ctext' schedule
       where
         f k c =
           inv_mix_columns $ add_round_key (inv_sub_bytes . inv_shift_rows $ c) k
