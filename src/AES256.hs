@@ -77,7 +77,7 @@ sub :: Word8 -> Word8
 
 sub a = sub' sbox a
   where
-    -- fig. 7
+    -- Fig. 7.
     sbox = listArray bounds_sbox [
       0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5,
       0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -143,7 +143,7 @@ inv_sub_bytes :: Mat -> Mat
 
 inv_sub_bytes vv = amap (sub' inv_sbox) vv
   where
-    -- fig. 14
+    -- Fig. 14.
     inv_sbox = listArray bounds_sbox [
       0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38,
       0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
@@ -207,13 +207,13 @@ key_expansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
 
 key_expansion' (key1, key2) rcon = (key3, key4)
   where
-    -- even rounds
+    -- Even rounds.
     rot_word:rot_words =
       [key2!((i+1) `mod` size_side, size_side - 1) | i <- range bounds_side]
     col2     =
       [(sub rot_word) `xor` rcon] ++ (map (sub) rot_words)
     key3     = key_expansion'' key1 col2
-    -- odd rounds
+    -- Odd rounds.
     col3     = [sub (key3!(i, size_side - 1)) | i <- range bounds_side]
     key4     = key_expansion'' key2 col3
 
@@ -232,8 +232,9 @@ cipher :: Mat -> Mat -> Mat -> Mat
 
 cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
   where
-    -- drop duplicate of key1 from schedule
+    -- Drop duplicate of key1 from schedule.
     schedule  = tail . key_expansion $ (key1, key2)
+    -- TODO: Combine these into a function to be more concise.
     schedule' = init schedule
     key15     = last schedule
     ptext'    = add_round_key ptext key1
@@ -245,7 +246,7 @@ inv_cipher :: Mat -> Mat -> Mat -> Mat
 inv_cipher ctext key1 key2 =
   add_round_key (inv_sub_bytes . inv_shift_rows $ ctext'') key1
   where
-    -- drop duplicate of key1 from schedule
+    -- Drop duplicate of key1 from schedule.
     schedule  = tail . key_expansion $ (key1, key2)
     schedule' = init schedule
     key15     = last schedule
