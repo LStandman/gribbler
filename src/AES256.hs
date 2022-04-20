@@ -212,7 +212,7 @@ key_expansion' (key1, key2) rcon = (key3, key4)
     rot_word:rot_words = [
       sub $ key2!((i+1) `mod` size_side, size_side - 1)
       | i <- range bounds_side]
-    col2               = [rot_word `xor` rcon] ++ rot_words
+    col2               = rot_word `xor` rcon : rot_words
     key3               = key_expansion'' key1 col2
     -- Odd rounds.
     col3               = [
@@ -236,7 +236,7 @@ runcons :: [a] -> Maybe (a, [a])
 runcons [] = Nothing
 
 runcons (x:xs) =
-  Just $ maybe (x, []) (\ (y, ys) -> (y, [x] ++ ys)) $ runcons xs
+  Just $ maybe (x, []) (\ (y, ys) -> (y, x : ys)) $ runcons xs
 
 schedule_helper :: (Mat, Mat) -> (Mat, [Mat])
 
