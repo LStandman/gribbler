@@ -62,11 +62,11 @@ from_list v = array bounds_state (zip [(j,i) | (i,j) <- range bounds_state] v)
 
 from_cols :: [[Word8]] -> Mat
 
-from_cols vv = from_list . concat $ vv
+from_cols = from_list . concat
 
 to_list :: Mat -> [Word8]
 
-to_list mat = concat . to_cols $ mat
+to_list = concat . to_cols
 
 to_cols :: Mat -> [[Word8]]
 
@@ -76,7 +76,7 @@ to_cols mat = [[mat!(i,j) | i <- range bounds_side] | j <- range bounds_side]
 
 sub :: Word8 -> Word8
 
-sub a = sub' sbox a
+sub = sub' sbox
   where
     -- Fig. 7.
     sbox = listArray bounds_sbox [
@@ -115,16 +115,16 @@ sub a = sub' sbox a
 
 sub_bytes :: Mat -> Mat
 
-sub_bytes vv = amap sub vv
+sub_bytes = amap sub
 
 shift_rows :: Mat -> Mat
 
-shift_rows vv = ixmap bounds_state f vv
+shift_rows = ixmap bounds_state f
   where f (i,j) = (i, (j + i) `mod` size_side)
 
-mix_columns' :: Mat -> (Word8 -> Word8 -> Word8 -> Word8 -> Word8) -> Mat
+mix_columns' :: (Word8 -> Word8 -> Word8 -> Word8 -> Word8) -> Mat -> Mat
 
-mix_columns' vv f = array bounds_state
+mix_columns' f vv = array bounds_state
   [ (
       (i,j),
       f (vv!(i,                        j))
@@ -135,14 +135,14 @@ mix_columns' vv f = array bounds_state
 
 mix_columns :: Mat -> Mat
 
-mix_columns vv = mix_columns' vv mix_byte
+mix_columns = mix_columns' mix_byte
   where mix_byte a b c d = (0x02 `dot` a) `xor` (0x03 `dot` b) `xor` c `xor` d
 
 -- INVERSE CIPHER OPERATIONS
 
 inv_sub_bytes :: Mat -> Mat
 
-inv_sub_bytes vv = amap (sub' inv_sbox) vv
+inv_sub_bytes = amap (sub' inv_sbox)
   where
     -- Fig. 14.
     inv_sbox = listArray bounds_sbox [
@@ -181,12 +181,12 @@ inv_sub_bytes vv = amap (sub' inv_sbox) vv
 
 inv_shift_rows :: Mat -> Mat
 
-inv_shift_rows vv = ixmap bounds_state f vv
+inv_shift_rows = ixmap bounds_state f
   where f (i,j) = (i, (j + size_side - i) `mod` size_side)
 
 inv_mix_columns :: Mat -> Mat
 
-inv_mix_columns vv = mix_columns' vv mix_byte
+inv_mix_columns = mix_columns' mix_byte
   where
     mix_byte a b c d =
       (0x0E `dot` a) `xor` (0x0B `dot` b) `xor`
@@ -209,20 +209,22 @@ key_expansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
 key_expansion' (key1, key2) rcon = (key3, key4)
   where
     -- Even rounds.
-    rot_word:rot_words =
-      [key2!((i+1) `mod` size_side, size_side - 1) | i <- range bounds_side]
-    col2     =
-      [(sub rot_word) `xor` rcon] ++ (map (sub) rot_words)
-    key3     = key_expansion'' key1 col2
+    rot_word:rot_words = [
+      sub $ key2!((i+1) `mod` size_side, size_side - 1)
+      | i <- range bounds_side]
+    col2               = [rot_word `xor` rcon] ++ rot_words
+    key3               = key_expansion'' key1 col2
     -- Odd rounds.
-    col3     = [sub (key3!(i, size_side - 1)) | i <- range bounds_side]
-    key4     = key_expansion'' key2 col3
+    col3               = [
+      sub $ key3!(i, size_side - 1)
+      | i <- range bounds_side]
+    key4               = key_expansion'' key2 col3
 
 key_expansion :: (Mat, Mat) -> [Mat]
 
 -- this recursion on key pairs inevitably produces one key too many,
 -- so we drop it.
-key_expansion key = init . concat $ [[a, b] | (a, b) <- schedule]
+key_expansion key = init $ concatMap (\ (a, b) -> [a, b]) schedule
   where
     schedule =
       scanl (key_expansion') key [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40]
@@ -234,32 +236,33 @@ runcons :: [a] -> Maybe (a, [a])
 runcons [] = Nothing
 
 runcons (x:xs) =
-  Just (maybe (x, []) (\ r -> (fst r, [x] ++ (snd r))) $ runcons xs)
+  Just $ maybe (x, []) (\ (y, ys) -> (y, [x] ++ ys)) $ runcons xs
+
+schedule_helper :: (Mat, Mat) -> (Mat, [Mat])
+
+-- `tail` drops a duplicate of key1 from schedule.
+schedule_helper = fromJust . runcons . tail . key_expansion
 
 cipher :: Mat -> Mat -> Mat -> Mat
 
 cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
   where
-    -- `tail` drops a duplicate of key1 from schedule.
-    (key15, schedule) =
-      fromJust . runcons . tail . key_expansion $ (key1, key2)
-    ptext'    = add_round_key ptext key1
-    ptext''   = foldl (f) ptext' schedule
-      where f p k = add_round_key (mix_columns . shift_rows . sub_bytes $ p) k
+    f p k             =
+      add_round_key (mix_columns . shift_rows . sub_bytes $ p) k
+    (key15, schedule) = schedule_helper (key1, key2)
+    ptext'            = add_round_key ptext key1
+    ptext''           = foldl (f) ptext' schedule
 
 inv_cipher :: Mat -> Mat -> Mat -> Mat
 
 inv_cipher ctext key1 key2 =
   add_round_key (inv_sub_bytes . inv_shift_rows $ ctext'') key1
   where
-    -- `tail` drops a duplicate of key1 from schedule.
-    (key15, schedule) =
-      fromJust . runcons . tail . key_expansion $ (key1, key2)
-    ctext'    = add_round_key ctext key15
-    ctext''   = foldr (f) ctext' schedule
-      where
-        f k c =
-          inv_mix_columns $ add_round_key (inv_sub_bytes . inv_shift_rows $ c) k
+    f k c             =
+      inv_mix_columns $ add_round_key (inv_sub_bytes . inv_shift_rows $ c) k
+    (key15, schedule) = schedule_helper (key1, key2)
+    ctext'            = add_round_key ctext key15
+    ctext''           = foldr (f) ctext' schedule
 
 -- PUBLIC WRAPPERS
 

@@ -15,10 +15,10 @@ import Data.Word
 
 type Hash = (Word32, Word32, Word32, Word32, Word32, Word32, Word32, Word32)
 
-sha256_size_block   :: Int
-sha256_size_digest  :: Int
-sha256sum           :: [Word8] -> Int -> [Word8]
-sha256sum1          :: [Word8] -> [Word8]
+sha256_size_block  :: Int
+sha256_size_digest :: Int
+sha256sum          :: [Word8] -> Int -> [Word8]
+sha256sum1         :: [Word8] -> [Word8]
 
 bounds_message     = (0,15)
 sha256_size_block  = 64
@@ -50,9 +50,9 @@ lil_sigma1 :: Word32 -> Word32
 
 lil_sigma1 x = (x `rotateR` 17) `xor` (x `rotateR` 19) `xor` (x `shiftR` 10)
 
-sha256round :: Word32 -> Word32 -> Hash -> Hash
+sha256round :: Hash -> (Word32, Word32) -> Hash
 
-sha256round k w (h0, h1, h2, h3, h4, h5, h6, h7) =
+sha256round (h0, h1, h2, h3, h4, h5, h6, h7) (k, w) =
   (a', b', c', d', e', f', g', h')
   where
     a  = h0
@@ -77,47 +77,35 @@ sha256round k w (h0, h1, h2, h3, h4, h5, h6, h7) =
 
 sha256sched' :: UArray Int Word32 -> Int -> UArray Int Word32
 
-sha256sched' v 16 = v
-
-sha256sched' v n = sha256sched' v' (n + 2)
+sha256sched' v n = v//[
+    ( i,
+      (lil_sigma1 $ deref i 2) + (deref i 7) +
+      (lil_sigma0 $ deref i 15) + (deref i 16))
+    | i <- [n, n + 1]]
   where
-    v'      = v//[
-      ( i,
-        (lil_sigma1 $ deref (i - 2)) + (deref (i - 7)) +
-        (lil_sigma0 $ deref (i - 15)) + (deref (i - 16)))
-      | i <- [n, n + 1]]
-    deref j = v!((j + size_block) `mod` size_block)
+    deref j o = v!((j + size_block - o) `mod` size_block)
 
 sha256sched :: [Word32] -> [Word32]
 
-sha256sched v = elems $ sha256sched' u 0
-  where u = listArray bounds_message v
+sha256sched v =
+  elems $ foldl (sha256sched') (listArray bounds_message v) [0,2..14]
 
-sha256block' :: [Word32] -> [Word32] -> Hash -> Hash
+sha256block :: Hash -> [(Word32, Word32)] -> Hash
 
-sha256block' [] [] h = h
-
-sha256block' k w h = sha256block' k2 w2 (sha256round k1 w1 h)
-  where
-    k1:k2 = k
-    w1:w2 = w
-
-sha256block :: [Word32] -> [Word32] -> Hash -> Hash
-
-sha256block k w h = (
+sha256block h v = (
     h0 + h0', h1 + h1', h2 + h2', h3 + h3',
     h4 + h4', h5 + h5', h6 + h6', h7 + h7')
   where
-    (h0,  h1,  h2,  h3,  h4,  h5,  h6,  h7)   = h
-    (h0', h1', h2', h3', h4', h5', h6', h7')  = sha256block' k w h
+    (h0,  h1,  h2,  h3,  h4,  h5,  h6,  h7)  = h
+    (h0', h1', h2', h3', h4', h5', h6', h7') = foldl (sha256round) h v
 
-sha256sum' :: [Word32] -> Hash -> Hash
+sha256sum' :: Hash -> [Word32] -> Hash
 
-sha256sum' [] h = h
+sha256sum' h [] = h
 
-sha256sum' m h = sha256sum' m2 h'
+sha256sum' h m = sha256sum' h' m2
   where
-    k         = [
+    k        = [
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
       0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
       0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
@@ -134,18 +122,17 @@ sha256sum' m h = sha256sum' m2 h'
       0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
       0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
       0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2]
-    (m1, m2)  = splitAt size_block m
-    w         = concat $ take 4 $ iterate (sha256sched) m1
-    h'        = sha256block k w h
+    (m1, m2) = splitAt size_block m
+    w        = concat $ take 4 $ iterate (sha256sched) m1
+    h'       = sha256block h (zip k w)
 
 to_list :: Hash -> [Word8]
 
 to_list (h0, h1, h2, h3, h4, h5, h6, h7) =
-  concat [g w | w <- [h0, h1, h2, h3, h4, h5, h6, h7]]
+  concatMap (split) [h0, h1, h2, h3, h4, h5, h6, h7]
   where
-    g n =[
-      fromIntegral i :: Word8
-      | i <- [n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n]]
+    split n = map (fromIntegral)
+      [n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
 
 from_list :: [Word8] -> [Word32]
 
@@ -153,20 +140,19 @@ from_list [] = []
 
 from_list m = foldl (f) 0 m1 : from_list m2
   where
-    f a b     = (a `shiftL` 8) .|. fromIntegral b
-    (m1, m2)  = splitAt 4 m
+    f a b    = (a `shiftL` 8) .|. fromIntegral b
+    (m1, m2) = splitAt 4 m
 
-sha256sum m l = to_list $ sha256sum' (from_list m') h
+sha256sum m l = to_list $ sha256sum' h $ from_list m'
   where
-    g n     = [
-      fromIntegral i :: Word8 | i <- [
+    split n = map (fromIntegral) [
         n `shiftR` 56, n `shiftR` 48, n `shiftR` 40, n `shiftR` 32,
-        n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n]]
+        n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
     h       = (
       0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
       0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19)
     n       = (sha256_size_block - 8 - (l + 1)) `mod` sha256_size_block
     m'      = m ++ [0x80] ++ (take n $ repeat 0) ++
-      (g $ (fromIntegral l :: Word64) * 8)
+      (split $ (fromIntegral l :: Word64) * 8)
 
 sha256sum1 m = sha256sum m (length m)
