@@ -27,8 +27,8 @@ cbc_encrypt1 f iv ptext key block_size = (ctext1 ++ ctext2, iv_out)
     ctext1           = f ptext1' key
     (ctext2, iv_out) = cbc_encrypt1 f ctext1 ptext2 key block_size
 
-cbc_encrypt f iv ptext key block_size = ctext
-  where (ctext, _) = cbc_encrypt1 f iv ptext key block_size
+cbc_encrypt f iv ptext key block_size =
+  fst $ cbc_encrypt1 f iv ptext key block_size
 
 cbc_decrypt _ _ [] _ _ = []
 

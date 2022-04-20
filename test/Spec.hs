@@ -43,7 +43,7 @@ testsuite name tests =
 
 expect_that :: (a -> IO Bool) -> a -> IO Bool
 
-expect_that matcher val = matcher val
+expect_that matcher = matcher
 
 memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
 
@@ -59,16 +59,15 @@ memeq varname expected actual =
 
 expect_memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
 
-expect_memeq varname expected actual =
-  expect_that (memeq varname expected) actual
+expect_memeq varname expected = expect_that (memeq varname expected)
 
 expect_true :: Bool -> IO Bool
 
-expect_true actual = return actual
+expect_true = return
 
 expect_false :: Bool -> IO Bool
 
-expect_false actual = return (not actual)
+expect_false = return . not
 
 nomod_aes256 :: Bool -> [Word8] -> [Word8] -> [Word8]
 
@@ -84,7 +83,7 @@ nomod_aes256 is_enc text key =
 
 from_str :: String -> [Word8]
 
-from_str s = [fromIntegral (fromEnum c)::Word8 | c <- s]
+from_str = map (fromIntegral . fromEnum)
 
 test_aes256 =
   let
