@@ -16,16 +16,16 @@ import Data.Word
 
 infixl 7 `dot`
 
-type Mat = UArray (Word8,Word8) Word8
+type Mat = UArray (Word8, Word8) Word8
 
 size_block  :: Int
 size_key    :: Int
 encrypt     :: [Word8] -> [Word8] -> [Word8]
 decrypt     :: [Word8] -> [Word8] -> [Word8]
 
-bounds_sbox   = ((0,0),(15,15))
-bounds_side   = (0,3)
-bounds_state  = ((0,0),(3,3))
+bounds_sbox   = ((0, 0), (15, 15))
+bounds_side   = (0, 3)
+bounds_state  = ((0, 0), (3, 3))
 num_rounds    = 14
 size_block    = 16
 size_key      = 32
@@ -58,7 +58,8 @@ sub' vv a = vv!(a `shiftR` 4, a .&. 0x0F)
 
 from_list :: [Word8] -> Mat
 
-from_list v = array bounds_state (zip [(j,i) | (i,j) <- range bounds_state] v)
+from_list v =
+  array bounds_state (zip [(j, i) | (i, j) <- range bounds_state] v)
 
 from_cols :: [[Word8]] -> Mat
 
@@ -70,7 +71,7 @@ to_list = concat . to_cols
 
 to_cols :: Mat -> [[Word8]]
 
-to_cols mat = [[mat!(i,j) | i <- range bounds_side] | j <- range bounds_side]
+to_cols mat = [[mat!(i, j) | i <- range bounds_side] | j <- range bounds_side]
 
 -- CIPHER OPERATIONS
 
@@ -120,18 +121,18 @@ sub_bytes = amap sub
 shift_rows :: Mat -> Mat
 
 shift_rows = ixmap bounds_state f
-  where f (i,j) = (i, (j + i) `mod` size_side)
+  where f (i, j) = (i, (j + i) `mod` size_side)
 
 mix_columns' :: (Word8 -> Word8 -> Word8 -> Word8 -> Word8) -> Mat -> Mat
 
 mix_columns' f vv = array bounds_state
   [ (
-      (i,j),
+      (i, j),
       f (vv!(i,                        j))
         (vv!((i + 1) `mod` size_side,  j))
         (vv!((i + 2) `mod` size_side,  j))
         (vv!((i + 3) `mod` size_side,  j)))
-    | (i,j) <- range bounds_state]
+    | (i, j) <- range bounds_state]
 
 mix_columns :: Mat -> Mat
 
@@ -182,7 +183,7 @@ inv_sub_bytes = amap (sub' inv_sbox)
 inv_shift_rows :: Mat -> Mat
 
 inv_shift_rows = ixmap bounds_state f
-  where f (i,j) = (i, (j + size_side - i) `mod` size_side)
+  where f (i, j) = (i, (j + size_side - i) `mod` size_side)
 
 inv_mix_columns :: Mat -> Mat
 
@@ -210,7 +211,7 @@ key_expansion' (key1, key2) rcon = (key3, key4)
   where
     -- Even rounds.
     rot_word:rot_words = [
-      sub $ key2!((i+1) `mod` size_side, size_side - 1)
+      sub $ key2!((i + 1) `mod` size_side, size_side - 1)
       | i <- range bounds_side]
     col2               = rot_word `xor` rcon : rot_words
     key3               = key_expansion'' key1 col2
@@ -236,7 +237,7 @@ runcons :: [a] -> Maybe (a, [a])
 runcons [] = Nothing
 
 runcons (x:xs) =
-  Just $ maybe (x, []) (\ (y, ys) -> (y, x : ys)) $ runcons xs
+  Just $ maybe (x, []) (\ (y, ys) -> (y, x:ys)) $ runcons xs
 
 schedule_helper :: (Mat, Mat) -> (Mat, [Mat])
 

@@ -20,7 +20,6 @@ sha256_size_digest :: Int
 sha256sum          :: [Word8] -> Int -> [Word8]
 sha256sum1         :: [Word8] -> [Word8]
 
-bounds_message     = (0,15)
 sha256_size_block  = 64
 sha256_size_digest = 32
 size_block         = 16
@@ -88,7 +87,7 @@ sha256sched' v n = v//[
 sha256sched :: [Word32] -> [Word32]
 
 sha256sched v =
-  elems $ foldl (sha256sched') (listArray bounds_message v) [0,2..14]
+  elems $ foldl (sha256sched') (listArray (0, size_block - 1) v) [0, 2..14]
 
 sha256block :: Hash -> [(Word32, Word32)] -> Hash
 
@@ -146,13 +145,12 @@ from_list m = foldl (f) 0 m1 : from_list m2
 sha256sum m l = to_list $ sha256sum' h $ from_list m'
   where
     split n = map (fromIntegral) [
-        n `shiftR` 56, n `shiftR` 48, n `shiftR` 40, n `shiftR` 32,
-        n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
+      n `shiftR` 56, n `shiftR` 48, n `shiftR` 40, n `shiftR` 32,
+      n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
     h       = (
       0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
       0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19)
     n       = (sha256_size_block - 8 - (l + 1)) `mod` sha256_size_block
-    m'      = m ++ [0x80] ++ (take n $ repeat 0) ++
-      (split $ (fromIntegral l :: Word64) * 8)
+    m'      = m ++ [0x80] ++ (take n $ repeat 0) ++ (split $ l * 8)
 
 sha256sum1 m = sha256sum m (length m)

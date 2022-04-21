@@ -23,6 +23,8 @@ pbkdf2' :: Prf -> Int -> [Word8] -> [Word8] -> Int -> Int -> [Word8]
 
 div1 :: Integral a => a -> a -> a
 
+infixl 7 `div1`
+
 a `div1` b = (a + b - 1) `div` b
 
 hmac k k_size text text_size h b l = ohash
@@ -38,11 +40,8 @@ hmac k k_size text text_size h b l = ohash
 
 hmac1 k text h b l = hmac k (length k) text (length text) (h) b l
 
-pbkdf2 h h_len p p_size s s_size c dk_len
-  | (toInteger $ dk_len `div1` h_len) > (4294967295::Integer) =
-      errorWithoutStackTrace "KDF.pbkdf2: derived key too long"
-  | otherwise =
-      take dk_len $ concatMap (f) [1..l]
+pbkdf2 h h_len p p_size s s_size c dk_len =
+  take dk_len $ concatMap (f) [1..l]
   where
     split n = map (fromIntegral) [
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
