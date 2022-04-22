@@ -26,7 +26,6 @@ decrypt     :: [Word8] -> [Word8] -> [Word8]
 bounds_sbox   = ((0, 0), (15, 15))
 bounds_side   = (0, 3)
 bounds_state  = ((0, 0), (3, 3))
-num_rounds    = 14
 size_block    = 16
 size_key      = 32
 size_side     = 4
@@ -203,7 +202,7 @@ add_round_key vv uu =
 key_expansion'' :: Mat -> [Word8] -> Mat
 
 key_expansion'' key1 col2  =
-  from_cols . tail $ scanl (zipWith (xor)) col2 (to_cols key1)
+  from_cols . tail $ scanl (zipWith (xor)) col2 $ to_cols key1
 
 key_expansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
 

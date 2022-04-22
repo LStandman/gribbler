@@ -78,11 +78,11 @@ sha256sched' :: UArray Int Word32 -> Int -> UArray Int Word32
 
 sha256sched' v n = v//[
     ( i,
-      (lil_sigma1 $ deref i 2) + (deref i 7) +
-      (lil_sigma0 $ deref i 15) + (deref i 16))
+      (lil_sigma1 $ deref (i - 2)) + deref (i - 7) +
+      (lil_sigma0 $ deref (i - 15)) + deref (i - 16))
     | i <- [n, n + 1]]
   where
-    deref j o = v!((j + size_block - o) `mod` size_block)
+    deref j = v!(j `mod` size_block)
 
 sha256sched :: [Word32] -> [Word32]
 
@@ -123,7 +123,7 @@ sha256sum' h m = sha256sum' h' m2
       0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2]
     (m1, m2) = splitAt size_block m
     w        = concat $ take 4 $ iterate (sha256sched) m1
-    h'       = sha256block h (zip k w)
+    h'       = sha256block h $ zip k w
 
 to_list :: Hash -> [Word8]
 

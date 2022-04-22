@@ -32,7 +32,7 @@ maybeMap :: (a -> Maybe b) -> [a] -> Maybe [b]
 maybeMap _ [] = Just []
 
 maybeMap f (x:xs) =
-  maybe Nothing (\ y -> maybeMap f xs >>= \ ys -> Just (y:ys)) (f x)
+  maybe Nothing (\ y -> maybeMap f xs >>= \ ys -> Just $ y:ys) (f x)
 
 diceware_decode dictionary hits =
   maybeMap (\ x -> elemIndex x dictionary) hits >>=
