@@ -41,14 +41,14 @@ hmac k k_size text text_size h b l = ohash
 hmac1 k text h b l = hmac k (length k) text (length text) (h) b l
 
 pbkdf2 h h_len p p_size s s_size c dk_len =
-  take dk_len $ concatMap (f) [1..l]
+  take dk_len $ concatMap (rehash . u1) [1..l]
   where
-    split n = map (fromIntegral) [
+    split  n = map (fromIntegral) [
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
-    u1    i = h p p_size (s ++ (split i)) (s_size + 4)
-    f     i =
+    u1     i = h p p_size (s ++ (split i)) (s_size + 4)
+    rehash u =
       foldl1 (zipWith (xor)) $ take c $
-      iterate (\ v -> h p p_size v h_len) $ u1 i
-    l       = dk_len `div1` h_len
+      iterate (\ v -> h p p_size v h_len) u
+    l        = dk_len `div1` h_len
 
 pbkdf2' h h_len p s c dk_len = pbkdf2 h h_len p (length p) s (length s) c dk_len

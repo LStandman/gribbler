@@ -901,27 +901,27 @@ test_diceware =
     testsuite "Diceware" [
       test "DecodePass" [
         expect_memeq "t1_number" (Just t1_number) $
-          diceware_decode t1_dictionary t1_hits],
+          Diceware.decode t1_dictionary t1_hits],
       test "DecodeFailNotInDictionary" [
         expect_memeq "t1_number" Nothing $
-          diceware_decode t1_dictionary t1_misses],
+          Diceware.decode t1_dictionary t1_misses],
       test "EncodePass" [
         expect_memeq "t1_hits" t1_hits $
-          diceware_encode t1_dictionary (length t1_hits) t1_number],
+          Diceware.encode t1_dictionary (length t1_hits) t1_number],
       test "IsSanitizedPass" [
-        expect_true $ diceware_is_sanitized t1_dictionary],
+        expect_true $ Diceware.is_sanitized t1_dictionary],
       test "IsSanitizedFailUnsorted" [
-        expect_false $ diceware_is_sanitized t1_unsorted],
+        expect_false $ Diceware.is_sanitized t1_unsorted],
       test "IsSanitizedFailRepeating" [
-        expect_false $ diceware_is_sanitized t1_repeating],
+        expect_false $ Diceware.is_sanitized t1_repeating],
       test "IsSanitizedFailUppercase" [
-        expect_false $ diceware_is_sanitized t1_uppercase],
+        expect_false $ Diceware.is_sanitized t1_uppercase],
       test "IsSanitizedFailNumeric" [
-        expect_false $ diceware_is_sanitized t1_numeric],
+        expect_false $ Diceware.is_sanitized t1_numeric],
       test "IsSanitizedFailSpace" [
-        expect_false $ diceware_is_sanitized t1_space],
+        expect_false $ Diceware.is_sanitized t1_space],
       test "IsSanitizedFailSymbol" [
-        expect_false $ diceware_is_sanitized t1_symbol]]
+        expect_false $ Diceware.is_sanitized t1_symbol]]
 
 testmain :: [IO Bool] -> IO Bool
 
