@@ -35,7 +35,7 @@ maybeMap f (x:xs) =
   f x >>= \ y -> maybeMap f xs >>= \ ys -> Just $ y:ys
 
 decode dictionary hits =
-  maybeMap (\ x -> elemIndex x dictionary) hits >>=
+  maybeMap (flip elemIndex dictionary) hits >>=
   Just . (foldl (\ a b -> a * (length dictionary) + b) 0)
 
 encode' :: [String] -> Int -> Int -> Int -> [String]
