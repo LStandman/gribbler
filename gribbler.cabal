@@ -30,6 +30,7 @@ library
       KDF
       MooMoo
       SHA2
+      YAML
   other-modules:
       Paths_gribbler
   hs-source-dirs:
