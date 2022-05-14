@@ -49,21 +49,19 @@ rep       :: Int -> Production a -> Production a
 zero_more :: Production a -> Production a
 zero_one  :: Production a -> Production a
 
-altr1 Mismatch r2 = r2
-altr1 r1        _ = r1
-
-altr f g = \ v -> f v `altr1` g v
-
-conc1 (Match v) f = f v
-conc1 r         _ = r
-
-conc f g = \ v -> f v `conc1` g
-
 override1 Mismatch   t2 = fst t2
 override1 (Match v1) t2 = (snd t2) v1
 override1 r1         _  = r1
 
 override f (g, h) = \ v -> f v `override1` (g v, h)
+
+altr1 r1 r2 = override1 r1 (r2, \ _ -> r1)
+
+altr f g = \ v -> f v `altr1` g v
+
+conc1 r1 f2 = override1 r1 (Mismatch, f2)
+
+conc f g = \ v -> f v `conc1` g
 
 rep 1 f = f
 rep n f = f `conc` (rep (n - 1) f)
