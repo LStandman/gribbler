@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       AES256
+      BNF
       Diceware
       KDF
       MooMoo

@@ -1,5 +1,6 @@
 module Main where
 
+import BNF
 import YAML
 
 main :: IO ()
@@ -28,4 +29,6 @@ main = do
   print (nb_char (Load "" "\ncrl"))
   print (printable (Load "" "carl"))
   print (printable (Load "" "\x85arl"))
+  print (uri_char (Load "" "%AFxxxx"))
+  print (uri_char (Load "" "%AGxxxx"))
   print "\x85"
