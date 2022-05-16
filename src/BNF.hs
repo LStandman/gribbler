@@ -30,8 +30,8 @@ infixl 1 `override`
 infixl 1 `override1`
 
 data Result a =
-  Match    a      |
-  Mismatch        |
+  Hit    a        |
+  Miss            |
   Error    String
   deriving (Show)
 
@@ -44,22 +44,22 @@ conc1     :: Result a -> Production a -> Result a
 exclude   :: Production a -> Production a -> Production a
 one_more  :: Production a -> Production a
 override  :: Production a -> (Production a, Production a) -> Production a
-override1 :: Result a -> (Result a, Production a) -> Result a
+override1 :: Result a -> (Production a, Result a) -> Result a
 rep       :: Int -> Production a -> Production a
 zero_more :: Production a -> Production a
 zero_one  :: Production a -> Production a
 
-override1 Mismatch   t2 = fst t2
-override1 (Match v1) t2 = (snd t2) v1
-override1 r1         _  = r1
+override1 (Hit v) (f,_) = f v
+override1 Miss    (_,r) = r
+override1 e       _     = e
 
-override f (g, h) = \ v -> f v `override1` (g v, h)
+override f (g, h) = \ v -> f v `override1` (g, h v)
 
-altr1 r1 r2 = override1 r1 (r2, \ _ -> r1)
+altr1 r1 r2 = r1 `override1` (return r1, r2)
 
 altr f g = \ v -> f v `altr1` g v
 
-conc1 r1 f2 = override1 r1 (Mismatch, f2)
+conc1 r f = r `override1` (f, Miss)
 
 conc f g = \ v -> f v `conc1` g
 
@@ -68,11 +68,10 @@ rep n f = f `conc` (rep (n - 1) f)
 
 exclude f g =
   \ v -> f v `conc1`
-  \ u -> g v `override1`
-  (Match u, \ _ -> Mismatch)
+  \ u -> g v `override1` (return Miss, Hit u)
 
-zero_one  f = f `altr` Match
+zero_one  f = f `altr` Hit
 
-zero_more f = f `override` (Match, zero_more f)
+zero_more f = f `override` (zero_more f, Hit)
 
 one_more  f = f `conc` zero_more f

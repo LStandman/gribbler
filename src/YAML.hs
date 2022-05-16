@@ -31,8 +31,8 @@ data Load a =
 
 match_char :: Char -> Production (Load String)
 match_char c l
-  | c == x    = Match $ Load (x : ys) xs
-  | otherwise = Mismatch
+  | c == x    = Hit $ Load (x : ys) xs
+  | otherwise = Miss
   where
     (x:xs) = stream l
     ys     = struct l
@@ -94,7 +94,7 @@ b_break =
 
 as_line_feed =
   \ l -> b_break l `conc1`
-  \ m -> Match $ Load ((struct l) ++ "\x0A") (stream m)
+  \ m -> Hit $ Load ((struct l) ++ "\x0A") (stream m)
 
 non_content = b_break
 
