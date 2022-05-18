@@ -7,8 +7,7 @@ module YAML(
 --    present,
 --    esc_htab,
 --    b_break,
-    Load (..),
-    Result (..),
+    as_line_feed,
     nb_char,
     b_break,
     printable,
@@ -18,34 +17,26 @@ module YAML(
 
 import Data.List
 import Data.Maybe
-
+--
 import BNF
 
 data Context = BlockOut | BlockIn | FlowOut | FlowIn
 
-data Load a =
-  Load {
-    struct :: a,
-    stream :: String}
-  deriving (Show)
-
-match_char :: Char -> Production (Load String)
-match_char c l
-  | c == x    = Hit $ Load (x : ys) xs
+match_char :: Char -> Production String
+match_char c (x:xs)
+  | c == x    = Hit [x] xs
   | otherwise = Miss
-  where
-    (x:xs) = stream l
-    ys     = struct l
+
+any_char :: [Char] -> Production String
+any_char = (foldl1 (altr)) . (map (match_char))
 
 printable       =
-  foldl1 (altr) $
-  map (match_char) $
+  any_char $
     ['\x09', '\x0A', '\x0D'] ++ ['\x20'..'\x7E'] ++
     ['\x85'] ++ ['\xA0'..'\xD7FF'] ++
     ['\xE000'..'\xFFFD'] ++ ['\x010000'..'\x10FFFF']
 json            =
-  foldl1 (altr) $
-  map (match_char) $ ['\x09'] ++ ['\x20'..'\x10FFFF']
+  any_char $ ['\x09'] ++ ['\x20'..'\x10FFFF']
 byte_order_mark = undefined
 
 sequence_entry = match_char '-'
@@ -93,8 +84,7 @@ b_break =
   carriage_return `altr` line_feed
 
 as_line_feed =
-  \ l -> b_break l `conc1`
-  \ m -> Hit $ Load ((struct l) ++ "\x0A") (stream m)
+  \ s1 -> b_break s1 `override` "\x0A"
 
 non_content = b_break
 
@@ -106,18 +96,15 @@ ns_char = nb_char `exclude` white
 dec_digit    = foldl1 (altr) $ map (match_char) ['\x30'..'\x39']
 hex_digit    =
   dec_digit `altr`
-  ( foldl1 (altr) $
-    map (match_char) $ ['\x41'..'\x46'] ++ ['\x61'..'\x66'])
+  ( any_char $ ['\x41'..'\x46'] ++ ['\x61'..'\x66'])
 ascii_letter =
-  foldl1 (altr) $
-  map (match_char) $ ['\x41'..'\x5A'] ++ ['\x61'..'\x7A']
+  any_char $ ['\x41'..'\x5A'] ++ ['\x61'..'\x7A']
 word_char    = dec_digit `altr` ascii_letter `altr` (match_char '-')
 
 uri_char =
   ( (match_char '%') `conc` (rep 2 hex_digit)) `altr`
   word_char `altr`
-  ( foldl1 (altr) $
-    map (match_char) $ [
+  ( any_char $ [
       '#',  ';', '/', '?', ':', '@', '&', '=',
       '+',  '$', ',', '_', '.', '!', '~', '*',
       '\'', '(', ')', '[', ']'])

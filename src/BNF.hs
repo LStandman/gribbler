@@ -4,15 +4,13 @@
 
 module BNF(
     Production (..),
-    Result (..),
+    Resultant (..),
     altr,
-    altr1,
     conc,
     conc1,
     exclude,
     one_more,
     override,
-    override1,
     rep,
     zero_more,
     zero_one)
@@ -27,52 +25,67 @@ infixl 1 `conc`
 infixl 1 `conc1`
 infixl 1 `exclude`
 infixl 1 `override`
-infixl 1 `override1`
 
-data Result a =
-  Hit a           |
-  Miss            |
-  Error    String
+data Resultant a =
+  Hit
+    { output :: a,
+      stream :: String} |
+  Miss                  |
+  Error String
   deriving (Show)
 
-type Production a = (a -> Result a)
+type Production a = (String -> Resultant a)
 
 altr      :: Production a -> Production a -> Production a
-altr1     :: Result a -> Result a -> Result a
-conc      :: Production a -> Production a -> Production a
-conc1     :: Result a -> Production a -> Result a
+conc      :: Semigroup a => Production a -> Production a -> Production a
+conc1     :: Semigroup a => Resultant a -> Production a -> Resultant a
 exclude   :: Production a -> Production a -> Production a
-one_more  :: Production a -> Production a
-override  :: Production a -> (Production a, Production a) -> Production a
-override1 :: Result a -> (Production a, Result a) -> Result a
-rep       :: Int -> Production a -> Production a
-zero_more :: Production a -> Production a
-zero_one  :: Production a -> Production a
+one_more  :: Monoid a => Production a -> Production a
+override  :: Resultant a -> a -> Resultant a
+rep       :: Semigroup a => Int -> Production a -> Production a
+zero_more :: Monoid a => Production a -> Production a
+zero_one  :: Monoid a => Production a -> Production a
 
-override1 (Hit v)   (f,_) = f v
-override1 Miss      (_,r) = r
--- Errors short-circuit in every combination.
-override1 (Error e) _     = Error e
+altr1 :: Resultant a -> Resultant a -> Resultant a
+altr1 (Hit o s) _ = Hit o s
+altr1 Miss      r = r
+altr1 (Error e) _ = Error e
 
-override f (g, h) = \ v -> f v `override1` (g, h v)
+altr f g = \ s -> f s `altr1` g s
 
-altr1 r1 r2 = r1 `override1` (return r1, r2)
+conc1 (Hit o1 s1) f = g .f $ s1
+  where
+    g (Hit o2 s2) = Hit (o1 <> o2) s2
+    g Miss        = Miss
+    g (Error e)   = Error e
+conc1 Miss        _ = Miss
+conc1 (Error e)   _ = Error e
 
-altr f g = \ v -> f v `altr1` g v
-
-conc1 r f = r `override1` (f, Miss)
-
-conc f g = \ v -> f v `conc1` g
+conc f g = \ s -> f s `conc1` g
 
 rep 1 f = f
 rep n f = f `conc` (rep (n - 1) f)
 
-exclude f g =
-  \ v -> f v `conc1`
-  \ u -> g v `override1` (return Miss, Hit u)
+exclude1 :: Resultant a -> Resultant a -> Resultant a
+exclude1 (Hit o1 s1) Miss       = Hit o1 s1
+exclude1 (Error e1)  _          = Error e1
+exclude1 _           (Error e2) = Error e2
+exclude1 _           _          = Miss
 
-zero_one  f = f `altr` Hit
+exclude f g = \ s -> f s `exclude1` g s
 
-zero_more f = f `override` (zero_more f, Hit)
+nill :: Monoid a => String -> Resultant a
+nill s = Hit mempty s
+
+override (Hit _ s) o = Hit o s
+override r         _ = r
+
+zero_one  f = f `altr` nill
+
+zero_more f s1 = g . f $ s1
+  where
+    g (Hit o2 s2) = (Hit o2 s2) `conc1` (zero_more f)
+    g Miss        = nill s1
+    g (Error e)   = Error e
 
 one_more  f = f `conc` zero_more f
