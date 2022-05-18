@@ -30,7 +30,7 @@ infixl 1 `override`
 infixl 1 `override1`
 
 data Result a =
-  Hit    a        |
+  Hit a           |
   Miss            |
   Error    String
   deriving (Show)
@@ -49,9 +49,10 @@ rep       :: Int -> Production a -> Production a
 zero_more :: Production a -> Production a
 zero_one  :: Production a -> Production a
 
-override1 (Hit v) (f,_) = f v
-override1 Miss    (_,r) = r
-override1 e       _     = e
+override1 (Hit v)   (f,_) = f v
+override1 Miss      (_,r) = r
+-- Errors short-circuit in every combination.
+override1 (Error e) _     = Error e
 
 override f (g, h) = \ v -> f v `override1` (g, h v)
 
