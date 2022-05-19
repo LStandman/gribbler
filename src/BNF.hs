@@ -9,8 +9,9 @@ module BNF(
     conc,
     conc1,
     exclude,
+    finally,
+    finally1,
     one_more,
-    override,
     rep,
     zero_more,
     zero_one)
@@ -24,14 +25,15 @@ infixl 1 `altr1`
 infixl 1 `conc`
 infixl 1 `conc1`
 infixl 1 `exclude`
-infixl 1 `override`
+infixl 1 `finally`
+infixl 1 `finally1`
 
 data Resultant a =
-  Hit
-    { output :: a,
-      stream :: String} |
-  Miss                  |
-  Error String
+    Hit
+      { output :: a,
+        stream :: String} |
+    Miss                  |
+    Error String
   deriving (Show)
 
 type Production a = (String -> Resultant a)
@@ -40,8 +42,9 @@ altr      :: Production a -> Production a -> Production a
 conc      :: Semigroup a => Production a -> Production a -> Production a
 conc1     :: Semigroup a => Resultant a -> Production a -> Resultant a
 exclude   :: Production a -> Production a -> Production a
+finally   :: Production a -> (a -> b) -> Production b
+finally1  :: Resultant a -> (a -> b) -> Resultant b
 one_more  :: Monoid a => Production a -> Production a
-override  :: Resultant a -> a -> Resultant a
 rep       :: Semigroup a => Int -> Production a -> Production a
 zero_more :: Monoid a => Production a -> Production a
 zero_one  :: Monoid a => Production a -> Production a
@@ -56,8 +59,7 @@ altr f g = \ s -> f s `altr1` g s
 conc1 (Hit o1 s1) f = g .f $ s1
   where
     g (Hit o2 s2) = Hit (o1 <> o2) s2
-    g Miss        = Miss
-    g (Error e)   = Error e
+    g r           = r
 conc1 Miss        _ = Miss
 conc1 (Error e)   _ = Error e
 
@@ -67,25 +69,28 @@ rep 1 f = f
 rep n f = f `conc` (rep (n - 1) f)
 
 exclude1 :: Resultant a -> Resultant a -> Resultant a
-exclude1 (Hit o1 s1) Miss       = Hit o1 s1
+exclude1 (Hit o s)   Miss       = Hit o s
 exclude1 (Error e1)  _          = Error e1
 exclude1 _           (Error e2) = Error e2
 exclude1 _           _          = Miss
 
 exclude f g = \ s -> f s `exclude1` g s
 
-nill :: Monoid a => String -> Resultant a
-nill s = Hit mempty s
+nop :: Monoid a => String -> Resultant a
+nop s = Hit mempty s
 
-override (Hit _ s) o = Hit o s
-override r         _ = r
+finally1 (Hit o s) f = Hit (f o) s
+finally1 Miss      _ = Miss
+finally1 (Error e) _ = Error e
 
-zero_one  f = f `altr` nill
+finally f g = \ s -> f s `finally1` g
+
+zero_one  f = f `altr` nop
 
 zero_more f s1 = g . f $ s1
   where
     g (Hit o2 s2) = (Hit o2 s2) `conc1` (zero_more f)
-    g Miss        = nill s1
+    g Miss        = nop s1
     g (Error e)   = Error e
 
 one_more  f = f `conc` zero_more f

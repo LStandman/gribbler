@@ -84,7 +84,7 @@ b_break =
   carriage_return `altr` line_feed
 
 as_line_feed =
-  \ s1 -> b_break s1 `override` "\x0A"
+  b_break `finally` (return "\x0A")
 
 non_content = b_break
 
