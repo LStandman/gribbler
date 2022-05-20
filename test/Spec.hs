@@ -476,6 +476,13 @@ test_bnf =
     t3_errxhit   = errorX
     t3_errxmiss  = errorX
     t3_errxerr   = errorX
+    t4_map       = length
+    t4_ihit      = Hit "abc" "xyz"
+    t4_ohit      = Hit 3 "xyz"
+    t4_imiss     = Miss :: Resultant String
+    t4_omiss     = Miss :: Resultant Int
+    t4_ierr      = Error "X" :: Resultant String
+    t4_oerr      = Error "X" :: Resultant Int
   in
     testsuite "BNF" [
       test "Altr" [
@@ -534,7 +541,14 @@ test_bnf =
         expect_memeq "t3_errxmiss" t3_errxmiss $
         (errX `BNF.exclude` miss) t3_in,
         expect_memeq "t3_errxerr" t3_errxerr $
-        (errX `BNF.exclude` errY) t3_in]
+        (errX `BNF.exclude` errY) t3_in],
+      test "Fmap" [
+        expect_memeq "t4_ohit" t4_ohit $
+        fmap (t4_map) t4_ihit,
+        expect_memeq "t4_omiss" t4_omiss $
+        fmap (t4_map) t4_imiss,
+        expect_memeq "t4_oerr" t4_oerr $
+        fmap (t4_map) t4_ierr]
       ]
 
 test_diceware =
