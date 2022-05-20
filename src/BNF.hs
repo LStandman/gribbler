@@ -82,10 +82,9 @@ finally f g = \ s -> fmap g $ f s
 
 zero_one  f = f `altr` nop
 
-zero_more f s1 = g . f $ s1
-  where
-    g (Hit o2 s2) = Hit o2 s2 `conc'` zero_more f
-    g Miss        = nop s1
-    g (Error e)   = Error e
+zero_more f s1 = case f $ s1 of
+  Hit o2 s2 -> Hit o2 s2 `conc'` zero_more f
+  Miss      -> nop s1
+  Error e   -> Error e
 
 one_more  f = f `conc` zero_more f
