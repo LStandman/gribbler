@@ -421,9 +421,9 @@ test_aes256_cbc =
             t2_iv t2_ctext t2_key AES256.size_block]]
 
 match_char :: Char -> Production String
-match_char c (x:xs)
-  | c == x    = Hit [x] xs
-  | otherwise = Miss
+match_char c = \ (x:xs) -> case c == x of
+  True  -> Hit [x] xs
+  False -> Miss
 
 any_char :: [Char] -> Production String
 any_char = (foldl1 (altr)) . (map (match_char))

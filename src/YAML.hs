@@ -33,9 +33,9 @@ to_list :: DiffList a -> [a]
 to_list d = appEndo d []
 
 match_char :: Char -> Production (DiffList Char)
-match_char c (x:xs)
-  | c == x    = Hit (difflist [x]) xs
-  | otherwise = Miss
+match_char c = \ (x:xs) -> case c == x of
+  True  -> Hit (difflist [x]) xs
+  False -> Miss
 
 any_char :: [Char] -> Production (DiffList Char)
 any_char = (foldl1 (altr)) . (map (match_char))
