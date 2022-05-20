@@ -26,15 +26,15 @@ data Context = BlockOut | BlockIn | FlowOut | FlowIn
 
 type DiffList a = Endo ([a])
 
-from_list :: [a] -> DiffList a
-from_list l = Endo (l ++)
+difflist :: [a] -> DiffList a
+difflist l = Endo (l ++)
 
 to_list :: DiffList a -> [a]
 to_list d = appEndo d []
 
 match_char :: Char -> Production (DiffList Char)
 match_char c (x:xs)
-  | c == x    = Hit (from_list [x]) xs
+  | c == x    = Hit (difflist [x]) xs
   | otherwise = Miss
 
 any_char :: [Char] -> Production (DiffList Char)
@@ -94,7 +94,7 @@ b_break =
   carriage_return `altr` line_feed
 
 as_line_feed =
-  b_break `finally` (return $ from_list "\x0A")
+  b_break `finally` (return $ difflist "\x0A")
 
 non_content = b_break
 

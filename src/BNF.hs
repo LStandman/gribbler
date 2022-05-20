@@ -31,7 +31,7 @@ data Resultant a =
       stream :: String} |
     Miss                |
     Error String
-  deriving (Show)
+  deriving (Eq, Show)
 
 type Production a = (String -> Resultant a)
 
