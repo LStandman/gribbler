@@ -69,8 +69,8 @@ rep n f = f `conc` rep (n - 1) f
 
 exclude' :: Resultant a -> Resultant a -> Resultant a
 exclude' (Hit o s)   Miss       = Hit o s
+exclude' (Hit _ _)   (Error e2) = Error e2
 exclude' (Error e1)  _          = Error e1
-exclude' _           (Error e2) = Error e2
 exclude' _           _          = Miss
 
 exclude f g = \ s -> f s `exclude'` g s

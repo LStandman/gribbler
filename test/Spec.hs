@@ -463,64 +463,78 @@ test_bnf =
     t2_errxhit   = errorX
     t2_errxmiss  = errorX
     t2_errxerr   = errorX
+    t3_in        = "a"
+    t3_success   = Hit "a" ""
+    t3_hitA      = match_char 'a'
+    t3_hitB      = match_char 'a'
+    t3_hitxhit   = amiss
+    t3_hitxmiss  = t3_success
+    t3_hitxerr   = errorY
+    t3_missxhit  = amiss
+    t3_missxmiss = amiss
+    t3_missxerr  = amiss
+    t3_errxhit   = errorX
+    t3_errxmiss  = errorX
+    t3_errxerr   = errorX
   in
     testsuite "BNF" [
       test "Altr" [
-        -- Hit x Hit
         expect_memeq "t1_hitxhit" t1_hitxhit $
         (t1_hitA `BNF.altr` t1_hitB) t1_in,
-        -- Hit x Miss
         expect_memeq "t1_hitxmiss" t1_hitxmiss $
         (t1_hitA `BNF.altr` miss) t1_in,
-        -- Hit x Err
         expect_memeq "t1_hitxerr" t1_hitxerr $
         (t1_hitA `BNF.altr` errY) t1_in,
-        -- Miss x Hit
         expect_memeq "t1_missxhit" t1_missxhit $
         (miss `BNF.altr` t1_hitB) t1_in,
-        -- Miss x Miss
         expect_memeq "t1_missxmiss" t1_missxmiss $
         (miss `BNF.altr` miss) t1_in,
-        -- Miss x Err
         expect_memeq "t1_missxerr" t1_missxerr $
         (miss `BNF.altr` errY) t1_in,
-        -- Err x Hit
         expect_memeq "t1_errxhit" t1_errxhit $
         (errX `BNF.altr` t1_hitB) t1_in,
-        -- Err x Miss
         expect_memeq "t1_errxmiss" t1_errxmiss $
         (errX `BNF.altr` miss) t1_in,
-        -- Err x Err
         expect_memeq "t1_errxerr" t1_errxerr $
         (errX `BNF.altr` errY) t1_in],
       test "Conc" [
-        -- Hit x Hit
         expect_memeq "t2_hitxhit" t2_hitxhit $
         (t2_hitA `BNF.conc` t2_hitB) t2_in,
-        -- Hit x Miss
         expect_memeq "t2_hitxmiss" t2_hitxmiss $
         (t2_hitA `BNF.conc` miss) t2_in,
-        -- Hit x Err
         expect_memeq "t2_hitxerr" t2_hitxerr $
         (t2_hitA `BNF.conc` errY) t2_in,
-        -- Miss x Hit
         expect_memeq "t2_missxhit" t2_missxhit $
         (miss `BNF.conc` t2_hitB) t2_in,
-        -- Miss x Miss
         expect_memeq "t2_missxmiss" t2_missxmiss $
         (miss `BNF.conc` miss) t2_in,
-        -- Miss x Err
         expect_memeq "t2_missxerr" t2_missxerr $
         (miss `BNF.conc` errY) t2_in,
-        -- Err x Hit
         expect_memeq "t2_errxhit" t2_errxhit $
         (errX `BNF.conc` t2_hitB) t2_in,
-        -- Err x Miss
         expect_memeq "t2_errxmiss" t2_errxmiss $
         (errX `BNF.conc` miss) t2_in,
-        -- Err x Err
         expect_memeq "t2_errxerr" t2_errxerr $
-        (errX `BNF.conc` errY) t2_in]
+        (errX `BNF.conc` errY) t2_in],
+      test "Exclude" [
+        expect_memeq "t3_hitxhit" t3_hitxhit $
+        (t3_hitA `BNF.exclude` t3_hitB) t3_in,
+        expect_memeq "t3_hitxmiss" t3_hitxmiss $
+        (t3_hitA `BNF.exclude` miss) t3_in,
+        expect_memeq "t3_hitxerr" t3_hitxerr $
+        (t3_hitA `BNF.exclude` errY) t3_in,
+        expect_memeq "t3_missxhit" t3_missxhit $
+        (miss `BNF.exclude` t3_hitB) t3_in,
+        expect_memeq "t3_missxmiss" t3_missxmiss $
+        (miss `BNF.exclude` miss) t3_in,
+        expect_memeq "t3_missxerr" t3_missxerr $
+        (miss `BNF.exclude` errY) t3_in,
+        expect_memeq "t3_errxhit" t3_errxhit $
+        (errX `BNF.exclude` t3_hitB) t3_in,
+        expect_memeq "t3_errxmiss" t3_errxmiss $
+        (errX `BNF.exclude` miss) t3_in,
+        expect_memeq "t3_errxerr" t3_errxerr $
+        (errX `BNF.exclude` errY) t3_in]
       ]
 
 test_diceware =
