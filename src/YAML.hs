@@ -12,22 +12,32 @@ module YAML(
     b_break,
     printable,
     uri_char,
-    match_char)
+    match_char,
+    to_list)
   where
 
 import Data.List
 import Data.Maybe
+import Data.Monoid
 --
 import BNF
 
 data Context = BlockOut | BlockIn | FlowOut | FlowIn
 
-match_char :: Char -> Production String
+type DiffList a = Endo a
+
+from_list :: [a] -> DiffList [a]
+from_list l = Endo (l ++)
+
+to_list :: DiffList [a] -> [a]
+to_list d = appEndo d []
+
+match_char :: Char -> Production (DiffList String)
 match_char c (x:xs)
-  | c == x    = Hit [x] xs
+  | c == x    = Hit (from_list [x]) xs
   | otherwise = Miss
 
-any_char :: [Char] -> Production String
+any_char :: [Char] -> Production (DiffList String)
 any_char = (foldl1 (altr)) . (map (match_char))
 
 printable       =
@@ -84,7 +94,7 @@ b_break =
   carriage_return `altr` line_feed
 
 as_line_feed =
-  b_break `finally` (return "\x0A")
+  b_break `finally` (return $ from_list "\x0A")
 
 non_content = b_break
 
