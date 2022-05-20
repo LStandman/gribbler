@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Diceware.hs: Encode and decode numbers to dictionary entries
--- Copyright (C) 2021 LStandman
+-- Copyright (C) 2021-2022 LStandman
 
 module Diceware(
     decode,

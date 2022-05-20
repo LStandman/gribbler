@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- BNF.hs: BNF parser
--- Copyright (C) 2021 LStandman
+-- Copyright (C) 2021-2022 LStandman
 
 module BNF(
     Production (..),
@@ -58,7 +58,7 @@ altr' (Error e) _ = Error e
 altr f g = \ s -> f s `altr'` g s
 
 conc' :: Semigroup a => Resultant a -> Production a -> Resultant a
-conc' (Hit o1 s1) f = fmap ((<>) o1) $ f s1
+conc' (Hit o1 s1) f = fmap (o1 <>) $ f s1
 conc' Miss        _ = Miss
 conc' (Error e)   _ = Error e
 
