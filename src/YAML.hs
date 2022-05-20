@@ -24,27 +24,27 @@ import BNF
 
 data Context = BlockOut | BlockIn | FlowOut | FlowIn
 
-type DiffList a = Endo a
+type DiffList a = Endo ([a])
 
-from_list :: [a] -> DiffList [a]
+from_list :: [a] -> DiffList a
 from_list l = Endo (l ++)
 
-to_list :: DiffList [a] -> [a]
+to_list :: DiffList a -> [a]
 to_list d = appEndo d []
 
-match_char :: Char -> Production (DiffList String)
+match_char :: Char -> Production (DiffList Char)
 match_char c (x:xs)
   | c == x    = Hit (from_list [x]) xs
   | otherwise = Miss
 
-any_char :: [Char] -> Production (DiffList String)
+any_char :: [Char] -> Production (DiffList Char)
 any_char = (foldl1 (altr)) . (map (match_char))
 
 printable       =
   any_char $
     ['\x09', '\x0A', '\x0D'] ++ ['\x20'..'\x7E'] ++
-    ['\x85'] ++ ['\xA0'..'\xD7FF'] ++
-    ['\xE000'..'\xFFFD'] ++ ['\x010000'..'\x10FFFF']
+    ['\x85'] ++ ['\xA0'..'\xD7FF'] ++ ['\xE000'..'\xFFFD'] ++
+    ['\x010000'..'\x10FFFF']
 json            =
   any_char $ ['\x09'] ++ ['\x20'..'\x10FFFF']
 byte_order_mark = undefined
