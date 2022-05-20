@@ -13,14 +13,11 @@ import MooMoo
 import SHA2
 
 test' :: [IO Bool] -> IO Bool
-
 test' [] = return True
-
 test' (e:es) =
   e >>= \ x -> if not x then return False else test' es
 
 test :: String -> [IO Bool] -> IO Bool
-
 test name es =
   print ("[ RUN      ] " ++ name) >>
   test' es >>=
@@ -29,24 +26,19 @@ test name es =
     return x
 
 testsuite' :: [IO Bool] -> IO Bool
-
 testsuite' [] = return True
-
 testsuite' (t:ts) = t >>= \ x -> testsuite' ts >>= \ y -> return (x && y)
 
 testsuite :: String -> [IO Bool] -> IO Bool
-
 testsuite name tests =
   print ("[----------] tests from " ++ name) >>
   testsuite' tests >>=
   \ x -> print "[----------]" >> return x
 
 expect_that :: (a -> IO Bool) -> a -> IO Bool
-
 expect_that matcher = matcher
 
 memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
-
 memeq varname expected actual =
   if actual == expected
     then
@@ -58,21 +50,16 @@ memeq varname expected actual =
       return False
 
 expect_memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
-
 expect_memeq varname expected = expect_that (memeq varname expected)
 
 expect_true :: Bool -> IO Bool
-
 expect_true = return
 
 expect_false :: Bool -> IO Bool
-
 expect_false = return . not
 
 nomod_aes256 :: Bool -> [Word8] -> [Word8] -> [Word8]
-
 nomod_aes256 _ [] _ = []
-
 nomod_aes256 is_enc text key =
   out ++ (nomod_aes256 is_enc text'' key)
   where
@@ -82,7 +69,6 @@ nomod_aes256 is_enc text key =
       | otherwise = AES256.decrypt text' key
 
 from_str :: String -> [Word8]
-
 from_str = map (fromIntegral . fromEnum)
 
 test_aes256 =
@@ -101,7 +87,6 @@ test_aes256 =
       0xEA, 0xFC, 0x49, 0x90, 0x4B, 0x49, 0x60, 0x89]
 
     -- From Linux/crypto/testmgr. (Inputs genereated w/ Crypto++.)
-    -- TODO: maybe use Crypto++ instead.
     t2_key   = [
       0xA6, 0xC9, 0x83, 0xA6, 0xC9, 0xEC, 0x0F, 0x32,
       0x55, 0x0F, 0x32, 0x55, 0x78, 0x9B, 0xBE, 0x78,
@@ -278,7 +263,6 @@ test_aes256_cbc =
       0xDA, 0x6C, 0x19, 0x07, 0x8C, 0x6A, 0x9D, 0x1B]
 
     -- From Linux/crypto/testmgr. (Inputs genereated w/ Crypto++.)
-    -- TODO: maybe use Crypto++ instead.
     t2_key    = [
       0xC9, 0x83, 0xA6, 0xC9, 0xEC, 0x0F, 0x32, 0x55,
       0x0F, 0x32, 0x55, 0x78, 0x9B, 0xBE, 0x78, 0x9B,
@@ -924,9 +908,7 @@ test_diceware =
         expect_false $ Diceware.is_sanitized t1_symbol]]
 
 testmain :: [IO Bool] -> IO Bool
-
 testmain [] = return True
-
 testmain (t:ts) = t >>= \ x -> testmain ts >>= \ y -> return (x && y)
 
 main :: IO ()

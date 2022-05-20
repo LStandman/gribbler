@@ -26,31 +26,24 @@ size_block         = 16
 size_hash          = 8
 
 ch :: Word32 -> Word32 -> Word32 -> Word32
-
 ch x y z = (x .&. y) `xor` ((complement x) .&. z)
 
 maj :: Word32 -> Word32 -> Word32 -> Word32
-
 maj x y z = (x .&. y) `xor` (x .&. z) `xor` (y .&. z)
 
 big_sigma0 :: Word32 -> Word32
-
 big_sigma0 x = (x `rotateR` 2) `xor` (x `rotateR` 13) `xor` (x `rotateR` 22)
 
 big_sigma1 :: Word32 -> Word32
-
 big_sigma1 x = (x `rotateR` 6) `xor` (x `rotateR` 11) `xor` (x `rotateR` 25)
 
 lil_sigma0 :: Word32 -> Word32
-
 lil_sigma0 x = (x `rotateR` 7) `xor` (x `rotateR` 18) `xor` (x `shiftR` 3)
 
 lil_sigma1 :: Word32 -> Word32
-
 lil_sigma1 x = (x `rotateR` 17) `xor` (x `rotateR` 19) `xor` (x `shiftR` 10)
 
 sha256round :: Hash -> (Word32, Word32) -> Hash
-
 sha256round (h0, h1, h2, h3, h4, h5, h6, h7) (k, w) =
   (a', b', c', d', e', f', g', h')
   where
@@ -75,7 +68,6 @@ sha256round (h0, h1, h2, h3, h4, h5, h6, h7) (k, w) =
     a' = t1 + t2
 
 sha256sched' :: UArray Int Word32 -> Int -> UArray Int Word32
-
 sha256sched' v n = v//[
     ( i,
       (lil_sigma1 $ deref (i - 2)) + deref (i - 7) +
@@ -85,12 +77,10 @@ sha256sched' v n = v//[
     deref j = v!(j `mod` size_block)
 
 sha256sched :: [Word32] -> [Word32]
-
 sha256sched v =
   elems $ foldl (sha256sched') (listArray (0, size_block - 1) v) [0, 2..14]
 
 sha256block :: Hash -> [(Word32, Word32)] -> Hash
-
 sha256block h v = (
     h0 + h0', h1 + h1', h2 + h2', h3 + h3',
     h4 + h4', h5 + h5', h6 + h6', h7 + h7')
@@ -99,9 +89,7 @@ sha256block h v = (
     (h0', h1', h2', h3', h4', h5', h6', h7') = foldl (sha256round) h v
 
 sha256sum' :: Hash -> [Word32] -> Hash
-
 sha256sum' h [] = h
-
 sha256sum' h m = sha256sum' h' m2
   where
     k        = [
@@ -126,7 +114,6 @@ sha256sum' h m = sha256sum' h' m2
     h'       = sha256block h $ zip k w
 
 to_list :: Hash -> [Word8]
-
 to_list (h0, h1, h2, h3, h4, h5, h6, h7) =
   concatMap (split) [h0, h1, h2, h3, h4, h5, h6, h7]
   where
@@ -134,9 +121,7 @@ to_list (h0, h1, h2, h3, h4, h5, h6, h7) =
       [n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
 
 from_list :: [Word8] -> [Word32]
-
 from_list [] = []
-
 from_list m = foldl (f) 0 m1 : from_list m2
   where
     f a b    = (a `shiftL` 8) .|. fromIntegral b

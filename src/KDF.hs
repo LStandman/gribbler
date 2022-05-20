@@ -12,6 +12,8 @@ module KDF(
 import Data.Bits
 import Data.Word
 
+infixl 7 `div1`
+
 type Prf = [Word8] -> Int -> [Word8] -> Int -> [Word8]
 
 hmac    ::
@@ -22,9 +24,6 @@ pbkdf2  :: Prf -> Int -> [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word
 pbkdf2' :: Prf -> Int -> [Word8] -> [Word8] -> Int -> Int -> [Word8]
 
 div1 :: Integral a => a -> a -> a
-
-infixl 7 `div1`
-
 a `div1` b = (a + b - 1) `div` b
 
 hmac k k_size text text_size h b l = ohash

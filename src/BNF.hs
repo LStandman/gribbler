@@ -29,10 +29,10 @@ infixl 1 `finally`
 infixl 1 `finally1`
 
 data Resultant a =
-    Hit
-      { output :: a,
-        stream :: String} |
-    Miss                  |
+    Hit {
+      output :: a,
+      stream :: String} |
+    Miss                |
     Error String
   deriving (Show)
 
@@ -56,7 +56,7 @@ altr1 (Error e) _ = Error e
 
 altr f g = \ s -> f s `altr1` g s
 
-conc1 (Hit o1 s1) f = g .f $ s1
+conc1 (Hit o1 s1) f = g . f $ s1
   where
     g (Hit o2 s2) = Hit (o1 <> o2) s2
     g r           = r

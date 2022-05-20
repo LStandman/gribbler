@@ -34,17 +34,15 @@ size_state    = 16
 -- PRELIMINARY FUNCTIONS
 
 xtime :: Word8 -> Word8
-
 xtime a
-  | (a .&. 0x80) /= 0 = p `xor` 0x1B
-  | otherwise         = p
+    | (a .&. 0x80) /= 0 = p `xor` 0x1B
+    | otherwise         = p
   where p = a `shiftL` 1
 
 dot :: Word8 -> Word8 -> Word8
-
 a `dot` b
-  | b > a     = b `dot'` a
-  | otherwise = a `dot'` b
+    | b > a     = b `dot'` a
+    | otherwise = a `dot'` b
   where
     infixl 7 `dot'`
     _ `dot'` 0  = 0
@@ -52,30 +50,24 @@ a `dot` b
     a `dot'` b  = (a `dot'` (b .&. 1)) `xor` (xtime a `dot'` (b `shiftR` 1))
 
 sub' :: Mat -> Word8 -> Word8
-
 sub' vv a = vv!(a `shiftR` 4, a .&. 0x0F)
 
 from_list :: [Word8] -> Mat
-
 from_list v =
   array bounds_state (zip [(j, i) | (i, j) <- range bounds_state] v)
 
 from_cols :: [[Word8]] -> Mat
-
 from_cols = from_list . concat
 
 to_list :: Mat -> [Word8]
-
 to_list = concat . to_cols
 
 to_cols :: Mat -> [[Word8]]
-
 to_cols mat = [[mat!(i, j) | i <- range bounds_side] | j <- range bounds_side]
 
 -- CIPHER OPERATIONS
 
 sub :: Word8 -> Word8
-
 sub = sub' sbox
   where
     -- Fig. 7.
@@ -114,16 +106,13 @@ sub = sub' sbox
       0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16] :: Mat
 
 sub_bytes :: Mat -> Mat
-
 sub_bytes = amap sub
 
 shift_rows :: Mat -> Mat
-
 shift_rows = ixmap bounds_state f
   where f (i, j) = (i, (j + i) `mod` size_side)
 
 mix_columns' :: (Word8 -> Word8 -> Word8 -> Word8 -> Word8) -> Mat -> Mat
-
 mix_columns' f vv = array bounds_state
   [ (
       (i, j),
@@ -134,14 +123,12 @@ mix_columns' f vv = array bounds_state
     | (i, j) <- range bounds_state]
 
 mix_columns :: Mat -> Mat
-
 mix_columns = mix_columns' mix_byte
   where mix_byte a b c d = (0x02 `dot` a) `xor` (0x03 `dot` b) `xor` c `xor` d
 
 -- INVERSE CIPHER OPERATIONS
 
 inv_sub_bytes :: Mat -> Mat
-
 inv_sub_bytes = amap (sub' inv_sbox)
   where
     -- Fig. 14.
@@ -180,12 +167,10 @@ inv_sub_bytes = amap (sub' inv_sbox)
       0xE1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0C, 0x7D] :: Mat
 
 inv_shift_rows :: Mat -> Mat
-
 inv_shift_rows = ixmap bounds_state f
   where f (i, j) = (i, (j + size_side - i) `mod` size_side)
 
 inv_mix_columns :: Mat -> Mat
-
 inv_mix_columns = mix_columns' mix_byte
   where
     mix_byte a b c d =
@@ -195,17 +180,14 @@ inv_mix_columns = mix_columns' mix_byte
 -- KEY SCHEDULE ALGORITHM
 
 add_round_key :: Mat -> Mat -> Mat
-
 add_round_key vv uu =
   listArray bounds_state $ zipWith (xor) (elems vv) (elems uu)
 
 key_expansion'' :: Mat -> [Word8] -> Mat
-
 key_expansion'' key1 col2  =
   from_cols . tail $ scanl (zipWith (xor)) col2 $ to_cols key1
 
 key_expansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
-
 key_expansion' (key1, key2) rcon = (key3, key4)
   where
     -- Even rounds.
@@ -220,10 +202,9 @@ key_expansion' (key1, key2) rcon = (key3, key4)
       | i <- range bounds_side]
     key4               = key_expansion'' key2 col3
 
-key_expansion :: (Mat, Mat) -> [Mat]
-
 -- this recursion on key pairs inevitably produces one key too many,
 -- so we drop it.
+key_expansion :: (Mat, Mat) -> [Mat]
 key_expansion key = init $ concatMap (\ (a, b) -> [a, b]) schedule
   where
     schedule =
@@ -232,19 +213,15 @@ key_expansion key = init $ concatMap (\ (a, b) -> [a, b]) schedule
 -- CIPHER ALGORITHM
 
 runcons :: [a] -> Maybe (a, [a])
-
 runcons [] = Nothing
-
 runcons (x:xs) =
   Just $ maybe (x, []) (\ (y, ys) -> (y, x:ys)) $ runcons xs
 
-schedule_helper :: (Mat, Mat) -> (Mat, [Mat])
-
 -- `tail` drops a duplicate of key1 from schedule.
+schedule_helper :: (Mat, Mat) -> (Mat, [Mat])
 schedule_helper = fromJust . runcons . tail . key_expansion
 
 cipher :: Mat -> Mat -> Mat -> Mat
-
 cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
   where
     f p k             =
@@ -254,7 +231,6 @@ cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
     ptext''           = foldl (f) ptext' schedule
 
 inv_cipher :: Mat -> Mat -> Mat -> Mat
-
 inv_cipher ctext key1 key2 =
   add_round_key (inv_sub_bytes . inv_shift_rows $ ctext'') key1
   where

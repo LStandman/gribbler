@@ -28,9 +28,7 @@ encode :: [String] -> Int -> Int -> [String]
 is_sanitized :: [String] -> Bool
 
 maybeMap :: (a -> Maybe b) -> [a] -> Maybe [b]
-
 maybeMap _ [] = Just []
-
 maybeMap f (x:xs) =
   f x >>= \ y -> maybeMap f xs >>= \ ys -> Just $ y:ys
 
@@ -39,9 +37,7 @@ decode dictionary hits =
   Just . (foldl (\ a b -> a * (length dictionary) + b) 0)
 
 encode' :: [String] -> Int -> Int -> Int -> [String]
-
 encode' _ _ 0 _ = []
-
 encode' dictionary radix digits number =
   (encode' dictionary radix (digits - 1) q) ++ [dictionary!!r]
   where
@@ -51,11 +47,9 @@ encode dictionary digits number =
   encode' dictionary (length dictionary) digits number
 
 is_sanitized' :: String -> Bool
-
 is_sanitized' = isNothing . (find (not . isLower))
 
 is_sanitized [] = True
-
 is_sanitized (x:xs) =
   is_sanitized' x &&
   (isNothing $ find (<= x) xs) &&
