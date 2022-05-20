@@ -7,10 +7,8 @@ module BNF(
     Resultant (..),
     altr,
     conc,
-    conc1,
     exclude,
     finally,
-    finally1,
     one_more,
     rep,
     zero_more,
@@ -21,12 +19,11 @@ import Data.List
 import Data.Maybe
 
 infixl 1 `altr`
-infixl 1 `altr1`
+infixl 1 `altr'`
 infixl 1 `conc`
-infixl 1 `conc1`
+infixl 1 `conc'`
 infixl 1 `exclude`
 infixl 1 `finally`
-infixl 1 `finally1`
 
 data Resultant a =
     Hit {
@@ -40,56 +37,54 @@ type Production a = (String -> Resultant a)
 
 altr      :: Production a -> Production a -> Production a
 conc      :: Semigroup a => Production a -> Production a -> Production a
-conc1     :: Semigroup a => Resultant a -> Production a -> Resultant a
 exclude   :: Production a -> Production a -> Production a
 finally   :: Production a -> (a -> b) -> Production b
-finally1  :: Resultant a -> (a -> b) -> Resultant b
 one_more  :: Monoid a => Production a -> Production a
 rep       :: Semigroup a => Int -> Production a -> Production a
 zero_more :: Monoid a => Production a -> Production a
 zero_one  :: Monoid a => Production a -> Production a
 
-altr1 :: Resultant a -> Resultant a -> Resultant a
-altr1 (Hit o s) _ = Hit o s
-altr1 Miss      r = r
-altr1 (Error e) _ = Error e
-
-altr f g = \ s -> f s `altr1` g s
-
-conc1 (Hit o1 s1) f = g . f $ s1
+instance Functor Resultant
   where
-    g (Hit o2 s2) = Hit (o1 <> o2) s2
-    g r           = r
-conc1 Miss        _ = Miss
-conc1 (Error e)   _ = Error e
+    fmap f (Hit o s) = Hit (f o) s
+    fmap _ Miss      = Miss
+    fmap _ (Error e) = Error e
 
-conc f g = \ s -> f s `conc1` g
+altr' :: Resultant a -> Resultant a -> Resultant a
+altr' (Hit o s) _ = Hit o s
+altr' Miss      r = r
+altr' (Error e) _ = Error e
+
+altr f g = \ s -> f s `altr'` g s
+
+conc' :: Semigroup a => Resultant a -> Production a -> Resultant a
+conc' (Hit o1 s1) f = fmap ((<>) o1) $ f s1
+conc' Miss        _ = Miss
+conc' (Error e)   _ = Error e
+
+conc f g = \ s -> f s `conc'` g
 
 rep 1 f = f
-rep n f = f `conc` (rep (n - 1) f)
+rep n f = f `conc` rep (n - 1) f
 
-exclude1 :: Resultant a -> Resultant a -> Resultant a
-exclude1 (Hit o s)   Miss       = Hit o s
-exclude1 (Error e1)  _          = Error e1
-exclude1 _           (Error e2) = Error e2
-exclude1 _           _          = Miss
+exclude' :: Resultant a -> Resultant a -> Resultant a
+exclude' (Hit o s)   Miss       = Hit o s
+exclude' (Error e1)  _          = Error e1
+exclude' _           (Error e2) = Error e2
+exclude' _           _          = Miss
 
-exclude f g = \ s -> f s `exclude1` g s
+exclude f g = \ s -> f s `exclude'` g s
 
 nop :: Monoid a => String -> Resultant a
 nop s = Hit mempty s
 
-finally1 (Hit o s) f = Hit (f o) s
-finally1 Miss      _ = Miss
-finally1 (Error e) _ = Error e
-
-finally f g = \ s -> f s `finally1` g
+finally f g = \ s -> fmap g $ f s
 
 zero_one  f = f `altr` nop
 
 zero_more f s1 = g . f $ s1
   where
-    g (Hit o2 s2) = (Hit o2 s2) `conc1` (zero_more f)
+    g (Hit o2 s2) = Hit o2 s2 `conc'` zero_more f
     g Miss        = nop s1
     g (Error e)   = Error e
 
