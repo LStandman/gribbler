@@ -425,9 +425,6 @@ match_char c = \ (x:xs) -> case c == x of
   True  -> Hit [x] xs
   False -> Miss
 
-any_char :: [Char] -> Production String
-any_char = (foldl1 (altr)) . (map (match_char))
-
 test_bnf =
   let
     errorX       = Error "X" :: Resultant String
@@ -483,6 +480,41 @@ test_bnf =
     t4_omiss     = Miss :: Resultant Int
     t4_ierr      = Error "X" :: Resultant String
     t4_oerr      = Error "X" :: Resultant Int
+    t5_in        = ""
+    t5_map       = t4_map
+    t5_ihit      = return t4_ihit
+    t5_ohit      = t4_ohit
+    t5_imiss     = return t4_imiss
+    t5_omiss     = t4_omiss
+    t5_ierr      = return t4_ierr
+    t5_oerr      = t4_oerr
+    t6_hit       = match_char 'a'
+    t6_reps      = 2
+    t6_inA       = "abb"
+    t6_outA      = Miss
+    t6_inB       = "aab"
+    t6_outB      = Hit "aa" "b"
+    t6_inC       = "aaa"
+    t6_outC      = Hit "aa" "a"
+    t7_hit       = match_char 'a'
+    t7_inA       = "aa"
+    t7_outA      = Hit "a" "a"
+    t7_inB       = "ba"
+    t7_outB      = Hit "" "ba"
+    t8_hit       = match_char 'a'
+    t8_inA       = "bbb"
+    t8_outA      = Hit "" "bbb"
+    t8_inB       = "abb"
+    t8_outB      = Hit "a" "bb"
+    t8_inC       = "aab"
+    t8_outC      = Hit "aa" "b"
+    t9_hit       = match_char 'a'
+    t9_inA       = "bbb"
+    t9_outA      = Miss
+    t9_inB       = "abb"
+    t9_outB      = Hit "a" "bb"
+    t9_inC       = "aab"
+    t9_outC      = Hit "aa" "b"
   in
     testsuite "BNF" [
       test "Altr" [
@@ -548,8 +580,40 @@ test_bnf =
         expect_memeq "t4_omiss" t4_omiss $
         fmap (t4_map) t4_imiss,
         expect_memeq "t4_oerr" t4_oerr $
-        fmap (t4_map) t4_ierr]
-      ]
+        fmap (t4_map) t4_ierr],
+      test "Finally" [
+        expect_memeq "t5_ohit" t5_ohit $
+        (t5_ihit `BNF.finally` t5_map) t5_in,
+        expect_memeq "t5_omiss" t5_omiss $
+        (t5_imiss `BNF.finally` t5_map) t5_in,
+        expect_memeq "t5_oerr" t5_oerr $
+        (t5_ierr `BNF.finally` t5_map) t5_in],
+      test "Rep" [
+        expect_memeq "t6_outA" t6_outA $
+        (BNF.rep t6_reps t6_hit) t6_inA,
+        expect_memeq "t6_outB" t6_outB $
+        (BNF.rep t6_reps t6_hit) t6_inB,
+        expect_memeq "t6_outC" t6_outC $
+        (BNF.rep t6_reps t6_hit) t6_inC],
+      test "ZeroOne" [
+        expect_memeq "t7_outA" t7_outA $
+        (BNF.zero_one t7_hit) t7_inA,
+        expect_memeq "t7_outB" t7_outB $
+        (BNF.zero_one t7_hit) t7_inB],
+      test "ZeroMore" [
+        expect_memeq "t8_outA" t8_outA $
+        (BNF.zero_more t8_hit) t8_inA,
+        expect_memeq "t8_outB" t8_outB $
+        (BNF.zero_more t8_hit) t8_inB,
+        expect_memeq "t8_outC" t8_outC $
+        (BNF.zero_more t8_hit) t8_inC],
+      test "OneMore" [
+        expect_memeq "t9_outA" t9_outA $
+        (BNF.one_more t9_hit) t9_inA,
+        expect_memeq "t9_outB" t9_outB $
+        (BNF.one_more t9_hit) t9_inB,
+        expect_memeq "t9_outC" t9_outC $
+        (BNF.one_more t9_hit) t9_inC]]
 
 test_diceware =
   let

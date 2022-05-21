@@ -103,18 +103,18 @@ tab     = match_char '\x09'
 white   = space `altr` tab
 ns_char = nb_char `exclude` white
 
-dec_digit    = foldl1 (altr) $ map (match_char) ['\x30'..'\x39']
+dec_digit    = any_char ['\x30'..'\x39']
 hex_digit    =
   dec_digit `altr`
-  ( any_char $ ['\x41'..'\x46'] ++ ['\x61'..'\x66'])
+  (any_char $ ['\x41'..'\x46'] ++ ['\x61'..'\x66'])
 ascii_letter =
   any_char $ ['\x41'..'\x5A'] ++ ['\x61'..'\x7A']
 word_char    = dec_digit `altr` ascii_letter `altr` (match_char '-')
 
 uri_char =
-  ( (match_char '%') `conc` (rep 2 hex_digit)) `altr`
+  ((match_char '%') `conc` (rep 2 hex_digit)) `altr`
   word_char `altr`
-  ( any_char $ [
+  (any_char [
       '#',  ';', '/', '?', ':', '@', '&', '=',
       '+',  '$', ',', '_', '.', '!', '~', '*',
       '\'', '(', ')', '[', ']'])
