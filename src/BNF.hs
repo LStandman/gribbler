@@ -33,7 +33,7 @@ data Resultant a =
     Error String
   deriving (Eq, Show)
 
-type Production a = (String -> Resultant a)
+type Production a = String -> Resultant a
 
 altr      :: Production a -> Production a -> Production a
 conc      :: Semigroup a => Production a -> Production a -> Production a

@@ -29,6 +29,7 @@ library
       BNF
       Diceware
       KDF
+      Misc
       MooMoo
       SHA2
       YAML

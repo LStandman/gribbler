@@ -14,12 +14,13 @@ import Data.Word
 
 infixl 7 `div1`
 
-type Prf = [Word8] -> Int -> [Word8] -> Int -> [Word8]
+type Prf   = [Word8] -> Int -> [Word8] -> Int -> [Word8]
+type Hashf = [Word8] -> Int -> [Word8]
 
 hmac    ::
-  [Word8] -> Int -> [Word8] -> Int -> ([Word8] -> Int -> [Word8]) -> Int -> Int -> [Word8]
+  [Word8] -> Int -> [Word8] -> Int -> Hashf -> Int -> Int -> [Word8]
 hmac1   ::
-  [Word8] -> [Word8] -> ([Word8] -> Int -> [Word8]) -> Int -> Int -> [Word8]
+  [Word8] -> [Word8] -> Hashf -> Int -> Int -> [Word8]
 pbkdf2  :: Prf -> Int -> [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
 pbkdf2' :: Prf -> Int -> [Word8] -> [Word8] -> Int -> Int -> [Word8]
 

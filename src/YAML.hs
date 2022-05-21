@@ -12,8 +12,7 @@ module YAML(
     b_break,
     printable,
     uri_char,
-    match_char,
-    to_list)
+    match_char)
   where
 
 import Data.List
@@ -21,16 +20,9 @@ import Data.Maybe
 import Data.Monoid
 --
 import BNF
+import Misc
 
 data Context = BlockOut | BlockIn | FlowOut | FlowIn
-
-type DiffList a = Endo ([a])
-
-difflist :: [a] -> DiffList a
-difflist l = Endo (l ++)
-
-to_list :: DiffList a -> [a]
-to_list d = appEndo d []
 
 match_char :: Char -> Production (DiffList Char)
 match_char c = \ (x:xs) -> case c == x of
@@ -120,21 +112,43 @@ uri_char =
       '\'', '(', ')', '[', ']'])
 tag_char = uri_char `exclude` tag `exclude` flow_indicator
 
-escape              = match_char '\\'
-esc_null            = match_char '0'
-esc_bell            = match_char 'a'
-esc_backspace       = match_char 'b'
-esc_htab            = (match_char 't') `altr` (match_char '\x09')
-esc_line_feed       = match_char 'n'
-esc_vtab            = match_char 'v'
-esc_form_feed       = match_char 'f'
-esc_carriage_return = match_char 'r'
-esc_escape          = match_char 'e'
-esc_space           = match_char '\x20'
-esc_dquote          = match_char '"'
-esc_slash           = match_char '/'
-esc_backslash       = match_char '\\'
-esc_nextline        = match_char 'N'
-esc_nbscpace        = match_char '_'
-esc_lseparator      = match_char 'L'
-esc_pseparator      = match_char 'P'
+escape = match_char '\\'
+esc_null =
+  escape `conc` match_char '0'    `finally` (return $ difflist "\x00")
+esc_bell =
+  escape `conc` match_char 'a'    `finally` (return $ difflist "\x07")
+esc_backspace =
+  escape `conc` match_char 'b'    `finally` (return $ difflist "\x08")
+esc_htab =
+  escape `conc` ((match_char 't') `altr` (match_char '\x09')) `finally`
+  (return $ difflist "\x09")
+esc_line_feed =
+  escape `conc` match_char 'n'    `finally` (return $ difflist "\x0A")
+esc_vtab =
+  escape `conc` match_char 'v'    `finally` (return $ difflist "\x0B")
+esc_form_feed =
+  escape `conc` match_char 'f'    `finally` (return $ difflist "\x0C")
+esc_carriage_return =
+  escape `conc` match_char 'r'    `finally` (return $ difflist "\x0D")
+esc_escape =
+  escape `conc` match_char 'e'    `finally` (return $ difflist "\x1B")
+esc_space =
+  escape `conc` match_char '\x20' `finally` (return $ difflist "\x20")
+esc_dquote =
+  escape `conc` match_char '"'    `finally` (return $ difflist "\x22")
+esc_slash =
+  escape `conc` match_char '/'    `finally` (return $ difflist "\x2F")
+esc_backslash =
+  escape `conc` match_char '\\'   `finally` (return $ difflist "\x5C")
+esc_nextline =
+  escape `conc` match_char 'N'    `finally` (return $ difflist "\x85")
+esc_nbscpace =
+  escape `conc` match_char '_'    `finally` (return $ difflist "\xA0")
+esc_lseparator =
+  escape `conc` match_char 'L'    `finally` (return $ difflist "\x2028")
+esc_pseparator =
+  escape `conc` match_char 'P'    `finally` (return $ difflist "\x2029")
+
+-- TODO: complete
+esc_8bit =
+  escape `conc` match_char 'x' `conc` rep 2 hex_digit `finally` undefined
