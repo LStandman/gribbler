@@ -43,7 +43,7 @@ cbc_decrypt' ::
   BlockCipher -> [Word8] -> [Word8] -> [Word8] -> Int -> DiffList Word8
 cbc_decrypt' _ _ [] _ _ = difflist []
 cbc_decrypt' f iv ctext key block_size =
-  ptext <> (cbc_decrypt' f ctext1 ctext2 key block_size)
+  ptext <> cbc_decrypt' f ctext1 ctext2 key block_size
   where
     (ctext1, ctext2) = splitAt block_size ctext
     ptext'           = f ctext1 key

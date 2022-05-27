@@ -5,13 +5,15 @@
 import Data.Array
 import Data.Word
 import System.Exit
-
+--
 import AES256
 import BNF
 import Diceware
 import KDF
 import MooMoo
 import SHA2
+
+type Matcher a = a -> IO Bool
 
 test' :: [IO Bool] -> IO Bool
 test' [] = return True
@@ -36,7 +38,7 @@ testsuite name tests =
   testsuite' tests >>=
   \ x -> print "[----------]" >> return x
 
-expect_that :: (a -> IO Bool) -> a -> IO Bool
+expect_that :: Matcher a -> a -> IO Bool
 expect_that matcher = matcher
 
 memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
