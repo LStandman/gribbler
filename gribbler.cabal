@@ -36,7 +36,7 @@ library
   other-modules:
       Paths_gribbler
   hs-source-dirs:
-      src
+      gribbler/src
   build-depends:
       array
     , base >=4.7 && <5
@@ -47,7 +47,7 @@ executable gribbler-exe
   other-modules:
       Paths_gribbler
   hs-source-dirs:
-      app
+      gribbler/app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       array
@@ -61,7 +61,7 @@ test-suite gribbler-test
   other-modules:
       Paths_gribbler
   hs-source-dirs:
-      test
+      tests
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       array

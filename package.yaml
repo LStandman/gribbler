@@ -24,12 +24,12 @@ dependencies:
 - array
 
 library:
-  source-dirs: src
+  source-dirs: gribbler/src
 
 executables:
   gribbler-exe:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         gribbler/app
     ghc-options:
     - -threaded
     - -rtsopts
@@ -40,7 +40,7 @@ executables:
 tests:
   gribbler-test:
     main:                Spec.hs
-    source-dirs:         test
+    source-dirs:         tests
     ghc-options:
     - -threaded
     - -rtsopts
