@@ -36,5 +36,6 @@ main = do
   print $ fmap (relist) $ as_line_feed "\n\nccrl"
   print $ fmap (relist) $ as_line_feed "\r\rccrl"
   print $ fmap (relist) $ as_line_feed "\r\nccrl"
+  print $ fmap (relist) $ esc_htab "\\\x09"
 --  print ((Hit 'c') <> Miss)
   print "\x85"

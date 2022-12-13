@@ -8,6 +8,7 @@ module YAML(
 --    esc_htab,
 --    b_break,
     as_line_feed,
+    esc_htab,
     nb_char,
     b_break,
     printable,
@@ -58,7 +59,7 @@ folded         = match_char '>'
 single_quote   = match_char '\''
 double_quote   = match_char '"'
 directive      = match_char '%'
-reserved       = (match_char '@') `altr` (match_char '`')
+reserved       = match_char '@' `altr` match_char '`'
 
 indicator =
     sequence_entry `altr` mapping_key   `altr`
@@ -101,15 +102,15 @@ hex_digit    =
   (any_char $ ['\x41'..'\x46'] ++ ['\x61'..'\x66'])
 ascii_letter =
   any_char $ ['\x41'..'\x5A'] ++ ['\x61'..'\x7A']
-word_char    = dec_digit `altr` ascii_letter `altr` (match_char '-')
+word_char    = dec_digit `altr` ascii_letter `altr` match_char '-'
 
 uri_char =
-  ((match_char '%') `conc` (rep 2 hex_digit)) `altr`
+  (match_char '%' `conc` rep 2 hex_digit) `altr`
   word_char `altr`
-  (any_char [
+  any_char [
       '#',  ';', '/', '?', ':', '@', '&', '=',
       '+',  '$', ',', '_', '.', '!', '~', '*',
-      '\'', '(', ')', '[', ']'])
+      '\'', '(', ')', '[', ']']
 tag_char = uri_char `exclude` tag `exclude` flow_indicator
 
 escape = match_char '\\'
@@ -120,7 +121,7 @@ esc_bell =
 esc_backspace =
   escape `conc` match_char 'b'    `finally` (return $ difflist "\x08")
 esc_htab =
-  escape `conc` ((match_char 't') `altr` (match_char '\x09')) `finally`
+  escape `conc` (match_char 't' `altr` match_char '\x09') `finally`
   (return $ difflist "\x09")
 esc_line_feed =
   escape `conc` match_char 'n'    `finally` (return $ difflist "\x0A")
