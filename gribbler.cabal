@@ -27,26 +27,28 @@ library
   exposed-modules:
       AES256
       AES256Test
-      BNF
-      BNFTest
-      Diceware
-      DicewareTest
-      DiffList
-      DiffListTest
       KDF
       KDFTest
       MooMoo
       MooMooTest
       SHA2
       SHA2Test
+      Libtest
+      Diceware
+      DicewareTest
+      DiffList
+      DiffListTest
+      BNF
+      BNFTest
       YAML
       YAMLTest
-      Libtest
   other-modules:
       Paths_gribbler
   hs-source-dirs:
-      gribbler/libcrypt
+      gribbler/crypt
       gribbler/libtest
+      gribbler/misc
+      gribbler/yaml
   build-depends:
       array
     , base >=4.7 && <5

@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- YAML.hs: YAML compatible parser
--- Copyright (C) 2021-2022 LStandman
+-- Copyright (C) 2021-2023 LStandman
 
 module YAML(
 --    construct,
