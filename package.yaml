@@ -4,7 +4,7 @@ github:              "LStandman/gribbler"
 license:             GPL-3.0-or-later
 author:              "LStandman"
 maintainer:          "65296484+LStandman@users.noreply.github.com"
-copyright:           "2022 LStandman"
+copyright:           "2022-2023 LStandman"
 
 extra-source-files:
 - README.md
@@ -24,12 +24,13 @@ dependencies:
 - array
 
 library:
-  source-dirs: gribbler/src
+  source-dirs:
+  - gribbler/libcrypt
+  - gribbler/libtest
 
 executables:
   gribbler-exe:
-    main:                Main.hs
-    source-dirs:         gribbler/app
+    main:                gribbler/Main.hs
     ghc-options:
     - -threaded
     - -rtsopts
@@ -39,8 +40,7 @@ executables:
 
 tests:
   gribbler-test:
-    main:                Spec.hs
-    source-dirs:         tests
+    main:                gribbler/Spec.hs
     ghc-options:
     - -threaded
     - -rtsopts
