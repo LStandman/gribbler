@@ -7,6 +7,7 @@ import System.Exit
 import AES256Test
 import BNFTest
 import DicewareTest
+import DiffListTest
 import KDFTest
 import MooMooTest
 import SHA2Test
@@ -23,6 +24,7 @@ main =
     test_aes256_cbc,
     test_bnf,
     test_diceware,
+    test_difflist,
     test_hmac_sha256,
     test_pbkdf2_hmac_sha256,
     test_sha256] >>=

@@ -11,6 +11,8 @@ module Diceware(
 import Data.Char
 import Data.List
 import Data.Maybe
+--
+import DiffList
   
 -- Decodes a number from list `hits` of entries from `dictionary`.
 -- First entry represents the most significant digit.
@@ -36,14 +38,15 @@ decode dictionary hits =
   maybeMap (flip elemIndex dictionary) hits >>=
   Just . (foldl (\ a b -> a * (length dictionary) + b) 0)
 
-encode' :: [String] -> Int -> Int -> Int -> [String]
-encode' _ _ 0 _ = []
+encode' :: [String] -> Int -> Int -> Int -> DiffList String
+encode' _ _ 0 _ = difflist []
 encode' dictionary radix digits number =
-  (encode' dictionary radix (digits - 1) q) ++ [dictionary!!r]
+  (encode' dictionary radix (digits - 1) q) <> difflist [dictionary!!r]
   where
     (q, r) = number `divMod` radix
 
 encode dictionary digits number =
+  relist $ 
   encode' dictionary (length dictionary) digits number
 
 is_sanitized' :: String -> Bool

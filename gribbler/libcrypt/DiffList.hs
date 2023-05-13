@@ -1,15 +1,15 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Common.hs: Miscellaneous definitions
--- Copyright (C) 2021-2022 LStandman
+-- DiffList.hs: DiffList implementation
+-- Copyright (C) 2021-2023 LStandman
 
-module Misc(
+module DiffList(
     DiffList (..),
     difflist,
     relist)
   where
 
 import Data.Monoid
-  
+
 type DiffList a = Endo ([a])
 
 difflist :: [a] -> DiffList a

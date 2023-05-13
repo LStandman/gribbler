@@ -31,9 +31,10 @@ library
       BNFTest
       Diceware
       DicewareTest
+      DiffList
+      DiffListTest
       KDF
       KDFTest
-      Misc
       MooMoo
       MooMooTest
       SHA2

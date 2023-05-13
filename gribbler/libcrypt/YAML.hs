@@ -21,16 +21,15 @@ import Data.Maybe
 import Data.Monoid
 --
 import BNF
-import Misc
 
 data Context = BlockOut | BlockIn | FlowOut | FlowIn
 
-match_char :: Char -> Production (DiffList Char)
+match_char :: Char -> Production String
 match_char c = \ (x:xs) -> case c == x of
-  True  -> Hit (difflist [x]) xs
+  True  -> Hit [x] xs
   False -> Miss
 
-any_char :: [Char] -> Production (DiffList Char)
+any_char :: [Char] -> Production String
 any_char = (foldl1 (altr)) . (map (match_char))
 
 printable       =
@@ -87,7 +86,7 @@ b_break =
   carriage_return `altr` line_feed
 
 as_line_feed =
-  b_break `finally` (return $ difflist "\x0A")
+  b_break `finally` (return "\x0A")
 
 non_content = b_break
 
@@ -115,40 +114,40 @@ tag_char = uri_char `exclude` tag `exclude` flow_indicator
 
 escape = match_char '\\'
 esc_null =
-  escape `conc` match_char '0'    `finally` (return $ difflist "\x00")
+  escape `conc` match_char '0'    `finally` (return "\x00")
 esc_bell =
-  escape `conc` match_char 'a'    `finally` (return $ difflist "\x07")
+  escape `conc` match_char 'a'    `finally` (return "\x07")
 esc_backspace =
-  escape `conc` match_char 'b'    `finally` (return $ difflist "\x08")
+  escape `conc` match_char 'b'    `finally` (return "\x08")
 esc_htab =
   escape `conc` (match_char 't' `altr` match_char '\x09') `finally`
-  (return $ difflist "\x09")
+  (return "\x09")
 esc_line_feed =
-  escape `conc` match_char 'n'    `finally` (return $ difflist "\x0A")
+  escape `conc` match_char 'n'    `finally` (return "\x0A")
 esc_vtab =
-  escape `conc` match_char 'v'    `finally` (return $ difflist "\x0B")
+  escape `conc` match_char 'v'    `finally` (return "\x0B")
 esc_form_feed =
-  escape `conc` match_char 'f'    `finally` (return $ difflist "\x0C")
+  escape `conc` match_char 'f'    `finally` (return "\x0C")
 esc_carriage_return =
-  escape `conc` match_char 'r'    `finally` (return $ difflist "\x0D")
+  escape `conc` match_char 'r'    `finally` (return "\x0D")
 esc_escape =
-  escape `conc` match_char 'e'    `finally` (return $ difflist "\x1B")
+  escape `conc` match_char 'e'    `finally` (return "\x1B")
 esc_space =
-  escape `conc` match_char '\x20' `finally` (return $ difflist "\x20")
+  escape `conc` match_char '\x20' `finally` (return "\x20")
 esc_dquote =
-  escape `conc` match_char '"'    `finally` (return $ difflist "\x22")
+  escape `conc` match_char '"'    `finally` (return "\x22")
 esc_slash =
-  escape `conc` match_char '/'    `finally` (return $ difflist "\x2F")
+  escape `conc` match_char '/'    `finally` (return "\x2F")
 esc_backslash =
-  escape `conc` match_char '\\'   `finally` (return $ difflist "\x5C")
+  escape `conc` match_char '\\'   `finally` (return "\x5C")
 esc_nextline =
-  escape `conc` match_char 'N'    `finally` (return $ difflist "\x85")
+  escape `conc` match_char 'N'    `finally` (return "\x85")
 esc_nbscpace =
-  escape `conc` match_char '_'    `finally` (return $ difflist "\xA0")
+  escape `conc` match_char '_'    `finally` (return "\xA0")
 esc_lseparator =
-  escape `conc` match_char 'L'    `finally` (return $ difflist "\x2028")
+  escape `conc` match_char 'L'    `finally` (return "\x2028")
 esc_pseparator =
-  escape `conc` match_char 'P'    `finally` (return $ difflist "\x2029")
+  escape `conc` match_char 'P'    `finally` (return "\x2029")
 
 -- TODO: complete
 esc_8bit =

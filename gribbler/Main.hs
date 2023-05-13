@@ -1,7 +1,6 @@
 module Main where
 
 import BNF
-import Misc
 import YAML
 
 main :: IO ()
@@ -10,32 +9,32 @@ main = do
   --print (esc_char "\\xaasdf")
   --print (esc_char "\\nabasdf")
   --print (esc_char "xabasdf")
-  print $ fmap (relist) $ match_char 'c' "carl"
-  print $ fmap (relist) $ match_char 'c' "xarl"
-  print $ fmap (relist) $ zero_more (match_char 'c') "xarl"
-  print $ fmap (relist) $ zero_more (match_char 'c') "carl"
-  print $ fmap (relist) $ zero_more (match_char 'c') "ccrl"
-  print $ fmap (relist) $ one_more (match_char 'c') "xarl"
-  print $ fmap (relist) $ one_more (match_char 'c') "carl"
-  print $ fmap (relist) $ one_more (match_char 'c') "ccrl"
-  print $ fmap (relist) $ zero_one (match_char 'c') "xarl"
-  print $ fmap (relist) $ zero_one (match_char 'c') "carl"
-  print $ fmap (relist) $ zero_one (match_char 'c') "ccrl"
-  print $ fmap (relist) $ b_break "\n\rccrl"
-  print $ fmap (relist) $ b_break "\n\nccrl"
-  print $ fmap (relist) $ b_break "\r\rccrl"
-  print $ fmap (relist) $ b_break "\r\nccrl"
-  print $ fmap (relist) $ b_break "ccrl"
-  print $ fmap (relist) $ nb_char "ccrl"
-  print $ fmap (relist) $ nb_char "\ncrl"
-  print $ fmap (relist) $ printable "carl"
-  print $ fmap (relist) $ printable "\x85arl"
-  print $ fmap (relist) $ uri_char "%AFxxxx"
-  print $ fmap (relist) $ uri_char "%AGxxxx"
-  print $ fmap (relist) $ as_line_feed "\n\rccrl"
-  print $ fmap (relist) $ as_line_feed "\n\nccrl"
-  print $ fmap (relist) $ as_line_feed "\r\rccrl"
-  print $ fmap (relist) $ as_line_feed "\r\nccrl"
-  print $ fmap (relist) $ esc_htab "\\\x09"
+  print $ match_char 'c' "carl"
+  print $ match_char 'c' "xarl"
+  print $ zero_more (match_char 'c') "xarl"
+  print $ zero_more (match_char 'c') "carl"
+  print $ zero_more (match_char 'c') "ccrl"
+  print $ one_more (match_char 'c') "xarl"
+  print $ one_more (match_char 'c') "carl"
+  print $ one_more (match_char 'c') "ccrl"
+  print $ zero_one (match_char 'c') "xarl"
+  print $ zero_one (match_char 'c') "carl"
+  print $ zero_one (match_char 'c') "ccrl"
+  print $ b_break "\n\rccrl"
+  print $ b_break "\n\nccrl"
+  print $ b_break "\r\rccrl"
+  print $ b_break "\r\nccrl"
+  print $ b_break "ccrl"
+  print $ nb_char "ccrl"
+  print $ nb_char "\ncrl"
+  print $ printable "carl"
+  print $ printable "\x85arl"
+  print $ uri_char "%AFxxxx"
+  print $ uri_char "%AGxxxx"
+  print $ as_line_feed "\n\rccrl"
+  print $ as_line_feed "\n\nccrl"
+  print $ as_line_feed "\r\rccrl"
+  print $ as_line_feed "\r\nccrl"
+  print $ esc_htab "\\\x09"
 --  print ((Hit 'c') <> Miss)
   print "\x85"
