@@ -35,8 +35,8 @@ main = do
   print $ as_line_feed "\n\nccrl"
   print $ as_line_feed "\r\rccrl"
   print $ as_line_feed "\r\nccrl"
-  print $ esc_htab "\\\x09"
-  print $ esc_htab "\\\x09"
-  print $ esc_32bit "\\U00000041"
+  print $ esc_char "\\\x09"
+  print $ esc_char "\\\x09"
+  print $ esc_char "\\U00000041"
 --  print ((Hit 'c') <> Miss)
   print "\x85"
