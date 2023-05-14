@@ -13,6 +13,7 @@ import Data.List
 import Data.Maybe
 --
 import DiffList
+import MemUtils
   
 -- Decodes a number from list `hits` of entries from `dictionary`.
 -- First entry represents the most significant digit.
@@ -28,11 +29,6 @@ encode :: [String] -> Int -> Int -> [String]
 -- * Only containining letters of the alphabet.
 -- * And only in lower case.
 is_sanitized :: [String] -> Bool
-
-maybeMap :: (a -> Maybe b) -> [a] -> Maybe [b]
-maybeMap _ [] = Just []
-maybeMap f (x:xs) =
-  f x >>= \ y -> maybeMap f xs >>= \ ys -> Just $ y:ys
 
 decode dictionary hits =
   maybeMap (flip elemIndex dictionary) hits >>=

@@ -7,14 +7,11 @@ module Libtest(
     expect_that,
     expect_true,
     expect_memeq,
-    from_str,
     test,
     testsuite)
   where
 
 import Data.Array
-import Data.Word
-
 
 type Matcher a = a -> IO Bool
 
@@ -63,6 +60,3 @@ expect_true = return
 
 expect_false :: Bool -> IO Bool
 expect_false = return . not
-
-from_str :: String -> [Word8]
-from_str = map (fromIntegral . fromEnum)

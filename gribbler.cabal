@@ -38,6 +38,7 @@ library
       DicewareTest
       DiffList
       DiffListTest
+      MemUtils
       BNF
       BNFTest
       YAML

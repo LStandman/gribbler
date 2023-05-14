@@ -10,6 +10,7 @@ module KDFTest(
 import KDF
 import Libtest
 import SHA2
+import MemUtils
 
 test_hmac_sha256 =
   let
@@ -23,7 +24,7 @@ test_hmac_sha256 =
       0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
       0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20]
     t01_ksize  = 32
-    t01_ptext  = from_str "abc"
+    t01_ptext  = strBytes "abc"
     t01_psize  = 3
     t01_digest = [
       0xA2, 0x1B, 0x1F, 0x5D, 0x4C, 0xF4, 0xF7, 0x3A,
@@ -37,7 +38,7 @@ test_hmac_sha256 =
       0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20]
     t02_ksize  = 32
     t02_ptext  =
-      from_str "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+      strBytes "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
     t02_psize  = 56
     t02_digest = [
       0x10, 0x4F, 0xDC, 0x12, 0x57, 0x32, 0x8F, 0x08,
@@ -50,7 +51,7 @@ test_hmac_sha256 =
       0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
       0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20]
     t03_ksize  = 32
-    t03_ptext  = from_str $
+    t03_ptext  = strBytes $
       "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq" ++
       "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
     t03_psize  = 112
@@ -65,16 +66,16 @@ test_hmac_sha256 =
       0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B,
       0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B, 0x0B]
     t04_ksize  = 32
-    t04_ptext  = from_str "Hi There"
+    t04_ptext  = strBytes "Hi There"
     t04_psize  = 8
     t04_digest = [
       0x19, 0x8A, 0x60, 0x7E, 0xB4, 0x4B, 0xFB, 0xC6,
       0x99, 0x03, 0xA0, 0xF1, 0xCF, 0x2B, 0xBD, 0xC5,
       0xBA, 0x0A, 0xA3, 0xF3, 0xD9, 0xAE, 0x3C, 0x1C,
       0x7A, 0x3B, 0x16, 0x96, 0xA0, 0xB6, 0x8C, 0xF7]
-    t05_key    = from_str "Jefe"
+    t05_key    = strBytes "Jefe"
     t05_ksize  = 4
-    t05_ptext  = from_str "what do ya want for nothing?"
+    t05_ptext  = strBytes "what do ya want for nothing?"
     t05_psize  = 28
     t05_digest = [
       0x5B, 0xDC, 0xC1, 0x46, 0xBF, 0x60, 0x75, 0x4E,
@@ -129,7 +130,7 @@ test_hmac_sha256 =
       0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C,
       0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C, 0x0C]
     t08_ksize  = 32
-    t08_ptext  = from_str "Test With Truncation"
+    t08_ptext  = strBytes "Test With Truncation"
     t08_psize  = 20
     t08_digest = [
       0x75, 0x46, 0xAF, 0x01, 0x84, 0x1F, 0xC0, 0x9B,
@@ -149,7 +150,7 @@ test_hmac_sha256 =
       0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA]
     t09_ksize  = 80
     t09_ptext  =
-      from_str "Test Using Larger Than Block-Size Key - Hash Key First"
+      strBytes "Test Using Larger Than Block-Size Key - Hash Key First"
     t09_psize  = 54
     t09_digest = [
       0x69, 0x53, 0x02, 0x5E, 0xD9, 0x6F, 0x0C, 0x09,
@@ -168,7 +169,7 @@ test_hmac_sha256 =
       0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
       0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA]
     t10_ksize  = 80
-    t10_ptext  = from_str $
+    t10_ptext  = strBytes $
       "Test Using Larger Than Block-Size Key and Larger Than " ++
       "One Block-Size Data"
     t10_psize  = 73
@@ -218,9 +219,9 @@ test_pbkdf2_hmac_sha256 =
         prf k k_size text text_size = KDF.hmac k k_size text text_size
           SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
     --  From RFC 7914.
-    t1_pass    = from_str "passwd"
+    t1_pass    = strBytes "passwd"
     t1_psize   = 6
-    t1_salt    = from_str "salt"
+    t1_salt    = strBytes "salt"
     t1_ssize   = 4
     t1_c       = 1
     t1_dk_len  = 64
@@ -233,9 +234,9 @@ test_pbkdf2_hmac_sha256 =
       0x99, 0x16, 0x64, 0xB3, 0x9D, 0x77, 0xEF, 0x31,
       0x7C, 0x71, 0xB8, 0x45, 0xB1, 0xE3, 0x0B, 0xD5,
       0x09, 0x11, 0x20, 0x41, 0xD3, 0xA1, 0x97, 0x83]
-    t2_pass    = from_str "Password"
+    t2_pass    = strBytes "Password"
     t2_psize   = 8
-    t2_salt    = from_str "NaCl"
+    t2_salt    = strBytes "NaCl"
     t2_ssize   = 4
     t2_c       = 80000
     t2_dk_len  = 64
@@ -249,10 +250,10 @@ test_pbkdf2_hmac_sha256 =
       0x6A, 0x27, 0x2B, 0xDE, 0xBB, 0xA1, 0xD0, 0x78,
       0x47, 0x8F, 0x62, 0xB3, 0x97, 0xF3, 0x3C, 0x8D]
     -- From cryptsetup.
-    t3_pass    = from_str $ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ++
+    t3_pass    = strBytes $ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ++
       "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     t3_psize   = 65
-    t3_salt    = from_str "pass phrase exceeds block size"
+    t3_salt    = strBytes "pass phrase exceeds block size"
     t3_ssize   = 30
     t3_c       = 1200
     t3_dk_len  = 32

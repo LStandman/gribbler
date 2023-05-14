@@ -28,7 +28,7 @@ main = do
   print $ nb_char "ccrl"
   print $ nb_char "\ncrl"
   print $ printable "carl"
-  print $ printable "\x85arl"
+  print $ printable "\x85\&arl"
   print $ uri_char "%AFxxxx"
   print $ uri_char "%AGxxxx"
   print $ as_line_feed "\n\rccrl"
@@ -36,5 +36,7 @@ main = do
   print $ as_line_feed "\r\rccrl"
   print $ as_line_feed "\r\nccrl"
   print $ esc_htab "\\\x09"
+  print $ esc_htab "\\\x09"
+  print $ esc_32bit "\\U00000041"
 --  print ((Hit 'c') <> Miss)
   print "\x85"

@@ -13,14 +13,16 @@ module YAML(
     b_break,
     printable,
     uri_char,
-    match_char)
+    match_char,
+    esc_32bit)
   where
 
 import Data.List
 import Data.Maybe
-import Data.Monoid
+import Numeric
 --
 import BNF
+import MemUtils
 
 data Context = BlockOut | BlockIn | FlowOut | FlowIn
 
@@ -86,7 +88,7 @@ b_break =
   carriage_return `altr` line_feed
 
 as_line_feed =
-  b_break `finally` (return "\x0A")
+  b_break `finally` return "\x0A"
 
 non_content = b_break
 
@@ -114,41 +116,62 @@ tag_char = uri_char `exclude` tag `exclude` flow_indicator
 
 escape = match_char '\\'
 esc_null =
-  escape `conc` match_char '0'    `finally` (return "\x00")
+  escape `conc` match_char '0'    `finally` return "\x00"
 esc_bell =
-  escape `conc` match_char 'a'    `finally` (return "\x07")
+  escape `conc` match_char 'a'    `finally` return "\x07"
 esc_backspace =
-  escape `conc` match_char 'b'    `finally` (return "\x08")
+  escape `conc` match_char 'b'    `finally` return "\x08"
 esc_htab =
   escape `conc` (match_char 't' `altr` match_char '\x09') `finally`
-  (return "\x09")
+  return "\x09"
 esc_line_feed =
-  escape `conc` match_char 'n'    `finally` (return "\x0A")
+  escape `conc` match_char 'n'    `finally` return "\x0A"
 esc_vtab =
-  escape `conc` match_char 'v'    `finally` (return "\x0B")
+  escape `conc` match_char 'v'    `finally` return "\x0B"
 esc_form_feed =
-  escape `conc` match_char 'f'    `finally` (return "\x0C")
+  escape `conc` match_char 'f'    `finally` return "\x0C"
 esc_carriage_return =
-  escape `conc` match_char 'r'    `finally` (return "\x0D")
+  escape `conc` match_char 'r'    `finally` return "\x0D"
 esc_escape =
-  escape `conc` match_char 'e'    `finally` (return "\x1B")
+  escape `conc` match_char 'e'    `finally` return "\x1B"
 esc_space =
-  escape `conc` match_char '\x20' `finally` (return "\x20")
+  escape `conc` match_char '\x20' `finally` return "\x20"
 esc_dquote =
-  escape `conc` match_char '"'    `finally` (return "\x22")
+  escape `conc` match_char '"'    `finally` return "\x22"
 esc_slash =
-  escape `conc` match_char '/'    `finally` (return "\x2F")
+  escape `conc` match_char '/'    `finally` return "\x2F"
 esc_backslash =
-  escape `conc` match_char '\\'   `finally` (return "\x5C")
+  escape `conc` match_char '\\'   `finally` return "\x5C"
 esc_nextline =
-  escape `conc` match_char 'N'    `finally` (return "\x85")
+  escape `conc` match_char 'N'    `finally` return "\x85"
 esc_nbscpace =
-  escape `conc` match_char '_'    `finally` (return "\xA0")
+  escape `conc` match_char '_'    `finally` return "\xA0"
 esc_lseparator =
-  escape `conc` match_char 'L'    `finally` (return "\x2028")
+  escape `conc` match_char 'L'    `finally` return "\x2028"
 esc_pseparator =
-  escape `conc` match_char 'P'    `finally` (return "\x2029")
+  escape `conc` match_char 'P'    `finally` return "\x2029"
 
--- TODO: complete
+hex2char s = [toEnum . fromJust . hex2num $ s ]
+
 esc_8bit =
-  escape `conc` match_char 'x' `conc` rep 2 hex_digit `finally` undefined
+  escape `conc` match_char 'x' `finally` return "" `conc`
+  rep 2 hex_digit `finally` hex2char
+
+esc_16bit =
+  escape `conc` match_char 'u' `finally` return "" `conc`
+  rep 4 hex_digit `finally` hex2char
+
+esc_32bit =
+  escape `conc` match_char 'U' `finally` return "" `conc`
+  rep 8 hex_digit `finally` hex2char
+
+esc_char =
+  esc_null       `altr` esc_bell            `altr` esc_backspace `altr`
+  esc_htab       `altr` esc_line_feed       `altr` esc_vtab      `altr`
+  esc_form_feed  `altr` esc_carriage_return `altr` esc_escape    `altr`
+  esc_space      `altr` esc_dquote          `altr` esc_slash     `altr`
+  esc_backslash  `altr` esc_nextline        `altr` esc_nbscpace  `altr`
+  esc_lseparator `altr` esc_pseparator      `altr` esc_8bit      `altr`
+  esc_16bit      `altr` esc_32bit
+
+
