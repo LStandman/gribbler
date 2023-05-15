@@ -24,6 +24,7 @@ import Data.List
 import Data.Maybe
 --
 import BNF
+import BNF.Extras
 import MemUtils
 
 data Context = BlockOut | BlockIn | FlowOut | FlowIn

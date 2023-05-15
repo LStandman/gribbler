@@ -6,6 +6,7 @@ module BNFTest(test_bnf) where
 
 import Libtest
 import BNF
+import BNF.Extras
 
 test_bnf =
   let

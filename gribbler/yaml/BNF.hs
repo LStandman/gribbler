@@ -9,7 +9,6 @@ module BNF(
     conc,
     conv,
     exclude,
-    match_char,
     nop,
     one_more,
     rep,
@@ -41,7 +40,6 @@ altr       :: Parser a b -> Parser a b -> Parser a b
 conc       :: Semigroup b => Parser a b -> Parser a b -> Parser a b
 exclude    :: Parser a b -> Parser a b -> Parser a b
 conv       :: Parser a b -> (b -> c) -> Parser a c
-match_char :: Char -> Parser String String
 nop        :: Monoid b => a -> Result a b
 one_more   :: Semigroup b => Parser a b -> Parser a b
 rep        :: Semigroup b => Int -> Parser a b -> Parser a b
@@ -99,9 +97,3 @@ conc'' Miss        _ = Miss
 conc'' (Error e)   _ = Error e
 
 one_more f = \ x -> f x `conc''` one_more f
-
-match_char c = \ xs -> case xs of
-  []     -> Miss
-  (y:ys) -> case c == y of
-    True  -> Hit ys [y]
-    False -> Miss

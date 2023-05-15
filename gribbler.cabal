@@ -40,6 +40,8 @@ library
       DiffListTest
       MemUtils
       BNF
+      BNF.Extras
+      BNF.ExtrasTest
       BNFTest
       YAML
       YAMLTest
