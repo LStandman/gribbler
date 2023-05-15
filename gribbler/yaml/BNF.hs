@@ -83,10 +83,7 @@ conv f g = \ x -> fmap g $ f x
 
 zero_one  f = f `altr` nop
 
-zero_more f = \ x -> case (f `conc` zero_more f) x of
-  Hit s p -> Hit s p
-  Miss    -> Hit x mempty
-  Error e -> Error e
+zero_more f = one_more f `altr` nop
 
 conc'' :: Semigroup b => Result a b -> Parser a b -> Result a b
 conc'' (Hit s1 p1) f = case f s1 of
