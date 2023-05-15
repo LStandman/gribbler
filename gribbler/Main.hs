@@ -37,6 +37,10 @@ main = do
   print $ b_as_line_feed "\r\nccrl"
   print $ c_ns_esc_char "\\\x09"
   print $ c_ns_esc_char "\\U00000041"
-  print $ b_l_folded BlockOut 0 "\n··\n·\n\n  as\n  space"
+  print $ s_indent  1 "   \n\n  as\n  space"
+  print $ "\n  \n \n\n  as\n  space"
+  print $ (s_space `conc` s_space `conc` s_space) "   \n \n\n  as\n  space"
+  print $ b_l_folded BlockOut 2 "          "
+  print $ b_l_folded BlockOut 10 "\n  \n \n\n  as\n  space"
 --  print ((Hit 'c') <> Miss)
   print "\x85"

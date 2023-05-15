@@ -15,7 +15,9 @@ module YAML(
     c_printable,
     ns_uri_char,
     c_ns_esc_char,
-    b_l_folded)
+    s_indent,
+    b_l_folded,
+    s_space)
   where
 
 import Data.List
@@ -88,7 +90,7 @@ b_break =
 
 b_as_line_feed = b_break `conv` return "\x0A"
 
-b_non_content = b_break
+b_non_content = b_break `conv` return ""
 
 s_space   = match_char '\x20'
 s_tab     = match_char '\x09'
@@ -166,7 +168,6 @@ s_indent_le n = (s_space `conc` s_indent_le (n - 1)) `altr` nop
 
 s_seperate_in_line = one_more s_white `altr` start_of_line
 
-
 s_line_prefix BlockOut = s_block_line_prefix
 s_line_prefix BlockIn  = s_block_line_prefix
 s_line_prefix FlowOut  = s_flow_line_prefix
@@ -175,10 +176,11 @@ s_line_prefix FlowIn   = s_flow_line_prefix
 s_block_line_prefix n = s_indent n
 s_flow_line_prefix  n = s_indent n `conc` zero_one s_seperate_in_line
 
-l_empty c n = s_line_prefix c n `altr` s_indent_lt n `conc` b_as_line_feed
+l_empty c n = (s_line_prefix c n `altr` s_indent_lt n) `conc` b_as_line_feed
 
 b_l_trimmed c n = b_non_content `conc` one_more (l_empty c n)
 
 b_as_space = b_break `conv` return "\x20"
 
+b_l_folded :: Context -> Int -> Parser String String
 b_l_folded c n = b_l_trimmed c n `altr` b_as_space
