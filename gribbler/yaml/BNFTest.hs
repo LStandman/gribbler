@@ -7,22 +7,17 @@ module BNFTest(test_bnf) where
 import Libtest
 import BNF
 
-match_char :: Char -> Production String
-match_char c = \ (x:xs) -> case c == x of
-  True  -> Hit [x] xs
-  False -> Miss
-
 test_bnf =
   let
-    errorX       = Error "X" :: Resultant String
-    errorY       = Error "Y" :: Resultant String
-    amiss        = Miss :: Resultant String
+    errorX       = Error "X" :: Result String
+    errorY       = Error "Y" :: Result String
+    amiss        = Miss :: Result String
     errX         = return errorX
     errY         = return errorY
     miss         = return amiss
     t1_in        = ""
-    t1_successA  = Hit "a" ""
-    t1_successB  = Hit "b" ""
+    t1_successA  = Hit "a"
+    t1_successB  = Hit "b"
     t1_hitA      = return t1_successA
     t1_hitB      = return t1_successB
     t1_hitxhit   = t1_successA
@@ -35,7 +30,7 @@ test_bnf =
     t1_errxmiss  = errorX
     t1_errxerr   = errorX
     t2_in        = "ab"
-    t2_success   = Hit "ab" ""
+    t2_success   = Hit "ab"
     t2_hitA      = match_char 'a'
     t2_hitB      = match_char 'b'
     t2_hitxhit   = t2_success
@@ -47,8 +42,9 @@ test_bnf =
     t2_errxhit   = errorX
     t2_errxmiss  = errorX
     t2_errxerr   = errorX
+    t2_short     = amiss
     t3_in        = "a"
-    t3_success   = Hit "a" ""
+    t3_success   = Hit "a"
     t3_hitA      = match_char 'a'
     t3_hitB      = match_char 'a'
     t3_hitxhit   = amiss
@@ -61,12 +57,12 @@ test_bnf =
     t3_errxmiss  = errorX
     t3_errxerr   = errorX
     t4_map       = length
-    t4_ihit      = Hit "abc" "xyz"
-    t4_ohit      = Hit 3 "xyz"
-    t4_imiss     = Miss :: Resultant String
-    t4_omiss     = Miss :: Resultant Int
-    t4_ierr      = Error "X" :: Resultant String
-    t4_oerr      = Error "X" :: Resultant Int
+    t4_ihit      = Hit "abc"
+    t4_ohit      = Hit 3
+    t4_imiss     = Miss :: Result String
+    t4_omiss     = Miss :: Result Int
+    t4_ierr      = Error "X" :: Result String
+    t4_oerr      = Error "X" :: Result Int
     t5_in        = ""
     t5_map       = t4_map
     t5_ihit      = return t4_ihit
@@ -80,28 +76,28 @@ test_bnf =
     t6_inA       = "abb"
     t6_outA      = Miss
     t6_inB       = "aab"
-    t6_outB      = Hit "aa" "b"
+    t6_outB      = Hit "aa"
     t6_inC       = "aaa"
-    t6_outC      = Hit "aa" "a"
+    t6_outC      = Hit "aa"
     t7_hit       = match_char 'a'
     t7_inA       = "aa"
-    t7_outA      = Hit "a" "a"
+    t7_outA      = Hit "a"
     t7_inB       = "ba"
-    t7_outB      = Hit "" "ba"
+    t7_outB      = Hit ""
     t8_hit       = match_char 'a'
     t8_inA       = "bbb"
-    t8_outA      = Hit "" "bbb"
+    t8_outA      = Hit ""
     t8_inB       = "abb"
-    t8_outB      = Hit "a" "bb"
+    t8_outB      = Hit "a"
     t8_inC       = "aab"
-    t8_outC      = Hit "aa" "b"
+    t8_outC      = Hit "aa"
     t9_hit       = match_char 'a'
     t9_inA       = "bbb"
     t9_outA      = Miss
     t9_inB       = "abb"
-    t9_outB      = Hit "a" "bb"
+    t9_outB      = Hit "a"
     t9_inC       = "aab"
-    t9_outC      = Hit "aa" "b"
+    t9_outC      = Hit "aa"
   in
     testsuite "BNF" [
       test "Altr" [
@@ -141,7 +137,9 @@ test_bnf =
         expect_memeq "t2_errxmiss" t2_errxmiss $
         (errX `BNF.conc` miss) t2_in,
         expect_memeq "t2_errxerr" t2_errxerr $
-        (errX `BNF.conc` errY) t2_in],
+        (errX `BNF.conc` errY) t2_in,
+        expect_memeq "t2_short" t2_short $
+        (t2_hitA `BNF.conc` t2_hitB `BNF.conc` t2_hitB) t2_in],
       test "Exclude" [
         expect_memeq "t3_hitxhit" t3_hitxhit $
         (t3_hitA `BNF.exclude` t3_hitB) t3_in,
@@ -168,13 +166,13 @@ test_bnf =
         fmap (t4_map) t4_imiss,
         expect_memeq "t4_oerr" t4_oerr $
         fmap (t4_map) t4_ierr],
-      test "Finally" [
+      test "conv" [
         expect_memeq "t5_ohit" t5_ohit $
-        (t5_ihit `BNF.finally` t5_map) t5_in,
+        (t5_ihit `BNF.conv` t5_map) t5_in,
         expect_memeq "t5_omiss" t5_omiss $
-        (t5_imiss `BNF.finally` t5_map) t5_in,
+        (t5_imiss `BNF.conv` t5_map) t5_in,
         expect_memeq "t5_oerr" t5_oerr $
-        (t5_ierr `BNF.finally` t5_map) t5_in],
+        (t5_ierr `BNF.conv` t5_map) t5_in],
       test "Rep" [
         expect_memeq "t6_outA" t6_outA $
         (BNF.rep t6_reps t6_hit) t6_inA,
