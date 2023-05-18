@@ -1,24 +1,24 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- BNFTest.hs: Unit tests for BNF
--- Copyright (C) 2023 LStandman
+-- Copyright (C) 2022-2023 LStandman
 
 module BNFTest(test_bnf) where
 
 import Libtest
 import BNF
-import BNF.Extras
+import BNF.Text
 
 test_bnf =
   let
-    errorX       = Error "X" :: Result String String
-    errorY       = Error "Y" :: Result String String
-    amiss        = Miss :: Result String String
+    errorX       = Error "X" :: Result Text
+    errorY       = Error "Y" :: Result Text
+    amiss        = Miss :: Result Text
     errX         = return errorX
     errY         = return errorY
     miss         = return amiss
-    t1_in        = ""
-    t1_successA  = Hit "" "a"
-    t1_successB  = Hit "" "b"
+    t1_in        = text ""
+    t1_successA  = Hit ("", "a")
+    t1_successB  = Hit ("", "b")
     t1_hitA      = return t1_successA
     t1_hitB      = return t1_successB
     t1_hitxhit   = t1_successA
@@ -30,8 +30,8 @@ test_bnf =
     t1_errxhit   = errorX
     t1_errxmiss  = errorX
     t1_errxerr   = errorX
-    t2_in        = "ab"
-    t2_success   = Hit "" "ab"
+    t2_in        = text "ab"
+    t2_success   = Hit ("", "ab")
     t2_hitA      = match_char 'a'
     t2_hitB      = match_char 'b'
     t2_hitxhit   = t2_success
@@ -43,9 +43,8 @@ test_bnf =
     t2_errxhit   = errorX
     t2_errxmiss  = errorX
     t2_errxerr   = errorX
-    t2_short     = amiss
-    t3_in        = "a"
-    t3_success   = Hit "" "a"
+    t3_in        = text "a"
+    t3_success   = Hit ("", "a")
     t3_hitA      = match_char 'a'
     t3_hitB      = match_char 'a'
     t3_hitxhit   = amiss
@@ -57,48 +56,40 @@ test_bnf =
     t3_errxhit   = errorX
     t3_errxmiss  = errorX
     t3_errxerr   = errorX
-    t4_map       = length
-    t4_ihit      = Hit "xyz" "abc"
-    t4_ohit      = Hit "xyz" 3
-    t4_imiss     = Miss :: Result String String
-    t4_omiss     = Miss :: Result String Int
-    t4_ierr      = Error "X" :: Result String String
-    t4_oerr      = Error "X" :: Result String Int
-    t5_in        = ""
-    t5_map       = t4_map
-    t5_ihit      = return t4_ihit
-    t5_ohit      = t4_ohit
-    t5_imiss     = return t4_imiss
-    t5_omiss     = t4_omiss
-    t5_ierr      = return t4_ierr
-    t5_oerr      = t4_oerr
+    t4_map       = \ (x, y) -> (x, length y)
+    t4_ihit      = Hit ("xyz", "abc")
+    t4_ohit      = Hit ("xyz", 3)
+    t4_imiss     = Miss :: Result Text
+    t4_omiss     = Miss :: Result (String, Int)
+    t4_ierr      = Error "X" :: Result Text
+    t4_oerr      = Error "X" :: Result (String, Int)
+    t5_hit       = match_char 'a'
+    t5_reps      = 2
+    t5_inA       = text "abb"
+    t5_outA      = Miss
+    t5_inB       = text "aab"
+    t5_outB      = Hit ("b", "aa")
+    t5_inC       = text "aaa"
+    t5_outC      = Hit ("a", "aa")
     t6_hit       = match_char 'a'
-    t6_reps      = 2
-    t6_inA       = "abb"
-    t6_outA      = Miss
-    t6_inB       = "aab"
-    t6_outB      = Hit "b" "aa"
-    t6_inC       = "aaa"
-    t6_outC      = Hit "a" "aa"
+    t6_inA       = text "aa"
+    t6_outA      = Hit ("a", "a")
+    t6_inB       = text "ba"
+    t6_outB      = Hit ("ba", "")
     t7_hit       = match_char 'a'
-    t7_inA       = "aa"
-    t7_outA      = Hit "a" "a"
-    t7_inB       = "ba"
-    t7_outB      = Hit "ba" ""
+    t7_inA       = text "bbb"
+    t7_outA      = Hit ("bbb", "")
+    t7_inB       = text "abb"
+    t7_outB      = Hit ("bb", "a")
+    t7_inC       = text "aab"
+    t7_outC      = Hit ("b", "aa")
     t8_hit       = match_char 'a'
-    t8_inA       = "bbb"
-    t8_outA      = Hit "bbb" ""
-    t8_inB       = "abb"
-    t8_outB      = Hit "bb" "a"
-    t8_inC       = "aab"
-    t8_outC      = Hit "b" "aa"
-    t9_hit       = match_char 'a'
-    t9_inA       = "bbb"
-    t9_outA      = Miss
-    t9_inB       = "abb"
-    t9_outB      = Hit "bb" "a"
-    t9_inC       = "aab"
-    t9_outC      = Hit "b" "aa"
+    t8_inA       = text "bbb"
+    t8_outA      = Miss
+    t8_inB       = text "abb"
+    t8_outB      = Hit ("bb", "a")
+    t8_inC       = text "aab"
+    t8_outC      = Hit ("b", "aa")
   in
     testsuite "BNF" [
       test "Ou" [
@@ -138,9 +129,7 @@ test_bnf =
         expect_memeq "t2_errxmiss" t2_errxmiss $
         (errX `BNF.et` miss) t2_in,
         expect_memeq "t2_errxerr" t2_errxerr $
-        (errX `BNF.et` errY) t2_in,
-        expect_memeq "t2_short" t2_short $
-        (t2_hitA `BNF.et` t2_hitB `BNF.et` t2_hitB) t2_in],
+        (errX `BNF.et` errY) t2_in],
       test "Sauf" [
         expect_memeq "t3_hitxhit" t3_hitxhit $
         (t3_hitA `BNF.sauf` t3_hitB) t3_in,
@@ -167,36 +156,29 @@ test_bnf =
         fmap (t4_map) t4_imiss,
         expect_memeq "t4_oerr" t4_oerr $
         fmap (t4_map) t4_ierr],
-      test "Conv" [
-        expect_memeq "t5_ohit" t5_ohit $
-        (t5_ihit `BNF.conv` t5_map) t5_in,
-        expect_memeq "t5_omiss" t5_omiss $
-        (t5_imiss `BNF.conv` t5_map) t5_in,
-        expect_memeq "t5_oerr" t5_oerr $
-        (t5_ierr `BNF.conv` t5_map) t5_in],
       test "Rep" [
+        expect_memeq "t5_outA" t5_outA $
+        (BNF.rep t5_reps t5_hit) t5_inA,
+        expect_memeq "t5_outB" t5_outB $
+        (BNF.rep t5_reps t5_hit) t5_inB,
+        expect_memeq "t5_outC" t5_outC $
+        (BNF.rep t5_reps t5_hit) t5_inC],
+      test "ZeroOrOne" [
         expect_memeq "t6_outA" t6_outA $
-        (BNF.rep t6_reps t6_hit) t6_inA,
+        (BNF.zero_or_one t6_hit) t6_inA,
         expect_memeq "t6_outB" t6_outB $
-        (BNF.rep t6_reps t6_hit) t6_inB,
-        expect_memeq "t6_outC" t6_outC $
-        (BNF.rep t6_reps t6_hit) t6_inC],
-      test "ZeroOne" [
+        (BNF.zero_or_one t6_hit) t6_inB],
+      test "ZeroOrMore" [
         expect_memeq "t7_outA" t7_outA $
-        (BNF.zero_one t7_hit) t7_inA,
+        (BNF.zero_or_more t7_hit) t7_inA,
         expect_memeq "t7_outB" t7_outB $
-        (BNF.zero_one t7_hit) t7_inB],
-      test "ZeroMore" [
+        (BNF.zero_or_more t7_hit) t7_inB,
+        expect_memeq "t7_outC" t7_outC $
+        (BNF.zero_or_more t7_hit) t7_inC],
+      test "OneOrMore" [
         expect_memeq "t8_outA" t8_outA $
-        (BNF.zero_more t8_hit) t8_inA,
+        (BNF.one_or_more t8_hit) t8_inA,
         expect_memeq "t8_outB" t8_outB $
-        (BNF.zero_more t8_hit) t8_inB,
+        (BNF.one_or_more t8_hit) t8_inB,
         expect_memeq "t8_outC" t8_outC $
-        (BNF.zero_more t8_hit) t8_inC],
-      test "OneMore" [
-        expect_memeq "t9_outA" t9_outA $
-        (BNF.one_more t9_hit) t9_inA,
-        expect_memeq "t9_outB" t9_outB $
-        (BNF.one_more t9_hit) t9_inB,
-        expect_memeq "t9_outC" t9_outC $
-        (BNF.one_more t9_hit) t9_inC]]
+        (BNF.one_or_more t8_hit) t8_inC]]

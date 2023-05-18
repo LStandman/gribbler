@@ -8,6 +8,8 @@ module YAML(
 --    esc_htab,
 --    b_break,
     Context (..),
+    b_non_content,
+    l_empty,
     b_as_line_feed,
     ns_esc_htab,
     nb_char,
@@ -24,18 +26,18 @@ import Data.List
 import Data.Maybe
 --
 import BNF
-import BNF.Extras
+import BNF.Text
 import MemUtils
 
 data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 
-any_char :: [Char] -> Parser String String
+any_char :: [Char] -> Parser Text
 any_char = (foldl1 (ou)) . (map (match_char))
 
 start_of_line = non
 end_of_input = non
 
-presentation :: Parser String String -> Parser String String
+presentation :: Parser Text -> Parser Text
 presentation f = f `conv` return ""
 
 -- [0]
@@ -177,7 +179,7 @@ s_indent_le' n = s_space `et` s_indent_le' (n - 1) `ou` non
 
 s_indent_le = s_indent_le'
 
-s_seperate_in_line = one_more s_white `ou` start_of_line
+s_seperate_in_line = one_or_more s_white `ou` start_of_line
 
 s_line_prefix' BlockOut = s_block_line_prefix
 s_line_prefix' BlockIn  = s_block_line_prefix
@@ -187,28 +189,28 @@ s_line_prefix' FlowIn   = s_flow_line_prefix
 s_line_prefix c = s_line_prefix' c
 
 s_block_line_prefix  = s_indent
-s_flow_line_prefix n = s_indent n `et` zero_one s_seperate_in_line
+s_flow_line_prefix n = s_indent n `et` zero_or_one s_seperate_in_line
 
 l_empty c n = s_line_prefix c n `ou` s_indent_lt n `et` b_as_line_feed
 
 b_l_trimmed c n =
-  b_non_content `et` one_more (l_empty c n `conv` return "\n")
+  b_non_content `et` one_or_more (l_empty c n `conv` return "\n")
 
 b_as_space = b_break `conv` return "\x20"
 
 b_l_folded c n = b_l_trimmed c n `ou` b_as_space
 
 s_flow_folded n =
-  zero_one s_seperate_in_line `et`
+  zero_or_one s_seperate_in_line `et`
   b_l_folded FlowIn n `et` s_flow_line_prefix n
 
-c_nb_comment_text = c_comment `et` zero_more nb_char
+c_nb_comment_text = c_comment `et` zero_or_more nb_char
 b_comment = b_non_content `ou` end_of_input
 s_b_comment =
-  zero_one (s_seperate_in_line `et` zero_one c_nb_comment_text) `et`
+  zero_or_one (s_seperate_in_line `et` zero_or_one c_nb_comment_text) `et`
   b_comment
 
-l_comment = s_seperate_in_line `et` zero_one c_nb_comment_text `et`
+l_comment = s_seperate_in_line `et` zero_or_one c_nb_comment_text `et`
   b_comment
 
-s_l_comments = (s_b_comment `ou` start_of_line) `et` zero_more l_comment
+s_l_comments = (s_b_comment `ou` start_of_line) `et` zero_or_more l_comment
