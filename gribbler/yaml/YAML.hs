@@ -22,7 +22,6 @@ module YAML(
     s_space)
   where
 
-import Data.List
 import Data.Maybe
 --
 import BNF

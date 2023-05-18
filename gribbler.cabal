@@ -39,6 +39,7 @@ library
       DiffList
       DiffListTest
       MemUtils
+      MemUtilsTest
       BNF
       BNF.Text
       BNF.TextTest
