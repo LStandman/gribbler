@@ -27,12 +27,16 @@ import BNF
 import BNF.Extras
 import MemUtils
 
-data Context = BlockOut | BlockIn | FlowOut | FlowIn
+data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 
 any_char :: [Char] -> Parser String String
-any_char = (foldl1 (altr)) . (map (match_char))
+any_char = (foldl1 (ou)) . (map (match_char))
 
-start_of_line = nop
+start_of_line = non
+end_of_input = non
+
+presentation :: Parser String String -> Parser String String
+presentation f = f `conv` return ""
 
 -- [0]
 c_printable       =
@@ -42,7 +46,7 @@ c_printable       =
     ['\x010000'..'\x10FFFF']
 nb_json            =
   any_char $ ['\x09'] ++ ['\x20'..'\x10FFFF']
-c_byte_order_mark = return Error "Not implemented"
+c_byte_order_mark = match_char '\xFEFF'
 
 c_sequence_entry = match_char '-'
 c_mapping_key    = match_char '?'
@@ -62,66 +66,66 @@ c_single_quote   = match_char '\''
 c_double_quote   = match_char '"'
 -- [20]
 c_directive      = match_char '%'
-c_reserved       = match_char '@' `altr` match_char '`'
+c_reserved       = match_char '@' `ou` match_char '`'
 
 c_indicator =
-    c_sequence_entry `altr` c_mapping_key   `altr`
-    c_mapping_value  `altr` c_collect_entry `altr`
-    c_sequence_start `altr` c_sequence_end  `altr`
-    c_mapping_start  `altr` c_mapping_end   `altr`
-    c_comment        `altr` c_anchor        `altr`
-    c_alias          `altr` c_tag           `altr`
-    c_literal        `altr` c_folded        `altr`
-    c_single_quote   `altr` c_double_quote  `altr`
-    c_directive      `altr` c_reserved
+    c_sequence_entry `ou` c_mapping_key   `ou`
+    c_mapping_value  `ou` c_collect_entry `ou`
+    c_sequence_start `ou` c_sequence_end  `ou`
+    c_mapping_start  `ou` c_mapping_end   `ou`
+    c_comment        `ou` c_anchor        `ou`
+    c_alias          `ou` c_tag           `ou`
+    c_literal        `ou` c_folded        `ou`
+    c_single_quote   `ou` c_double_quote  `ou`
+    c_directive      `ou` c_reserved
 
 c_flow_indicator =
-    c_collect_entry  `altr` c_sequence_start `altr`
-    c_sequence_end   `altr` c_mapping_start  `altr`
+    c_collect_entry  `ou` c_sequence_start `ou`
+    c_sequence_end   `ou` c_mapping_start  `ou`
     c_mapping_end
 
 b_line_feed       = match_char '\x0A'
 b_carriage_return = match_char '\x0D'
-b_char          = b_line_feed `altr` b_carriage_return
-nb_char         = c_printable `exclude` b_char `exclude` c_byte_order_mark
+b_char          = b_line_feed `ou` b_carriage_return
+nb_char         = c_printable `sauf` b_char `sauf` c_byte_order_mark
 
 b_break =
-  (b_carriage_return `conc` b_line_feed) `altr`
-  b_carriage_return `altr` b_line_feed
+  (b_carriage_return `et` b_line_feed) `ou`
+  b_carriage_return `ou` b_line_feed
 
 b_as_line_feed = b_break `conv` return "\x0A"
 
-b_non_content = b_break `conv` return ""
+b_non_content = presentation b_break
 
 s_space   = match_char '\x20'
 s_tab     = match_char '\x09'
-s_white   = s_space `altr` s_tab
-ns_char = nb_char `exclude` s_white
+s_white   = s_space `ou` s_tab
+ns_char = nb_char `sauf` s_white
 
 ns_dec_digit    = any_char ['\x30'..'\x39']
 ns_hex_digit    =
-  ns_dec_digit `altr`
+  ns_dec_digit `ou`
   (any_char $ ['\x41'..'\x46'] ++ ['\x61'..'\x66'])
 ns_ascii_letter =
   any_char $ ['\x41'..'\x5A'] ++ ['\x61'..'\x7A']
-ns_word_char    = ns_dec_digit `altr` ns_ascii_letter `altr` match_char '-'
+ns_word_char    = ns_dec_digit `ou` ns_ascii_letter `ou` match_char '-'
 
 ns_uri_char =
-  (match_char '%' `conc` rep 2 ns_hex_digit) `altr`
-  ns_word_char `altr`
+  (match_char '%' `et` rep 2 ns_hex_digit) `ou`
+  ns_word_char `ou`
   any_char [
       '#',  ';', '/', '?', ':', '@', '&', '=',
       '+',  '$', ',', '_', '.', '!', '~', '*',
       '\'', '(', ')', '[', ']']
 
 -- [40]
-ns_tag_char = ns_uri_char `exclude` c_tag `exclude` c_flow_indicator
+ns_tag_char = ns_uri_char `sauf` c_tag `sauf` c_flow_indicator
 
 c_escape = match_char '\\' `conv` return ""
 ns_esc_null            = match_char '0'    `conv` return "\x00"
 ns_esc_bell            = match_char 'a'    `conv` return "\x07"
 ns_esc_backspace       = match_char 'b'    `conv` return "\x08"
-ns_esc_htab = (match_char 't' `altr` match_char '\x09') `conv` return "\x09"
+ns_esc_htab = (match_char 't' `ou` match_char '\x09') `conv` return "\x09"
 ns_esc_line_feed       = match_char 'n'    `conv` return "\x0A"
 ns_esc_vtab            = match_char 'v'    `conv` return "\x0B"
 ns_esc_form_feed       = match_char 'f'    `conv` return "\x0C"
@@ -138,50 +142,73 @@ ns_esc_pseparator      = match_char 'P'    `conv` return "\x2029"
 
 hex2char s = [toEnum . fromJust . hex2num $ tail s ]
 
-ns_esc_8bit  = match_char 'x' `conc` rep 2 ns_hex_digit `conv` hex2char
+ns_esc_8bit  = match_char 'x' `et` rep 2 ns_hex_digit `conv` hex2char
 
 -- [60]
-ns_esc_16bit = match_char 'u' `conc` rep 4 ns_hex_digit `conv` hex2char
+ns_esc_16bit = match_char 'u' `et` rep 4 ns_hex_digit `conv` hex2char
 
-ns_esc_32bit = match_char 'U' `conc` rep 8 ns_hex_digit `conv` hex2char
+ns_esc_32bit = match_char 'U' `et` rep 8 ns_hex_digit `conv` hex2char
 
 c_ns_esc_char =
-  c_escape `conc`
-  (ns_esc_null      `altr` ns_esc_bell            `altr`
-  ns_esc_backspace  `altr` ns_esc_htab            `altr`
-  ns_esc_line_feed  `altr` ns_esc_vtab            `altr`
-  ns_esc_form_feed  `altr` ns_esc_carriage_return `altr`
-  ns_esc_escape     `altr` ns_esc_space           `altr`
-  ns_esc_dquote     `altr` ns_esc_slash           `altr`
-  ns_esc_backslash  `altr` ns_esc_nextline        `altr`
-  ns_esc_nbscpace   `altr` ns_esc_lseparator      `altr`
-  ns_esc_pseparator `altr` ns_esc_8bit            `altr`
-  ns_esc_16bit      `altr` ns_esc_32bit)
+  c_escape `et`
+  (ns_esc_null      `ou` ns_esc_bell            `ou`
+  ns_esc_backspace  `ou` ns_esc_htab            `ou`
+  ns_esc_line_feed  `ou` ns_esc_vtab            `ou`
+  ns_esc_form_feed  `ou` ns_esc_carriage_return `ou`
+  ns_esc_escape     `ou` ns_esc_space           `ou`
+  ns_esc_dquote     `ou` ns_esc_slash           `ou`
+  ns_esc_backslash  `ou` ns_esc_nextline        `ou`
+  ns_esc_nbscpace   `ou` ns_esc_lseparator      `ou`
+  ns_esc_pseparator `ou` ns_esc_8bit            `ou`
+  ns_esc_16bit      `ou` ns_esc_32bit)
 
-s_indent 0 = nop
-s_indent n = s_space `conc` s_indent (n - 1)
+s_indent' 0 = non
+s_indent' n = s_space `et` s_indent' (n - 1)
 
-s_indent_lt 1 = nop
-s_indent_lt n = (s_space `conc` s_indent_lt (n - 1)) `altr` nop
+s_indent = s_indent'
 
-s_indent_le 0 = nop
-s_indent_le n = (s_space `conc` s_indent_le (n - 1)) `altr` nop
+s_indent_lt' 1 = non
+s_indent_lt' n = s_space `et` s_indent_lt' (n - 1) `ou` non
 
-s_seperate_in_line = one_more s_white `altr` start_of_line
+s_indent_lt = s_indent_lt'
 
-s_line_prefix BlockOut = s_block_line_prefix
-s_line_prefix BlockIn  = s_block_line_prefix
-s_line_prefix FlowOut  = s_flow_line_prefix
-s_line_prefix FlowIn   = s_flow_line_prefix
+s_indent_le' 0 = non
+s_indent_le' n = s_space `et` s_indent_le' (n - 1) `ou` non
 
-s_block_line_prefix n = s_indent n
-s_flow_line_prefix  n = s_indent n `conc` zero_one s_seperate_in_line
+s_indent_le = s_indent_le'
 
-l_empty c n = (s_line_prefix c n `altr` s_indent_lt n) `conc` b_as_line_feed
+s_seperate_in_line = one_more s_white `ou` start_of_line
 
-b_l_trimmed c n = b_non_content `conc` one_more (l_empty c n)
+s_line_prefix' BlockOut = s_block_line_prefix
+s_line_prefix' BlockIn  = s_block_line_prefix
+s_line_prefix' FlowOut  = s_flow_line_prefix
+s_line_prefix' FlowIn   = s_flow_line_prefix
+
+s_line_prefix c = s_line_prefix' c
+
+s_block_line_prefix  = s_indent
+s_flow_line_prefix n = s_indent n `et` zero_one s_seperate_in_line
+
+l_empty c n = s_line_prefix c n `ou` s_indent_lt n `et` b_as_line_feed
+
+b_l_trimmed c n =
+  b_non_content `et` one_more (l_empty c n `conv` return "\n")
 
 b_as_space = b_break `conv` return "\x20"
 
-b_l_folded :: Context -> Int -> Parser String String
-b_l_folded c n = b_l_trimmed c n `altr` b_as_space
+b_l_folded c n = b_l_trimmed c n `ou` b_as_space
+
+s_flow_folded n =
+  zero_one s_seperate_in_line `et`
+  b_l_folded FlowIn n `et` s_flow_line_prefix n
+
+c_nb_comment_text = c_comment `et` zero_more nb_char
+b_comment = b_non_content `ou` end_of_input
+s_b_comment =
+  zero_one (s_seperate_in_line `et` zero_one c_nb_comment_text) `et`
+  b_comment
+
+l_comment = s_seperate_in_line `et` zero_one c_nb_comment_text `et`
+  b_comment
+
+s_l_comments = (s_b_comment `ou` start_of_line) `et` zero_more l_comment

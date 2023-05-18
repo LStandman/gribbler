@@ -9,8 +9,7 @@ module BNF.Extras(match_char)
 import BNF
 
 match_char :: Char -> Parser String String
-match_char c = \ xs -> case xs of
-  []     -> Miss
-  (y:ys) -> case c == y of
-    True  -> Hit ys [y]
-    False -> Miss
+match_char c []     = Miss
+match_char c (x:xs) = case c == x of
+  True  -> Hit xs [x]
+  False -> Miss

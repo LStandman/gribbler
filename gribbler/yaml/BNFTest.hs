@@ -101,65 +101,65 @@ test_bnf =
     t9_outC      = Hit "b" "aa"
   in
     testsuite "BNF" [
-      test "Altr" [
+      test "Ou" [
         expect_memeq "t1_hitxhit" t1_hitxhit $
-        (t1_hitA `BNF.altr` t1_hitB) t1_in,
+        (t1_hitA `BNF.ou` t1_hitB) t1_in,
         expect_memeq "t1_hitxmiss" t1_hitxmiss $
-        (t1_hitA `BNF.altr` miss) t1_in,
+        (t1_hitA `BNF.ou` miss) t1_in,
         expect_memeq "t1_hitxerr" t1_hitxerr $
-        (t1_hitA `BNF.altr` errY) t1_in,
+        (t1_hitA `BNF.ou` errY) t1_in,
         expect_memeq "t1_missxhit" t1_missxhit $
-        (miss `BNF.altr` t1_hitB) t1_in,
+        (miss `BNF.ou` t1_hitB) t1_in,
         expect_memeq "t1_missxmiss" t1_missxmiss $
-        (miss `BNF.altr` miss) t1_in,
+        (miss `BNF.ou` miss) t1_in,
         expect_memeq "t1_missxerr" t1_missxerr $
-        (miss `BNF.altr` errY) t1_in,
+        (miss `BNF.ou` errY) t1_in,
         expect_memeq "t1_errxhit" t1_errxhit $
-        (errX `BNF.altr` t1_hitB) t1_in,
+        (errX `BNF.ou` t1_hitB) t1_in,
         expect_memeq "t1_errxmiss" t1_errxmiss $
-        (errX `BNF.altr` miss) t1_in,
+        (errX `BNF.ou` miss) t1_in,
         expect_memeq "t1_errxerr" t1_errxerr $
-        (errX `BNF.altr` errY) t1_in],
-      test "Conc" [
+        (errX `BNF.ou` errY) t1_in],
+      test "Et" [
         expect_memeq "t2_hitxhit" t2_hitxhit $
-        (t2_hitA `BNF.conc` t2_hitB) t2_in,
+        (t2_hitA `BNF.et` t2_hitB) t2_in,
         expect_memeq "t2_hitxmiss" t2_hitxmiss $
-        (t2_hitA `BNF.conc` miss) t2_in,
+        (t2_hitA `BNF.et` miss) t2_in,
         expect_memeq "t2_hitxerr" t2_hitxerr $
-        (t2_hitA `BNF.conc` errY) t2_in,
+        (t2_hitA `BNF.et` errY) t2_in,
         expect_memeq "t2_missxhit" t2_missxhit $
-        (miss `BNF.conc` t2_hitB) t2_in,
+        (miss `BNF.et` t2_hitB) t2_in,
         expect_memeq "t2_missxmiss" t2_missxmiss $
-        (miss `BNF.conc` miss) t2_in,
+        (miss `BNF.et` miss) t2_in,
         expect_memeq "t2_missxerr" t2_missxerr $
-        (miss `BNF.conc` errY) t2_in,
+        (miss `BNF.et` errY) t2_in,
         expect_memeq "t2_errxhit" t2_errxhit $
-        (errX `BNF.conc` t2_hitB) t2_in,
+        (errX `BNF.et` t2_hitB) t2_in,
         expect_memeq "t2_errxmiss" t2_errxmiss $
-        (errX `BNF.conc` miss) t2_in,
+        (errX `BNF.et` miss) t2_in,
         expect_memeq "t2_errxerr" t2_errxerr $
-        (errX `BNF.conc` errY) t2_in,
+        (errX `BNF.et` errY) t2_in,
         expect_memeq "t2_short" t2_short $
-        (t2_hitA `BNF.conc` t2_hitB `BNF.conc` t2_hitB) t2_in],
-      test "Exclude" [
+        (t2_hitA `BNF.et` t2_hitB `BNF.et` t2_hitB) t2_in],
+      test "Sauf" [
         expect_memeq "t3_hitxhit" t3_hitxhit $
-        (t3_hitA `BNF.exclude` t3_hitB) t3_in,
+        (t3_hitA `BNF.sauf` t3_hitB) t3_in,
         expect_memeq "t3_hitxmiss" t3_hitxmiss $
-        (t3_hitA `BNF.exclude` miss) t3_in,
+        (t3_hitA `BNF.sauf` miss) t3_in,
         expect_memeq "t3_hitxerr" t3_hitxerr $
-        (t3_hitA `BNF.exclude` errY) t3_in,
+        (t3_hitA `BNF.sauf` errY) t3_in,
         expect_memeq "t3_missxhit" t3_missxhit $
-        (miss `BNF.exclude` t3_hitB) t3_in,
+        (miss `BNF.sauf` t3_hitB) t3_in,
         expect_memeq "t3_missxmiss" t3_missxmiss $
-        (miss `BNF.exclude` miss) t3_in,
+        (miss `BNF.sauf` miss) t3_in,
         expect_memeq "t3_missxerr" t3_missxerr $
-        (miss `BNF.exclude` errY) t3_in,
+        (miss `BNF.sauf` errY) t3_in,
         expect_memeq "t3_errxhit" t3_errxhit $
-        (errX `BNF.exclude` t3_hitB) t3_in,
+        (errX `BNF.sauf` t3_hitB) t3_in,
         expect_memeq "t3_errxmiss" t3_errxmiss $
-        (errX `BNF.exclude` miss) t3_in,
+        (errX `BNF.sauf` miss) t3_in,
         expect_memeq "t3_errxerr" t3_errxerr $
-        (errX `BNF.exclude` errY) t3_in],
+        (errX `BNF.sauf` errY) t3_in],
       test "Fmap" [
         expect_memeq "t4_ohit" t4_ohit $
         fmap (t4_map) t4_ihit,
@@ -167,7 +167,7 @@ test_bnf =
         fmap (t4_map) t4_imiss,
         expect_memeq "t4_oerr" t4_oerr $
         fmap (t4_map) t4_ierr],
-      test "conv" [
+      test "Conv" [
         expect_memeq "t5_ohit" t5_ohit $
         (t5_ihit `BNF.conv` t5_map) t5_in,
         expect_memeq "t5_omiss" t5_omiss $
