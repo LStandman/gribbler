@@ -14,28 +14,17 @@ import BNF
 
 infixl 1 `conv`
 
+type Ctx a b = (a, b)
 type Text = (String, String)
 
-conv        :: Parser Text -> (String -> String) -> Parser Text
+reproduce :: (b -> b) -> Result (Ctx a b) -> Result (Ctx a b)
+reproduce f r = fmap (fmap f) r
+
+conv :: Semigroup b => Parser (Ctx a b) -> (b -> b) -> Parser (Ctx a b)
+conv f g = \ (i, o) -> reproduce ((o <>) . g) $ f (i, o)
+
 match_char  :: Char -> Parser Text
 text :: String -> Text
-
---format  :: (String -> String) -> Text -> Text
---format f (a, b) = (a, f b)
-
---combiner :: Parser Text -> Parser Text
---combiner f = \ (s, p) -> fmap (format (p ++)) $ f (s, p)
-
---to_parser :: (String -> Result Text) -> Parser Text
---to_parser f = \ (s, p) -> f s
-
-conv'' :: (String -> String) -> Text -> Text
-conv'' f (s, p) = (s, f p)
-
-conv' :: (String -> String) -> Result Text -> Result Text
-conv' f r = fmap (conv'' f) r
-
-conv f g = \ (s, p) -> (conv' ((p ++) . g) $ f (s, p))
 
 text s = (s, "")
 
