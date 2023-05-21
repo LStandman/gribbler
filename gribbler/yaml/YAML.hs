@@ -30,13 +30,13 @@ import MemUtils
 
 data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 
-any_char :: [Char] -> Parser Text
+any_char :: [Char] -> Parser String String
 any_char = (foldl1 (ou)) . (map (match_char))
 
 start_of_line = non
 end_of_input = non
 
-presentation :: Parser Text -> Parser Text
+presentation :: Parser String String -> Parser String String
 presentation f = f `conv` return ""
 
 -- [0]
