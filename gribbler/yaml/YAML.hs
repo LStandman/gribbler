@@ -31,7 +31,11 @@ import MemUtils
 data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 
 any_char :: [Char] -> Parser String String
-any_char = (foldl1 (ou)) . (map (match_char))
+any_char s = foldl1 (ou) $ map (match_char) s
+
+match_text :: [Char] -> Parser String String
+match_text [] = non
+match_text s  = foldl1 (et) $ map (match_char) s
 
 start_of_line = non
 end_of_input = non
@@ -163,53 +167,167 @@ c_ns_esc_char =
   ns_esc_pseparator `ou` ns_esc_8bit            `ou`
   ns_esc_16bit      `ou` ns_esc_32bit)
 
-s_indent' 0 = non
-s_indent' n = s_space `et` s_indent' (n - 1)
+s_indent 0 = non
+s_indent n = s_space `et` s_indent (n - 1)
 
-s_indent = s_indent'
+s_indent_lt 1 = non
+s_indent_lt n = s_space `et` s_indent_lt (n - 1) `ou` non
 
-s_indent_lt' 1 = non
-s_indent_lt' n = s_space `et` s_indent_lt' (n - 1) `ou` non
+s_indent_le 0 = non
+s_indent_le n = s_space `et` s_indent_le (n - 1) `ou` non
 
-s_indent_lt = s_indent_lt'
+s_separate_in_line = oom s_white `ou` start_of_line
 
-s_indent_le' 0 = non
-s_indent_le' n = s_space `et` s_indent_le' (n - 1) `ou` non
-
-s_indent_le = s_indent_le'
-
-s_seperate_in_line = one_or_more s_white `ou` start_of_line
-
-s_line_prefix' BlockOut = s_block_line_prefix
-s_line_prefix' BlockIn  = s_block_line_prefix
-s_line_prefix' FlowOut  = s_flow_line_prefix
-s_line_prefix' FlowIn   = s_flow_line_prefix
-
-s_line_prefix c = s_line_prefix' c
+s_line_prefix BlockOut = s_block_line_prefix
+s_line_prefix BlockIn  = s_block_line_prefix
+s_line_prefix FlowOut  = s_flow_line_prefix
+s_line_prefix FlowIn   = s_flow_line_prefix
 
 s_block_line_prefix  = s_indent
-s_flow_line_prefix n = s_indent n `et` zero_or_one s_seperate_in_line
+s_flow_line_prefix n = s_indent n `et` zoo s_separate_in_line
 
 l_empty c n = s_line_prefix c n `ou` s_indent_lt n `et` b_as_line_feed
 
 b_l_trimmed c n =
-  b_non_content `et` one_or_more (l_empty c n `conv` return "\n")
+  b_non_content `et` oom (l_empty c n `conv` return "\n")
 
 b_as_space = b_break `conv` return "\x20"
 
 b_l_folded c n = b_l_trimmed c n `ou` b_as_space
 
 s_flow_folded n =
-  zero_or_one s_seperate_in_line `et`
+  zoo s_separate_in_line `et`
   b_l_folded FlowIn n `et` s_flow_line_prefix n
 
-c_nb_comment_text = c_comment `et` zero_or_more nb_char
+c_nb_comment_text = c_comment `et` zom nb_char
 b_comment = b_non_content `ou` end_of_input
 s_b_comment =
-  zero_or_one (s_seperate_in_line `et` zero_or_one c_nb_comment_text) `et`
+  zoo (s_separate_in_line `et` zoo c_nb_comment_text) `et`
   b_comment
 
-l_comment = s_seperate_in_line `et` zero_or_one c_nb_comment_text `et`
+l_comment = s_separate_in_line `et` zoo c_nb_comment_text `et`
   b_comment
 
-s_l_comments = (s_b_comment `ou` start_of_line) `et` zero_or_more l_comment
+s_l_comments = (s_b_comment `ou` start_of_line) `et` zom l_comment
+
+-- [80]
+s_separate BlockOut n = s_separate_lines n
+s_separate BlockIn  n = s_separate_lines n
+s_separate FlowOut  n = s_separate_lines n
+s_separate FlowIn   n = s_separate_lines n
+s_separate BlockKey n = s_separate_in_line
+s_separate FlowKey  n = s_separate_in_line
+
+s_separate_lines n =
+  (s_l_comments `et` s_flow_line_prefix n) `ou` s_separate_in_line
+
+l_directive =
+  c_directive `et`
+  (ns_yaml_directive `ou` ns_tag_directive `ou` ns_reserved_directive) `et`
+  s_l_comments
+
+ns_reserved_directive =
+  ns_directive_name `et`
+  zom (s_separate_in_line `et` ns_directive_parameter)
+
+ns_directive_name      = oom ns_char
+ns_directive_parameter = oom ns_char
+
+ns_yaml_directive =
+  match_text "YAML" `et` s_separate_in_line `et` ns_yaml_version
+
+ns_yaml_version =
+  oom ns_dec_digit `et` match_char '.' `et` oom ns_dec_digit
+
+ns_tag_directive =
+  match_text "TAG" `et` s_separate_in_line `et`
+  c_tag_handle `et` s_separate_in_line `et` ns_tag_prefix
+
+c_tag_handle =
+  c_named_tag_handle `ou` c_secondary_tag_handle `ou` c_primary_tag_handle
+
+c_primary_tag_handle   = match_char '!'
+c_secondary_tag_handle = match_text "!!"
+c_named_tag_handle     = c_tag `et` oom ns_word_char `et` c_tag
+
+ns_tag_prefix = ns_local_tag_prefix `ou` ns_global_tag_prefix
+
+ns_local_tag_prefix  = c_tag `et` zom ns_uri_char
+ns_global_tag_prefix = c_tag `et` zom ns_uri_char
+
+c_ns_properties c n =
+  (c_ns_tag_property `et`
+  zoo (
+    s_separate c n `et` c_ns_anchor_property)) `ou`
+  (c_ns_anchor_property `et`
+  zoo (
+    s_separate c n `et` c_ns_tag_property))
+
+c_ns_tag_property =
+  c_verbatim_tag `ou` c_ns_shorthand_tag `ou` c_non_specific_tag
+
+c_verbatim_tag =
+  match_text "!<" `et` oom ns_uri_char `et` match_char '>'
+
+c_ns_shorthand_tag = c_tag_handle `et` oom ns_tag_char
+
+-- [100]
+c_non_specific_tag = match_char '!'
+
+c_ns_anchor_property = c_anchor `et` ns_anchor_name
+
+ns_anchor_char = ns_char `sauf` c_flow_indicator
+ns_anchor_name = oom ns_anchor_char
+
+c_ns_alias_node = c_alias `et` ns_anchor_name
+
+e_scalar = match_text ""
+e_node   = e_scalar
+
+nb_double_char =
+  c_ns_esc_char `ou` (nb_json `sauf` c_escape `sauf` c_double_quote)
+
+ns_double_char = nb_double_char `sauf` s_white
+
+c_doube_quoted c n = c_double_quote `et` nb_double_text c n `et` c_double_quote
+
+nb_double_text FlowOut  n = nb_double_multi_line n
+nb_double_text FlowIn   n = nb_double_multi_line n
+nb_double_text BlockKey n = nb_double_one_line
+nb_double_text FlowKey  n = nb_double_one_line
+
+nb_double_one_line = zom nb_double_char
+
+s_double_escaped n =
+  zom s_white `et` c_escape `et` b_non_content `et`
+  l_empty FlowIn n `et` s_flow_line_prefix n
+
+s_double_break n = s_double_escaped n `ou` s_flow_folded n
+
+nb_ns_double_in_line = zom (zom s_white `et` ns_double_char)
+
+s_double_next_line n =
+  s_double_break n `et`
+  zoo (
+    ns_double_char `et` nb_ns_double_in_line `et`
+    (s_double_next_line n `et` zom s_white))
+
+nb_double_multi_line n =
+  nb_ns_double_in_line `et`
+  (s_double_next_line n `ou` zom s_white)
+
+c_quoted_quote = match_text "''"
+
+nb_single_char = c_quoted_quote `ou` (nb_json `sauf` c_single_quote)
+
+ns_single_char = nb_single_char `sauf` s_white
+
+-- [120]
+--c_singe_quoted c n = c_single_quote `et` nb_single_text c n `et` c_single_quote
+
+--nb_single_text FlowOut  n = nb_single_multi_line n
+--nb_single_text FlowIn   n = nb_single_multi_line n
+--nb_single_text BlockKey n = nb_single_one_line
+--nb_single_text FlowKey  n = nb_single_one_line
+
+--nb_single_one_line = zom nb_single_char

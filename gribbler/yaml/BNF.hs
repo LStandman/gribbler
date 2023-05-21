@@ -8,12 +8,12 @@ module BNF(
     conv,
     et,
     non,
-    one_or_more,
+    oom,
     ou,
     rep,
     sauf,
-    zero_or_more,
-    zero_or_one)
+    zom,
+    zoo)
   where
 
 infixl 1 `conv`
@@ -33,13 +33,13 @@ type Parser a b = a -> Result a b
 
 et           :: Semigroup b => Parser a b -> Parser a b -> Parser a b
 non          :: Monoid b => a -> Result a b
-one_or_more  :: Semigroup b => Parser a b -> Parser a b
+oom  :: Semigroup b => Parser a b -> Parser a b
 ou           :: Parser a b -> Parser a b -> Parser a b
 sauf         :: Parser a b -> Parser a b -> Parser a b
 conv         :: Parser a b -> (b -> c) -> Parser a c
 rep          :: Semigroup b => Int -> Parser a b -> Parser a b
-zero_or_more :: Monoid b => Parser a b -> Parser a b
-zero_or_one  :: Monoid b => Parser a b -> Parser a b
+zom :: Monoid b => Parser a b -> Parser a b
+zoo  :: Monoid b => Parser a b -> Parser a b
 
 instance Functor (Result a)
   where
@@ -76,9 +76,9 @@ non i = Hit (i, mempty)
 
 conv f g = \ x -> fmap g $ f x
 
-zero_or_one  f = f `ou` non
+zoo  f = f `ou` non
 
-zero_or_more f = one_or_more f `ou` non
+zom f = oom f `ou` non
 
 et'' :: Semigroup b => Result a b -> Parser a b -> Result a b
 et'' (Hit (i1, o1)) f = case f i1 of
@@ -88,4 +88,4 @@ et'' (Hit (i1, o1)) f = case f i1 of
 et'' Miss        _ = Miss
 et'' (Error e)   _ = Error e
 
-one_or_more f = \ x -> f x `et''` one_or_more f
+oom f = \ x -> f x `et''` oom f
