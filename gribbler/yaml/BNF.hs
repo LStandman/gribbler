@@ -6,6 +6,7 @@ module BNF(
     Parser (..),
     Result (..),
     conv,
+    err,
     et,
     non,
     oom,
@@ -19,6 +20,8 @@ module BNF(
 infixl 1 `conv`
 infixl 1 `ou`
 infixl 1 `ou'`
+infixl 1 `err`
+infixl 1 `err'`
 infixl 1 `et`
 infixl 1 `et'`
 infixl 1 `sauf`
@@ -31,14 +34,15 @@ data Result a b =
 
 type Parser a b = a -> Result a b
 
-et           :: Semigroup b => Parser a b -> Parser a b -> Parser a b
-non          :: Monoid b => a -> Result a b
+err  :: Parser a b -> String -> Parser a b
+et   :: Semigroup b => Parser a b -> Parser a b -> Parser a b
+non  :: Monoid b => a -> Result a b
 oom  :: Semigroup b => Parser a b -> Parser a b
-ou           :: Parser a b -> Parser a b -> Parser a b
-sauf         :: Parser a b -> Parser a b -> Parser a b
-conv         :: Parser a b -> (b -> c) -> Parser a c
-rep          :: Semigroup b => Int -> Parser a b -> Parser a b
-zom :: Monoid b => Parser a b -> Parser a b
+ou   :: Parser a b -> Parser a b -> Parser a b
+sauf :: Parser a b -> Parser a b -> Parser a b
+conv :: Parser a b -> (b -> c) -> Parser a c
+rep  :: Semigroup b => Int -> Parser a b -> Parser a b
+zom  :: Monoid b => Parser a b -> Parser a b
 zoo  :: Monoid b => Parser a b -> Parser a b
 
 instance Functor (Result a)
@@ -76,7 +80,7 @@ non i = Hit (i, mempty)
 
 conv f g = \ x -> fmap g $ f x
 
-zoo  f = f `ou` non
+zoo f = f `ou` non
 
 zom f = oom f `ou` non
 
@@ -89,3 +93,10 @@ et'' Miss        _ = Miss
 et'' (Error e)   _ = Error e
 
 oom f = \ x -> f x `et''` oom f
+
+err' :: Result a b -> String -> Result a b
+err' (Hit _)    e2 = Error e2
+err' Miss       _  = Miss
+err' (Error e1) _  = Error e1
+
+err f e = \ x -> f x `err'` e

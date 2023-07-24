@@ -98,6 +98,16 @@ test_bnf =
     t9_outB      = Hit ("bb", "a")
     t9_inC       = "aab"
     t9_outC      = Hit ("b", "aa")
+    t10_in       = ""
+    t10_errStr   = "Y"
+    t10_errA     = Error "X"
+    t10_errB     = Error t10_errStr
+    t10_fhit     = return $ Hit ("", "a")
+    t10_ohit     = t10_errB
+    t10_fmiss    = return Miss :: Parser String String
+    t10_omiss    = Miss
+    t10_ferr     = return t10_errA :: Parser String String
+    t10_oerr     = t10_errA
   in
     testsuite "BNF" [
       test "Ou" [
@@ -196,4 +206,11 @@ test_bnf =
         expect_memeq "t9_outB" t9_outB $
         (BNF.oom t9_hit) t9_inB,
         expect_memeq "t9_outC" t9_outC $
-        (BNF.oom t9_hit) t9_inC]]
+        (BNF.oom t9_hit) t9_inC],
+      test "Err" [
+        expect_memeq "t10_ohit" t10_ohit $
+        (t10_fhit `BNF.err` t10_errStr) t10_in,
+        expect_memeq "t10_omiss" t10_omiss $
+        (t10_fmiss `BNF.err` t10_errStr) t10_in,
+        expect_memeq "t10_oerr" t10_oerr $
+        (t10_ferr `BNF.err` t10_errStr) t10_in]]
