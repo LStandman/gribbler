@@ -9,6 +9,7 @@ module BNF(
     err,
     et,
     non,
+    look_ahead,
     oom,
     ou,
     rep,
@@ -18,6 +19,8 @@ module BNF(
   where
 
 infixl 1 `conv`
+infixl 1 `look_ahead`
+infixl 1 `look_ahead'`
 infixl 1 `ou`
 infixl 1 `ou'`
 infixl 1 `err`
@@ -34,16 +37,17 @@ data Result a b =
 
 type Parser a b = a -> Result a b
 
-err  :: Parser a b -> String -> Parser a b
-et   :: Semigroup b => Parser a b -> Parser a b -> Parser a b
-non  :: Monoid b => a -> Result a b
-oom  :: Semigroup b => Parser a b -> Parser a b
-ou   :: Parser a b -> Parser a b -> Parser a b
-sauf :: Parser a b -> Parser a b -> Parser a b
-conv :: Parser a b -> (b -> c) -> Parser a c
-rep  :: Semigroup b => Int -> Parser a b -> Parser a b
-zom  :: Monoid b => Parser a b -> Parser a b
-zoo  :: Monoid b => Parser a b -> Parser a b
+err        :: Parser a b -> String -> Parser a b
+et         :: Semigroup b => Parser a b -> Parser a b -> Parser a b
+non        :: Monoid b => a -> Result a b
+look_ahead :: Parser a b -> Parser a b -> Parser a b
+oom        :: Semigroup b => Parser a b -> Parser a b
+ou         :: Parser a b -> Parser a b -> Parser a b
+sauf       :: Parser a b -> Parser a b -> Parser a b
+conv       :: Parser a b -> (b -> c) -> Parser a c
+rep        :: Semigroup b => Int -> Parser a b -> Parser a b
+zom        :: Monoid b => Parser a b -> Parser a b
+zoo        :: Monoid b => Parser a b -> Parser a b
 
 instance Functor (Result a)
   where
@@ -100,3 +104,13 @@ err' Miss       _  = Miss
 err' (Error e1) _  = Error e1
 
 err f e = \ x -> f x `err'` e
+
+look_ahead' :: Result a b -> Parser a b -> Result a b
+look_ahead' (Hit (i, o)) f = case f i of
+  Hit _    -> Hit (i, o)
+  Miss     -> Miss
+  Error e2 -> Error e2
+look_ahead' Miss       _ = Miss
+look_ahead' (Error e1) _ = Error e1
+
+look_ahead f g = \ x -> f x `look_ahead'` g

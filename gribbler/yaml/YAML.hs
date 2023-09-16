@@ -33,10 +33,6 @@ data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 any_char :: [Char] -> Parser String String
 any_char s = foldl1 (ou) $ map (match_char) s
 
-match_text :: [Char] -> Parser String String
-match_text [] = non
-match_text s  = foldl1 (et) $ map (match_char) s
-
 start_of_line = non
 end_of_input = non
 

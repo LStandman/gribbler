@@ -108,6 +108,19 @@ test_bnf =
     t10_omiss    = Miss
     t10_ferr     = return t10_errA :: Parser String String
     t10_oerr     = t10_errA
+    t11_in        = "ab"
+    t11_success   = Hit ("b", "a")
+    t11_hitA      = match_char 'a'
+    t11_hitB      = match_char 'b'
+    t11_hitxhit   = t2_success
+    t11_hitxmiss  = amiss
+    t11_hitxerr   = errorY
+    t11_missxhit  = amiss
+    t11_missxmiss = amiss
+    t11_missxerr  = amiss
+    t11_errxhit   = errorX
+    t11_errxmiss  = errorX
+    t11_errxerr   = errorX
   in
     testsuite "BNF" [
       test "Ou" [
@@ -213,4 +226,23 @@ test_bnf =
         expect_memeq "t10_omiss" t10_omiss $
         (t10_fmiss `BNF.err` t10_errStr) t10_in,
         expect_memeq "t10_oerr" t10_oerr $
-        (t10_ferr `BNF.err` t10_errStr) t10_in]]
+        (t10_ferr `BNF.err` t10_errStr) t10_in],
+      test "LookAhead" [
+        expect_memeq "t11_hitxhit" t11_hitxhit $
+        (t11_hitA `BNF.et` t11_hitB) t11_in,
+        expect_memeq "t11_hitxmiss" t11_hitxmiss $
+        (t11_hitA `BNF.et` miss) t11_in,
+        expect_memeq "t11_hitxerr" t11_hitxerr $
+        (t11_hitA `BNF.et` errY) t11_in,
+        expect_memeq "t11_missxhit" t11_missxhit $
+        (miss `BNF.et` t11_hitB) t11_in,
+        expect_memeq "t11_missxmiss" t11_missxmiss $
+        (miss `BNF.et` miss) t11_in,
+        expect_memeq "t11_missxerr" t11_missxerr $
+        (miss `BNF.et` errY) t11_in,
+        expect_memeq "t11_errxhit" t11_errxhit $
+        (errX `BNF.et` t11_hitB) t11_in,
+        expect_memeq "t11_errxmiss" t11_errxmiss $
+        (errX `BNF.et` miss) t11_in,
+        expect_memeq "t11_errxerr" t11_errxerr $
+        (errX `BNF.et` errY) t11_in]]
