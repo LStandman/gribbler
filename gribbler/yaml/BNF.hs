@@ -10,6 +10,7 @@ module BNF(
     et,
     non,
     look_ahead,
+    look_behind,
     oom,
     ou,
     rep,
@@ -21,6 +22,8 @@ module BNF(
 infixl 1 `conv`
 infixl 1 `look_ahead`
 infixl 1 `look_ahead'`
+infixl 1 `look_behind`
+infixl 1 `look_behind'`
 infixl 1 `ou`
 infixl 1 `ou'`
 infixl 1 `err`
@@ -37,17 +40,18 @@ data Result a b =
 
 type Parser a b = a -> Result a b
 
-err        :: Parser a b -> String -> Parser a b
-et         :: Semigroup b => Parser a b -> Parser a b -> Parser a b
-non        :: Monoid b => a -> Result a b
-look_ahead :: Parser a b -> Parser a b -> Parser a b
-oom        :: Semigroup b => Parser a b -> Parser a b
-ou         :: Parser a b -> Parser a b -> Parser a b
-sauf       :: Parser a b -> Parser a b -> Parser a b
-conv       :: Parser a b -> (b -> c) -> Parser a c
-rep        :: Semigroup b => Int -> Parser a b -> Parser a b
-zom        :: Monoid b => Parser a b -> Parser a b
-zoo        :: Monoid b => Parser a b -> Parser a b
+err         :: Parser a b -> String -> Parser a b
+et          :: Semigroup b => Parser a b -> Parser a b -> Parser a b
+non         :: Monoid b => a -> Result a b
+look_ahead  :: Parser a b -> Parser a b -> Parser a b
+look_behind :: Parser a b -> Parser a b -> Parser a b
+oom         :: Semigroup b => Parser a b -> Parser a b
+ou          :: Parser a b -> Parser a b -> Parser a b
+sauf        :: Parser a b -> Parser a b -> Parser a b
+conv        :: Parser a b -> (b -> c) -> Parser a c
+rep         :: Semigroup b => Int -> Parser a b -> Parser a b
+zom         :: Monoid b => Parser a b -> Parser a b
+zoo         :: Monoid b => Parser a b -> Parser a b
 
 instance Functor (Result a)
   where
@@ -114,3 +118,12 @@ look_ahead' Miss       _ = Miss
 look_ahead' (Error e1) _ = Error e1
 
 look_ahead f g = \ x -> f x `look_ahead'` g
+
+look_behind' :: Result a b -> Result a b -> Result a b
+look_behind' (Hit c1)   (Hit _)    = Hit c1
+look_behind' (Hit _)    Miss       = Miss
+look_behind' (Error e1) _          = Error e1
+look_behind' _          (Error e2) = Error e2
+look_behind' _          _          = Miss
+
+look_behind f g = \ x -> f x `look_behind'` g x
