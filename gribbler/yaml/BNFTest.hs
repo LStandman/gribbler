@@ -123,7 +123,7 @@ test_bnf =
     t11_errxerr   = errorX
     t12_in        = "ab"
     t12_success   = Hit ("", difflist "ab")
-    t12_hitX      = match_char 'a' `et` match_char 'b'
+    t12_hitX      = match_char 'a' `BNF.et` match_char 'b'
     t12_hitY      = match_char 'a'
     t12_hitxhit   = t12_success
     t12_hitxmiss  = amiss
@@ -174,25 +174,25 @@ test_bnf =
         (errX `BNF.et` miss) t2_in,
         expect_memeq "t2_errxerr" t2_errxerr $
         (errX `BNF.et` errY) t2_in],
-      test "Sauf" [
+      test "Except" [
         expect_memeq "t3_hitxhit" t3_hitxhit $
-        (t3_hitA `BNF.sauf` t3_hitB) t3_in,
+        (t3_hitA `BNF.except` t3_hitB) t3_in,
         expect_memeq "t3_hitxmiss" t3_hitxmiss $
-        (t3_hitA `BNF.sauf` miss) t3_in,
+        (t3_hitA `BNF.except` miss) t3_in,
         expect_memeq "t3_hitxerr" t3_hitxerr $
-        (t3_hitA `BNF.sauf` errY) t3_in,
+        (t3_hitA `BNF.except` errY) t3_in,
         expect_memeq "t3_missxhit" t3_missxhit $
-        (miss `BNF.sauf` t3_hitB) t3_in,
+        (miss `BNF.except` t3_hitB) t3_in,
         expect_memeq "t3_missxmiss" t3_missxmiss $
-        (miss `BNF.sauf` miss) t3_in,
+        (miss `BNF.except` miss) t3_in,
         expect_memeq "t3_missxerr" t3_missxerr $
-        (miss `BNF.sauf` errY) t3_in,
+        (miss `BNF.except` errY) t3_in,
         expect_memeq "t3_errxhit" t3_errxhit $
-        (errX `BNF.sauf` t3_hitB) t3_in,
+        (errX `BNF.except` t3_hitB) t3_in,
         expect_memeq "t3_errxmiss" t3_errxmiss $
-        (errX `BNF.sauf` miss) t3_in,
+        (errX `BNF.except` miss) t3_in,
         expect_memeq "t3_errxerr" t3_errxerr $
-        (errX `BNF.sauf` errY) t3_in],
+        (errX `BNF.except` errY) t3_in],
       test "Fmap" [
         expect_memeq "t4_ohit" t4_ohit $
         fmap (t4_map) t4_ihit,

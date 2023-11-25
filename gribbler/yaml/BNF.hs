@@ -8,26 +8,26 @@ module BNF(
     conv,
     err,
     et,
-    non,
+    except,
     look_ahead,
+    nul,
     oom,
     ou,
     rep,
-    sauf,
     zom,
     zoo)
   where
 
 infixl 1 `conv`
-infixl 1 `look_ahead`
-infixl 1 `look_ahead'`
-infixl 1 `ou`
-infixl 1 `ou'`
 infixl 1 `err`
 infixl 1 `err'`
 infixl 1 `et`
 infixl 1 `et'`
-infixl 1 `sauf`
+infixl 1 `look_ahead`
+infixl 1 `look_ahead'`
+infixl 1 `ou`
+infixl 1 `ou'`
+infixl 1 `except`
 
 data Result a b =
     Hit (a, b)   |
@@ -37,14 +37,14 @@ data Result a b =
 
 type Parser a b = a -> Result a b
 
+conv        :: Parser a b -> (b -> c) -> Parser a c
 err         :: Parser a b -> String -> Parser a b
 et          :: Semigroup b => Parser a b -> Parser a b -> Parser a b
-non         :: Monoid b => Parser a b
+except      :: Parser a b -> Parser a b -> Parser a b
 look_ahead  :: Parser a b -> Parser a b -> Parser a b
+nul         :: Monoid b => Parser a b
 oom         :: Semigroup b => Parser a b -> Parser a b
 ou          :: Parser a b -> Parser a b -> Parser a b
-sauf        :: Parser a b -> Parser a b -> Parser a b
-conv        :: Parser a b -> (b -> c) -> Parser a c
 rep         :: Semigroup b => Int -> Parser a b -> Parser a b
 zom         :: Monoid b => Parser a b -> Parser a b
 zoo         :: Monoid b => Parser a b -> Parser a b
@@ -72,31 +72,31 @@ et f g = \ x -> f x `et'` g
 rep 1 f = f
 rep n f = f `et` rep (n - 1) f
 
-sauf' :: Result a b -> Result a b -> Result a b
-sauf' (Hit ctx)  Miss       = Hit ctx
-sauf' (Hit _)    (Error e2) = Error e2
-sauf' (Error e1) _          = Error e1
-sauf' _          _          = Miss
+except' :: Result a b -> Result a b -> Result a b
+except' (Hit ctx)  Miss       = Hit ctx
+except' (Hit _)    (Error e2) = Error e2
+except' (Error e1) _          = Error e1
+except' _          _          = Miss
 
-sauf f g = \ x -> f x `sauf'` g x
+except f g = \ x -> f x `except'` g x
 
-non i = Hit (i, mempty)
+nul i = Hit (i, mempty)
 
 conv f g = \ x -> fmap g $ f x
 
-zoo f = f `ou` non
+zoo f = f `ou` nul
 
-zom f = oom f `ou` non
+zom f = oom f `ou` nul
 
-et'' :: Semigroup b => Result a b -> Parser a b -> Result a b
-et'' (Hit (i1, o1)) f = case f i1 of
+maybe' :: Semigroup b => Result a b -> Parser a b -> Result a b
+maybe' (Hit (i1, o1)) f = case f i1 of
   Hit ctx2  -> Hit $ fmap (o1 <>) ctx2
   Miss      -> Hit (i1, o1)
   Error e   -> Error e
-et'' Miss        _ = Miss
-et'' (Error e)   _ = Error e
+maybe' Miss        _ = Miss
+maybe' (Error e)   _ = Error e
 
-oom f = \ x -> f x `et''` oom f
+oom f = \ x -> f x `maybe'` oom f
 
 err' :: Result a b -> String -> Result a b
 err' (Hit _)    e2 = Error e2

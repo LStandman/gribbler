@@ -33,9 +33,9 @@ data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 any_char :: [Char] -> TextParser
 any_char s = foldl1 (ou) $ map (match_char) s
 
-x_empty = non :: TextParser
-start_of_line = non
-end_of_input = non
+x_empty = nul :: TextParser
+start_of_line = nul
+end_of_input = nul
 
 presentation :: TextParser -> TextParser
 presentation f = f `conv` (return $ difflist "")
@@ -94,7 +94,7 @@ c_flow_indicator =
 b_line_feed       = match_char '\x0A'
 b_carriage_return = match_char '\x0D'
 b_char          = b_line_feed `ou` b_carriage_return
-nb_char         = c_printable `sauf` b_char `sauf` c_byte_order_mark
+nb_char         = c_printable `except` b_char `except` c_byte_order_mark
 
 b_break =
   (b_carriage_return `et` b_line_feed) `ou`
@@ -108,7 +108,7 @@ b_non_content = presentation b_break
 s_space   = match_char '\x20'
 s_tab     = match_char '\x09'
 s_white   = s_space `ou` s_tab
-ns_char = nb_char `sauf` s_white
+ns_char = nb_char `except` s_white
 
 -- 5.6. Miscellaneous Characters
 ns_dec_digit    = any_char ['\x30'..'\x39']
@@ -127,7 +127,7 @@ ns_uri_char =
       '+',  '$', ',', '_', '.', '!', '~', '*',
       '\'', '(', ')', '[', ']']
 
-ns_tag_char = ns_uri_char `sauf` c_tag `sauf` c_flow_indicator
+ns_tag_char = ns_uri_char `except` c_tag `except` c_flow_indicator
 
 -- 5.7. Escaped Characters
 c_escape = match_char '\\' `conv` (return $ difflist "")
@@ -171,14 +171,14 @@ c_ns_esc_char =
   ns_esc_16bit      `ou` ns_esc_32bit)
 
 -- 6.1. Indentation Spaces
-s_indent 0 = non
+s_indent 0 = nul
 s_indent n = s_space `et` s_indent (n - 1)
 
-s_indent_lt 1 = non
-s_indent_lt n = s_space `et` s_indent_lt (n - 1) `ou` non
+s_indent_lt 1 = nul
+s_indent_lt n = s_space `et` s_indent_lt (n - 1) `ou` nul
 
-s_indent_le 0 = non
-s_indent_le n = s_space `et` s_indent_le (n - 1) `ou` non
+s_indent_le 0 = nul
+s_indent_le n = s_space `et` s_indent_le (n - 1) `ou` nul
 
 -- 6.2. Separation Spaces
 s_separate_in_line = oom s_white `ou` start_of_line
@@ -251,7 +251,7 @@ c_ns_properties c n =
     s_separate c n `et` c_ns_tag_property))
 
 c_ns_tag_property =
-  (c_verbatim_tag `ou` c_ns_shorthand_tag `ou` c_non_specific_tag)
+  (c_verbatim_tag `ou` c_ns_shorthand_tag `ou` c_nul_specific_tag)
   `err` "Node tags are not implemented!"
 
 c_verbatim_tag =
@@ -259,7 +259,7 @@ c_verbatim_tag =
 
 c_ns_shorthand_tag = c_tag_handle `et` oom ns_tag_char
 
-c_non_specific_tag = match_char '!'
+c_nul_specific_tag = match_char '!'
 
 c_ns_anchor_property =
   c_anchor `err` "Node anchors are not implemented!"
@@ -280,9 +280,9 @@ c_double_quoted c n =
 -- 7.3.2. Single-Quoted Style
 c_quoted_quote = match_text "''"
 
-nb_single_char = c_quoted_quote `ou` (nb_json `sauf` c_single_quote)
+nb_single_char = c_quoted_quote `ou` (nb_json `except` c_single_quote)
 
-ns_single_char = nb_single_char `sauf` s_white
+ns_single_char = nb_single_char `except` s_white
 
 c_single_quoted c n = c_single_quote `et` nb_single_text c n `et` c_single_quote
 

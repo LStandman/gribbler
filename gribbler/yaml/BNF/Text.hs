@@ -24,5 +24,5 @@ match_char c = \ xs -> case xs of
     False -> Miss
 
 match_text :: [Char] -> TextParser
-match_text [] = non
+match_text [] = nul
 match_text s  = foldl1 (et) $ map (match_char) s
