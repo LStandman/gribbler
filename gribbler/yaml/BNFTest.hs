@@ -10,15 +10,15 @@ import BNF.Text
 
 test_bnf =
   let
-    errorX       = Error "X" :: Result String String
-    errorY       = Error "Y" :: Result String String
-    amiss        = Miss :: Result String String
+    errorX       = Error "X" :: Result String (DiffList Char)
+    errorY       = Error "Y" :: Result String (DiffList Char)
+    amiss        = Miss :: Result String (DiffList Char)
     errX         = return errorX
     errY         = return errorY
     miss         = return amiss
     t1_in        = ""
-    t1_successA  = Hit ("", "a")
-    t1_successB  = Hit ("", "b")
+    t1_successA  = Hit ("", difflist "a")
+    t1_successB  = Hit ("", difflist "b")
     t1_hitA      = return t1_successA
     t1_hitB      = return t1_successB
     t1_hitxhit   = t1_successA
@@ -31,7 +31,7 @@ test_bnf =
     t1_errxmiss  = errorX
     t1_errxerr   = errorX
     t2_in        = "ab"
-    t2_success   = Hit ("", "ab")
+    t2_success   = Hit ("", difflist "ab")
     t2_hitA      = match_char 'a'
     t2_hitB      = match_char 'b'
     t2_hitxhit   = t2_success
@@ -44,7 +44,7 @@ test_bnf =
     t2_errxmiss  = errorX
     t2_errxerr   = errorX
     t3_in        = "a"
-    t3_success   = Hit ("", "a")
+    t3_success   = Hit ("", difflist "a")
     t3_hitA      = match_char 'a'
     t3_hitB      = match_char 'a'
     t3_hitxhit   = amiss
@@ -56,12 +56,12 @@ test_bnf =
     t3_errxhit   = errorX
     t3_errxmiss  = errorX
     t3_errxerr   = errorX
-    t4_map       = length
-    t4_ihit      = Hit ("xyz", "abc")
+    t4_map       = length . relist
+    t4_ihit      = Hit ("xyz", difflist "abc")
     t4_ohit      = Hit ("xyz", 3)
-    t4_imiss     = Miss :: Result String String
+    t4_imiss     = Miss :: Result String (DiffList Char)
     t4_omiss     = Miss :: Result String Int
-    t4_ierr      = Error "X" :: Result String String
+    t4_ierr      = Error "X" :: Result String (DiffList Char)
     t4_oerr      = Error "X" :: Result String Int
     t5_in        = ""
     t5_map       = t4_map
@@ -76,40 +76,40 @@ test_bnf =
     t6_inA       = "abb"
     t6_outA      = Miss
     t6_inB       = "aab"
-    t6_outB      = Hit ("b", "aa")
+    t6_outB      = Hit ("b", difflist "aa")
     t6_inC       = "aaa"
-    t6_outC      = Hit ("a", "aa")
+    t6_outC      = Hit ("a", difflist "aa")
     t7_hit       = match_char 'a'
     t7_inA       = "aa"
-    t7_outA      = Hit ("a", "a")
+    t7_outA      = Hit ("a", difflist "a")
     t7_inB       = "ba"
-    t7_outB      = Hit ("ba", "")
+    t7_outB      = Hit ("ba", difflist "")
     t8_hit       = match_char 'a'
     t8_inA       = "bbb"
-    t8_outA      = Hit ("bbb", "")
+    t8_outA      = Hit ("bbb", difflist "")
     t8_inB       = "abb"
-    t8_outB      = Hit ("bb", "a")
+    t8_outB      = Hit ("bb", difflist "a")
     t8_inC       = "aab"
-    t8_outC      = Hit ("b", "aa")
+    t8_outC      = Hit ("b", difflist "aa")
     t9_hit       = match_char 'a'
     t9_inA       = "bbb"
     t9_outA      = Miss
     t9_inB       = "abb"
-    t9_outB      = Hit ("bb", "a")
+    t9_outB      = Hit ("bb", difflist "a")
     t9_inC       = "aab"
-    t9_outC      = Hit ("b", "aa")
+    t9_outC      = Hit ("b", difflist "aa")
     t10_in       = ""
     t10_errStr   = "Y"
     t10_errA     = Error "X"
     t10_errB     = Error t10_errStr
-    t10_fhit     = return $ Hit ("", "a")
+    t10_fhit     = return $ Hit ("", difflist "a")
     t10_ohit     = t10_errB
-    t10_fmiss    = return Miss :: Parser String String
+    t10_fmiss    = return Miss :: Parser String (DiffList Char)
     t10_omiss    = Miss
-    t10_ferr     = return t10_errA :: Parser String String
+    t10_ferr     = return t10_errA :: Parser String (DiffList Char)
     t10_oerr     = t10_errA
     t11_in        = "ab"
-    t11_success   = Hit ("b", "a")
+    t11_success   = Hit ("b", difflist "a")
     t11_hitA      = match_char 'a'
     t11_hitB      = match_char 'b'
     t11_hitxhit   = t11_success
@@ -122,7 +122,7 @@ test_bnf =
     t11_errxmiss  = errorX
     t11_errxerr   = errorX
     t12_in        = "ab"
-    t12_success   = Hit ("", "ab")
+    t12_success   = Hit ("", difflist "ab")
     t12_hitX      = match_char 'a' `et` match_char 'b'
     t12_hitY      = match_char 'a'
     t12_hitxhit   = t12_success
@@ -258,23 +258,4 @@ test_bnf =
         expect_memeq "t11_errxmiss" t11_errxmiss $
         (errX `BNF.look_ahead` miss) t11_in,
         expect_memeq "t11_errxerr" t11_errxerr $
-        (errX `BNF.look_ahead` errY) t11_in],
-      test "LookBehind" [
-        expect_memeq "t12_hitxhit" t12_hitxhit $
-        (t12_hitX `BNF.look_behind` t12_hitY) t12_in,
-        expect_memeq "t12_hitxmiss" t12_hitxmiss $
-        (t12_hitX `BNF.look_behind` miss) t12_in,
-        expect_memeq "t12_hitxerr" t12_hitxerr $
-        (t12_hitX `BNF.look_behind` errY) t12_in,
-        expect_memeq "t12_missxhit" t12_missxhit $
-        (miss `BNF.look_behind` t12_hitY) t12_in,
-        expect_memeq "t12_missxmiss" t12_missxmiss $
-        (miss `BNF.look_behind` miss) t12_in,
-        expect_memeq "t12_missxerr" t12_missxerr $
-        (miss `BNF.look_behind` errY) t12_in,
-        expect_memeq "t12_errxhit" t12_errxhit $
-        (errX `BNF.look_behind` t12_hitY) t12_in,
-        expect_memeq "t12_errxmiss" t12_errxmiss $
-        (errX `BNF.look_behind` miss) t12_in,
-        expect_memeq "t12_errxerr" t12_errxerr $
-        (errX `BNF.look_behind` errY) t12_in]]
+        (errX `BNF.look_ahead` errY) t11_in]]

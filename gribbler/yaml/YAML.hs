@@ -30,14 +30,15 @@ import MemUtils
 
 data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 
-any_char :: [Char] -> Parser String String
+any_char :: [Char] -> Parser String (DiffList Char)
 any_char s = foldl1 (ou) $ map (match_char) s
 
+x_empty = non :: Parser String (DiffList Char)
 start_of_line = non
 end_of_input = non
 
-presentation :: Parser String String -> Parser String String
-presentation f = f `conv` return ""
+presentation :: Parser String (DiffList Char) -> Parser String (DiffList Char)
+presentation f = f `conv` (return $ difflist "")
 
 -- 5. Character Productions
 -- 5.1. Character Set
@@ -99,7 +100,7 @@ b_break =
   (b_carriage_return `et` b_line_feed) `ou`
   b_carriage_return `ou` b_line_feed
 
-b_as_line_feed = b_break `conv` return "\x0A"
+b_as_line_feed = b_break `conv` (return $ difflist "\x0A")
 
 b_non_content = presentation b_break
 
@@ -129,26 +130,26 @@ ns_uri_char =
 ns_tag_char = ns_uri_char `sauf` c_tag `sauf` c_flow_indicator
 
 -- 5.7. Escaped Characters
-c_escape = match_char '\\' `conv` return ""
-ns_esc_null            = match_char '0'    `conv` return "\x00"
-ns_esc_bell            = match_char 'a'    `conv` return "\x07"
-ns_esc_backspace       = match_char 'b'    `conv` return "\x08"
-ns_esc_htab = (match_char 't' `ou` match_char '\x09') `conv` return "\x09"
-ns_esc_line_feed       = match_char 'n'    `conv` return "\x0A"
-ns_esc_vtab            = match_char 'v'    `conv` return "\x0B"
-ns_esc_form_feed       = match_char 'f'    `conv` return "\x0C"
-ns_esc_carriage_return = match_char 'r'    `conv` return "\x0D"
-ns_esc_escape          = match_char 'e'    `conv` return "\x1B"
-ns_esc_space           = match_char '\x20' `conv` return "\x20"
-ns_esc_dquote          = match_char '"'    `conv` return "\x22"
-ns_esc_slash           = match_char '/'    `conv` return "\x2F"
-ns_esc_backslash       = match_char '\\'   `conv` return "\x5C"
-ns_esc_nextline        = match_char 'N'    `conv` return "\x85"
-ns_esc_nbscpace        = match_char '_'    `conv` return "\xA0"
-ns_esc_lseparator      = match_char 'L'    `conv` return "\x2028"
-ns_esc_pseparator      = match_char 'P'    `conv` return "\x2029"
+c_escape = match_char '\\' `conv` (return $ difflist "")
+ns_esc_null            = match_char '0'    `conv` (return $ difflist "\x00")
+ns_esc_bell            = match_char 'a'    `conv` (return $ difflist "\x07")
+ns_esc_backspace       = match_char 'b'    `conv` (return $ difflist "\x08")
+ns_esc_htab = (match_char 't' `ou` match_char '\x09') `conv` (return $ difflist "\x09")
+ns_esc_line_feed       = match_char 'n'    `conv` (return $ difflist "\x0A")
+ns_esc_vtab            = match_char 'v'    `conv` (return $ difflist "\x0B")
+ns_esc_form_feed       = match_char 'f'    `conv` (return $ difflist "\x0C")
+ns_esc_carriage_return = match_char 'r'    `conv` (return $ difflist "\x0D")
+ns_esc_escape          = match_char 'e'    `conv` (return $ difflist "\x1B")
+ns_esc_space           = match_char '\x20' `conv` (return $ difflist "\x20")
+ns_esc_dquote          = match_char '"'    `conv` (return $ difflist "\x22")
+ns_esc_slash           = match_char '/'    `conv` (return $ difflist "\x2F")
+ns_esc_backslash       = match_char '\\'   `conv` (return $ difflist "\x5C")
+ns_esc_nextline        = match_char 'N'    `conv` (return $ difflist "\x85")
+ns_esc_nbscpace        = match_char '_'    `conv` (return $ difflist "\xA0")
+ns_esc_lseparator      = match_char 'L'    `conv` (return $ difflist "\x2028")
+ns_esc_pseparator      = match_char 'P'    `conv` (return $ difflist "\x2029")
 
-hex2char s = [toEnum . fromJust . hex2num $ tail s ]
+hex2char s = difflist [toEnum . fromJust . hex2num $ tail $ relist s ]
 
 ns_esc_8bit  = match_char 'x' `et` rep 2 ns_hex_digit `conv` hex2char
 
@@ -196,9 +197,9 @@ l_empty c n = s_line_prefix c n `ou` s_indent_lt n `et` b_as_line_feed
 
 -- 6.5. Line Folding
 b_l_trimmed c n =
-  b_non_content `et` oom (l_empty c n `conv` return "\n")
+  b_non_content `et` oom (l_empty c n `conv` (return $ difflist "\n"))
 
-b_as_space = b_break `conv` return "\x20"
+b_as_space = b_break `conv` (return $ difflist "\x20")
 
 b_l_folded c n = b_l_trimmed c n `ou` b_as_space
 

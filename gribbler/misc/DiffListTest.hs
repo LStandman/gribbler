@@ -9,9 +9,9 @@ import Libtest
 
 test_difflist =
   let
-    t1_listA  = [ "1", "2", "3", "4" ]
-    t1_listB  = [ "a", "b", "c", "d" ]
-    t1_result = [ "1", "2", "3", "4", "a", "b", "c", "d" ]
+    t1_listA  = [ '1', '2', '3', '4' ]
+    t1_listB  = [ 'a', 'b', 'c', 'd' ]
+    t1_result = [ '1', '2', '3', '4', 'a', 'b', 'c', 'd' ]
   in
     testsuite "DiffList" [
       test "Concat" [

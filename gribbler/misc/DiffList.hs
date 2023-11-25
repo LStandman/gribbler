@@ -10,10 +10,26 @@ module DiffList(
 
 import Data.Monoid
 
-type DiffList a = Endo ([a])
+data DiffList a = DiffList (Endo ([a]))
+
+instance Semigroup (DiffList a)
+  where
+    DiffList x <> DiffList y = DiffList $ x <> y
 
 difflist :: [a] -> DiffList a
-difflist l = Endo (l ++)
+difflist l = DiffList $ Endo (l ++)
 
 relist :: DiffList a -> [a]
-relist d = appEndo d []
+relist (DiffList d) = appEndo d []
+
+instance Monoid (DiffList a)
+  where
+    mempty = difflist []
+
+instance Eq a => Eq (DiffList a)
+  where
+    x == y = relist x == relist y
+
+instance Show a => Show (DiffList a)
+  where
+    show = show . relist
