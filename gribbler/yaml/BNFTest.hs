@@ -10,9 +10,9 @@ import BNF.Text
 
 test_bnf =
   let
-    errorX       = Error "X" :: Result String (DiffList Char)
-    errorY       = Error "Y" :: Result String (DiffList Char)
-    amiss        = Miss :: Result String (DiffList Char)
+    errorX       = Error "X" :: TextResult
+    errorY       = Error "Y" :: TextResult
+    amiss        = Miss :: TextResult
     errX         = return errorX
     errY         = return errorY
     miss         = return amiss
@@ -59,9 +59,9 @@ test_bnf =
     t4_map       = length . relist
     t4_ihit      = Hit ("xyz", difflist "abc")
     t4_ohit      = Hit ("xyz", 3)
-    t4_imiss     = Miss :: Result String (DiffList Char)
+    t4_imiss     = Miss :: TextResult
     t4_omiss     = Miss :: Result String Int
-    t4_ierr      = Error "X" :: Result String (DiffList Char)
+    t4_ierr      = Error "X" :: TextResult
     t4_oerr      = Error "X" :: Result String Int
     t5_in        = ""
     t5_map       = t4_map
@@ -104,9 +104,9 @@ test_bnf =
     t10_errB     = Error t10_errStr
     t10_fhit     = return $ Hit ("", difflist "a")
     t10_ohit     = t10_errB
-    t10_fmiss    = return Miss :: Parser String (DiffList Char)
+    t10_fmiss    = return Miss :: TextParser
     t10_omiss    = Miss
-    t10_ferr     = return t10_errA :: Parser String (DiffList Char)
+    t10_ferr     = return t10_errA :: TextParser
     t10_oerr     = t10_errA
     t11_in        = "ab"
     t11_success   = Hit ("b", difflist "a")

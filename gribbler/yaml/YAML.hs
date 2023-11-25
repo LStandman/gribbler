@@ -30,14 +30,14 @@ import MemUtils
 
 data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
 
-any_char :: [Char] -> Parser String (DiffList Char)
+any_char :: [Char] -> TextParser
 any_char s = foldl1 (ou) $ map (match_char) s
 
-x_empty = non :: Parser String (DiffList Char)
+x_empty = non :: TextParser
 start_of_line = non
 end_of_input = non
 
-presentation :: Parser String (DiffList Char) -> Parser String (DiffList Char)
+presentation :: TextParser -> TextParser
 presentation f = f `conv` (return $ difflist "")
 
 -- 5. Character Productions

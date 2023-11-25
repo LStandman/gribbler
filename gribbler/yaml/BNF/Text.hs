@@ -4,6 +4,8 @@
 
 module BNF.Text(
     module DiffList,
+    TextParser,
+    TextResult,
     match_char,
     match_text)
   where
@@ -11,13 +13,16 @@ module BNF.Text(
 import BNF
 import DiffList
 
-match_char :: Char -> Parser String (DiffList Char)
+type TextParser = Parser String (DiffList Char)
+type TextResult = Result String (DiffList Char)
+
+match_char :: Char -> TextParser
 match_char c = \ xs -> case xs of
   []     -> Miss
   (y:ys) -> case c == y of
     True  -> Hit (ys, difflist [y])
     False -> Miss
 
-match_text :: [Char] -> Parser String (DiffList Char)
+match_text :: [Char] -> TextParser
 match_text [] = non
 match_text s  = foldl1 (et) $ map (match_char) s
