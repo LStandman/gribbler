@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -48,6 +48,8 @@ library
       YAMLTest
   other-modules:
       Paths_gribbler
+  autogen-modules:
+      Paths_gribbler
   hs-source-dirs:
       gribbler/crypt
       gribbler/libtest
@@ -62,6 +64,8 @@ executable gribbler-exe
   main-is: gribbler/Main.hs
   other-modules:
       Paths_gribbler
+  autogen-modules:
+      Paths_gribbler
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       array
@@ -73,6 +77,8 @@ test-suite gribbler-test
   type: exitcode-stdio-1.0
   main-is: gribbler/Spec.hs
   other-modules:
+      Paths_gribbler
+  autogen-modules:
       Paths_gribbler
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:

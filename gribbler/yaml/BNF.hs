@@ -20,11 +20,9 @@ module BNF(
 
 infixl 1 `conv`
 infixl 1 `err`
-infixl 1 `err'`
 infixl 1 `et`
-infixl 1 `et'`
 infixl 1 `look_ahead`
-infixl 1 `look_ahead'`
+infixl 1 `on_success`
 infixl 1 `ou`
 infixl 1 `ou'`
 infixl 1 `except`
@@ -62,12 +60,15 @@ ou' (Error e) _ = Error e
 
 ou f g = \ x -> f x `ou'` g x
 
-et' :: Semigroup b => Result a b -> Parser a b -> Result a b
-et' (Hit (i, o)) f = fmap (o <>) $ f i
-et' Miss         _ = Miss
-et' (Error e)    _ = Error e
+on_success :: Result a b -> ((a, b) -> Result a b) -> Result a b
+on_success (Hit ctx) f = f ctx
+on_success Miss      _ = Miss
+on_success (Error e) _ = Error e
 
-et f g = \ x -> f x `et'` g
+cat :: Semigroup b => Parser a b -> (a, b) -> Result a b
+cat f (i, o) = fmap (o <>) $ f i
+
+et f g = \ x -> f x `on_success` cat g
 
 rep 1 f = f
 rep n f = f `et` rep (n - 1) f
@@ -88,29 +89,20 @@ zoo f = f `ou` nul
 
 zom f = oom f `ou` nul
 
-maybe' :: Semigroup b => Result a b -> Parser a b -> Result a b
-maybe' (Hit (i1, o1)) f = case f i1 of
+more :: Semigroup b => Parser a b -> (a, b) -> Result a b
+more f (i1, o1)  = case f i1 of
   Hit ctx2  -> Hit $ fmap (o1 <>) ctx2
   Miss      -> Hit (i1, o1)
   Error e   -> Error e
-maybe' Miss        _ = Miss
-maybe' (Error e)   _ = Error e
 
-oom f = \ x -> f x `maybe'` oom f
+oom f = \ x -> f x `on_success` more (oom f)
 
-err' :: Result a b -> String -> Result a b
-err' (Hit _)    e2 = Error e2
-err' Miss       _  = Miss
-err' (Error e1) _  = Error e1
+err f e = \ x -> f x `on_success` return (Error e)
 
-err f e = \ x -> f x `err'` e
-
-look_ahead' :: Result a b -> Parser a b -> Result a b
-look_ahead' (Hit (i, o)) f = case f i of
+peek :: Parser a b -> (a, b) -> Result a b
+peek f (i, o) = case f i of
   Hit _    -> Hit (i, o)
   Miss     -> Miss
   Error e2 -> Error e2
-look_ahead' Miss       _ = Miss
-look_ahead' (Error e1) _ = Error e1
 
-look_ahead f g = \ x -> f x `look_ahead'` g
+look_ahead f g = \ x -> f x `on_success` peek g
