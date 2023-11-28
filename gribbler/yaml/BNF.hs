@@ -3,7 +3,7 @@
 -- Copyright (C) 2021-2023 LStandman
 
 module BNF(
-    Parser (..),
+    Parser,
     Result (..),
     conv,
     err,

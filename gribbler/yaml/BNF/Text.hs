@@ -13,8 +13,8 @@ module BNF.Text(
 import BNF
 import DiffList
 
-type TextParser = Parser String (DiffList Char)
-type TextResult = Result String (DiffList Char)
+type TextParser = Parser String DiffString
+type TextResult = Result String DiffString
 
 match_char :: Char -> TextParser
 match_char c = \ xs -> case xs of

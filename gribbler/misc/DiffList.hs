@@ -4,6 +4,7 @@
 
 module DiffList(
     DiffList (..),
+    DiffString,
     difflist,
     relist)
   where
@@ -11,6 +12,7 @@ module DiffList(
 import Data.Monoid
 
 data DiffList a = DiffList (Endo ([a]))
+type DiffString = DiffList Char
 
 instance Semigroup (DiffList a)
   where
