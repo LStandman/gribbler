@@ -84,15 +84,9 @@ conv f g = \ x -> fmap g $ f x
 
 zoo f = f `ou` nul
 
-zom f = oom f `ou` nul
+zom f = f `et` zom f `ou` nul
 
-more :: Semigroup b => Parser a b -> (a, b) -> Result a b
-more f (i1, o1)  = case f i1 of
-  Hit ctx2 -> Hit $ fmap (o1 <>) ctx2
-  Miss     -> Hit (i1, o1)
-  Error e2 -> Error e2
-
-oom f = \ x -> f x `on_hit` more (oom f)
+oom f = f `et` oom f `ou` f
 
 err f e = \ x -> f x `on_hit` return (Error e)
 
