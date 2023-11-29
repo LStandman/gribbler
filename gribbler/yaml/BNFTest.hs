@@ -4,6 +4,8 @@
 
 module BNFTest(test_bnf) where
 
+import Data.Char
+--
 import Libtest
 import BNF
 import BNF.Text
@@ -121,19 +123,13 @@ test_bnf =
     t11_errxhit   = errorX
     t11_errxmiss  = errorX
     t11_errxerr   = errorX
-    t12_in        = "ab"
-    t12_success   = Hit ("", difflist "ab")
-    t12_hitX      = match_char 'a' `BNF.et` match_char 'b'
-    t12_hitY      = match_char 'a'
-    t12_hitxhit   = t12_success
-    t12_hitxmiss  = amiss
-    t12_hitxerr   = errorY
-    t12_missxhit  = amiss
-    t12_missxmiss = amiss
-    t12_missxerr  = errorY
-    t12_errxhit   = errorX
-    t12_errxmiss  = errorX
-    t12_errxerr   = errorX
+    t12_in        = "a"
+    t12_f         = \ (i, o) -> (i, (difflist . (fmap (toUpper)) . relist) o)
+    t12_success   = Hit ("", difflist "A")
+    t12_hitA      = match_char 'a'
+    t12_hit       = t12_success
+    t12_miss      = amiss
+    t12_err       = errorX
   in
     testsuite "BNF" [
       test "Ou" [
@@ -258,4 +254,11 @@ test_bnf =
         expect_memeq "t11_errxmiss" t11_errxmiss $
         (errX `BNF.look_ahead` miss) t11_in,
         expect_memeq "t11_errxerr" t11_errxerr $
-        (errX `BNF.look_ahead` errY) t11_in]]
+        (errX `BNF.look_ahead` errY) t11_in],
+      test "Finally" [
+        expect_memeq "t12_hit" t12_hit $
+        (t11_hitA `BNF.finally` t12_f) t12_in,
+        expect_memeq "t12_miss" t12_miss $
+        (miss `BNF.finally` t12_f) t12_in,
+        expect_memeq "t12_err" t12_err $
+        (errX `BNF.finally` t12_f) t12_in]]

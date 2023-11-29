@@ -9,6 +9,7 @@ module BNF(
     err,
     et,
     except,
+    finally,
     look_ahead,
     nul,
     oom,
@@ -21,6 +22,7 @@ module BNF(
 infixl 1 `conv`
 infixl 1 `err`
 infixl 1 `et`
+infixl 1 `finally`
 infixl 1 `look_ahead`
 infixl 1 `on_hit`
 infixl 1 `on_miss`
@@ -39,6 +41,7 @@ conv       :: Parser a b -> (b -> c) -> Parser a c
 err        :: Parser a b -> String -> Parser a b
 et         :: Semigroup b => Parser a b -> Parser a b -> Parser a b
 except     :: Parser a b -> Parser a b -> Parser a b
+finally    :: Parser a b -> ((a, b) -> (a, b)) -> Parser a b
 look_ahead :: Parser a b -> Parser a b -> Parser a b
 nul        :: Monoid b => Parser a b
 oom        :: Semigroup b => Parser a b -> Parser a b
@@ -79,6 +82,8 @@ invert (Error e) _    = Error e
 except f g = \ x -> f x `on_hit` invert (g x)
 
 nul i = Hit (i, mempty)
+
+finally f g = \ x -> f x `on_hit` (Hit . g)
 
 conv f g = \ x -> fmap g $ f x
 
