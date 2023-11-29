@@ -17,12 +17,13 @@ type TextParser = Parser String DiffString
 type TextResult = Result String DiffString
 
 match_char :: Char -> TextParser
+match_text :: [Char] -> TextParser
+
 match_char c = \ xs -> case xs of
   []     -> Miss
   (y:ys) -> case c == y of
-    True  -> Hit (ys, difflist [y])
+    True  -> Hit (ys, difflist [c])
     False -> Miss
 
-match_text :: [Char] -> TextParser
 match_text [] = nul
 match_text s  = foldl1 (et) $ map (match_char) s

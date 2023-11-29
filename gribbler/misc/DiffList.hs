@@ -14,15 +14,12 @@ import Data.Monoid
 data DiffList a = DiffList (Endo ([a]))
 type DiffString = DiffList Char
 
+difflist :: [a] -> DiffList a
+relist :: DiffList a -> [a]
+
 instance Semigroup (DiffList a)
   where
     DiffList x <> DiffList y = DiffList $ x <> y
-
-difflist :: [a] -> DiffList a
-difflist l = DiffList $ Endo (l ++)
-
-relist :: DiffList a -> [a]
-relist (DiffList d) = appEndo d []
 
 instance Monoid (DiffList a)
   where
@@ -35,3 +32,7 @@ instance Eq a => Eq (DiffList a)
 instance Show a => Show (DiffList a)
   where
     show = show . relist
+
+difflist l = DiffList $ Endo (l ++)
+
+relist (DiffList d) = appEndo d []
