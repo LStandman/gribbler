@@ -41,7 +41,7 @@ conv       :: Parser a b -> (b -> c) -> Parser a c
 err        :: Parser a b -> String -> Parser a b
 et         :: Semigroup b => Parser a b -> Parser a b -> Parser a b
 except     :: Parser a b -> Parser a b -> Parser a b
-finally    :: Parser a b -> ((a, b) -> (a, b)) -> Parser a b
+finally    :: Parser a b -> ((a, b) -> (a, c)) -> Parser a c
 look_ahead :: Parser a b -> Parser a b -> Parser a b
 nul        :: Monoid b => Parser a b
 oom        :: Semigroup b => Parser a b -> Parser a b
@@ -62,9 +62,10 @@ on_miss r1   _  = r1
 
 ou f g = \ x -> f x `on_miss` g x
 
-on_hit :: Result a b -> ((a, b) -> Result a b) -> Result a b
+on_hit :: Result a b -> ((a, b) -> Result a c) -> Result a c
 on_hit (Hit ctx) f = f ctx
-on_hit r         _ = r
+on_hit Miss      _ = Miss
+on_hit (Error e) _ = Error e
 
 cat :: Semigroup b => Parser a b -> (a, b) -> Result a b
 cat f (i, o) = fmap (o <>) $ f i
@@ -85,7 +86,7 @@ nul i = Hit (i, mempty)
 
 finally f g = \ x -> f x `on_hit` (Hit . g)
 
-conv f g = \ x -> fmap g $ f x
+conv f g = f `finally` fmap (g)
 
 zoo f = f `ou` nul
 

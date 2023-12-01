@@ -8,6 +8,7 @@ module YAML(
 --    esc_htab,
 --    b_break,
     Context (..),
+    match_char,
     b_non_content,
     l_empty,
     b_as_line_feed,
@@ -19,23 +20,44 @@ module YAML(
     c_ns_esc_char,
     s_indent,
     b_l_folded,
-    s_space)
+    s_space,
+    c_single_quoted)
   where
 
 import Data.Maybe
 --
 import BNF
-import BNF.Text
+import DiffList
 import MemUtils
 
 data Context = BlockIn | BlockKey | BlockOut | FlowIn | FlowKey | FlowOut
+type TextState  = (String, Int, Int)
+type TextParser = Parser TextState DiffString
+type TextResult = Result TextState DiffString
+
+match_char :: Char -> TextParser
+match_char c = \ (xs, n, sol) -> case xs of
+  []     -> Miss
+  (y:ys) -> case c == y of
+    True  -> Hit ((ys, n + 1, sol), difflist [c])
+    False -> Miss
+
+match_text :: [Char] -> TextParser
+match_text [] = nul
+match_text s  = foldl1 (et) $ map (match_char) s
 
 any_char :: [Char] -> TextParser
 any_char s = foldl1 (ou) $ map (match_char) s
 
 x_empty = nul :: TextParser
-start_of_line = nul
-end_of_input = nul
+
+x_start_of_line = \ (xs, n, sol) -> case n == sol of
+  True -> Hit ((xs, n, sol), difflist [])
+  False -> Miss
+
+x_end_of_input = \ (xs, n, sol) -> case xs == [] of
+  True -> Hit ((xs, n, sol), difflist [])
+  False -> Miss
 
 presentation :: TextParser -> TextParser
 presentation f = f `conv` (return $ difflist "")
@@ -100,7 +122,7 @@ b_break =
   (b_carriage_return `et` b_line_feed) `ou`
   b_carriage_return `ou` b_line_feed
 
-b_as_line_feed = b_break `conv` (return $ difflist "\x0A")
+b_as_line_feed = b_break `finally` \ ((xs, n, _), _) -> ((xs, n, n), difflist "\x0A")
 
 b_non_content = presentation b_break
 
@@ -180,8 +202,11 @@ s_indent_lt n = s_space `et` s_indent_lt (n - 1) `ou` nul
 s_indent_le 0 = nul
 s_indent_le n = s_space `et` s_indent_le (n - 1) `ou` nul
 
+s_indent_ge 0 = zom s_space
+s_indent_ge n = s_space `et` s_indent_ge (n - 1)
+
 -- 6.2. Separation Spaces
-s_separate_in_line = oom s_white `ou` start_of_line
+s_separate_in_line = oom s_white `ou` x_start_of_line
 
 -- 6.3. Line Prefixes
 s_line_prefix BlockOut = s_block_line_prefix
@@ -209,7 +234,7 @@ s_flow_folded n =
 
 -- 6.6. Comments
 c_nb_comment_text = c_comment `et` zom nb_char
-b_comment = b_non_content `ou` end_of_input
+b_comment = b_non_content `ou` x_end_of_input
 s_b_comment =
   zoo (s_separate_in_line `et` zoo c_nb_comment_text) `et`
   b_comment
@@ -217,7 +242,7 @@ s_b_comment =
 l_comment = s_separate_in_line `et` zoo c_nb_comment_text `et`
   b_comment
 
-s_l_comments = (s_b_comment `ou` start_of_line) `et` zom l_comment
+s_l_comments = (s_b_comment `ou` x_start_of_line) `et` zom l_comment
 
 -- 6.7. Separation Lines
 s_separate BlockOut n = s_separate_lines n
@@ -302,3 +327,8 @@ s_single_next_line n =
 
 nb_single_multi_line n =
   nb_ns_single_in_line `et` (s_single_next_line n `ou` zom s_white)
+
+-- 8.2 Block Collection Styles
+-- 8.2.1. Block Sequences
+
+ -- l_block_sequence n = oom (s_indent_ge (n + 1) `finally` length `et` c_l_block_seq_entry)
