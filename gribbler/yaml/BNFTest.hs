@@ -130,6 +130,13 @@ test_bnf =
     t12_hit       = t12_success
     t12_miss      = Miss :: Result String Int
     t12_err       = Error "X" :: Result String Int
+    t13_in        = "a"
+    t13_f         = Hit . (fmap (length . relist))
+    t13_success   = Hit ("", 1)
+    t13_hitA      = match_char 'a'
+    t13_hit       = t13_success
+    t13_miss      = Miss :: Result String Int
+    t13_err       = Error "X" :: Result String Int
   in
     testsuite "BNF" [
       test "Ou" [
@@ -257,8 +264,15 @@ test_bnf =
         (errX `BNF.look_ahead` errY) t11_in],
       test "Finally" [
         expect_memeq "t12_hit" t12_hit $
-        (t11_hitA `BNF.finally` t12_f) t12_in,
+        (t12_hitA `BNF.finally` t12_f) t12_in,
         expect_memeq "t12_miss" t12_miss $
         (miss `BNF.finally` t12_f) t12_in,
         expect_memeq "t12_err" t12_err $
-        (errX `BNF.finally` t12_f) t12_in]]
+        (errX `BNF.finally` t12_f) t12_in],
+      test "on_hit" [
+        expect_memeq "t13_hit" t13_hit $
+        (t13_hitA `BNF.on_hit` t13_f) t13_in,
+        expect_memeq "t13_miss" t13_miss $
+        (miss `BNF.on_hit` t13_f) t13_in,
+        expect_memeq "t13_err" t13_err $
+        (errX `BNF.on_hit` t13_f) t13_in]]

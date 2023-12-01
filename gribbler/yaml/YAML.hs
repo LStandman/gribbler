@@ -331,4 +331,6 @@ nb_single_multi_line n =
 -- 8.2 Block Collection Styles
 -- 8.2.1. Block Sequences
 
- -- l_block_sequence n = oom (s_indent_ge (n + 1) `finally` length `et` c_l_block_seq_entry)
+-- l_block_sequence n = oom (s_indent_ge (n + 1) `on_hit` ( \ (ctx, s) -> c_l_block_seq_entry (length s) (ctx, difflist [])))
+
+-- c_l_block_seq_entry = nul
