@@ -137,6 +137,19 @@ test_bnf =
     t13_hit       = t13_success
     t13_miss      = Miss :: Result String Int
     t13_err       = Error "X" :: Result String Int
+    t14_in        = "ab"
+    t14_success   = Hit ("b", difflist "a")
+    t14_hitA      = match_char 'a'
+    t14_hitB      = match_char 'b'
+    t14_hitxhit   = amiss
+    t14_hitxmiss  = t14_success
+    t14_hitxerr   = errorY
+    t14_missxhit  = amiss
+    t14_missxmiss = amiss
+    t14_missxerr  = amiss
+    t14_errxhit   = errorX
+    t14_errxmiss  = errorX
+    t14_errxerr   = errorX
   in
     testsuite "BNF" [
       test "Ou" [
@@ -275,4 +288,23 @@ test_bnf =
         expect_memeq "t13_miss" t13_miss $
         (miss `BNF.on_hit` t13_f) t13_in,
         expect_memeq "t13_err" t13_err $
-        (errX `BNF.on_hit` t13_f) t13_in]]
+        (errX `BNF.on_hit` t13_f) t13_in],
+      test "LookNotAhead" [
+        expect_memeq "t14_hitxhit" t14_hitxhit $
+        (t14_hitA `BNF.look_not_ahead` t14_hitB) t14_in,
+        expect_memeq "t14_hitxmiss" t14_hitxmiss $
+        (t14_hitA `BNF.look_not_ahead` miss) t14_in,
+        expect_memeq "t14_hitxerr" t14_hitxerr $
+        (t14_hitA `BNF.look_not_ahead` errY) t14_in,
+        expect_memeq "t14_missxhit" t14_missxhit $
+        (miss `BNF.look_not_ahead` t14_hitB) t14_in,
+        expect_memeq "t14_missxmiss" t14_missxmiss $
+        (miss `BNF.look_not_ahead` miss) t14_in,
+        expect_memeq "t14_missxerr" t14_missxerr $
+        (miss `BNF.look_not_ahead` errY) t14_in,
+        expect_memeq "t14_errxhit" t14_errxhit $
+        (errX `BNF.look_not_ahead` t14_hitB) t14_in,
+        expect_memeq "t14_errxmiss" t14_errxmiss $
+        (errX `BNF.look_not_ahead` miss) t14_in,
+        expect_memeq "t14_errxerr" t14_errxerr $
+        (errX `BNF.look_not_ahead` errY) t14_in]]

@@ -11,6 +11,7 @@ module BNF(
     except,
     finally,
     look_ahead,
+    look_not_ahead,
     nul,
     on_hit,
     oom,
@@ -25,6 +26,7 @@ infixl 1 `err`
 infixl 1 `et`
 infixl 1 `finally`
 infixl 1 `look_ahead`
+infixl 1 `look_not_ahead`
 infixl 1 `on_hit`
 infixl 1 `on_hit'`
 infixl 1 `on_miss`
@@ -39,19 +41,20 @@ data Result a b =
 
 type Parser a b = a -> Result a b
 
-conv       :: Parser a b -> (b -> c) -> Parser a c
-err        :: Parser a b -> String -> Parser a b
-et         :: Semigroup b => Parser a b -> Parser a b -> Parser a b
-except     :: Parser a b -> Parser a b -> Parser a b
-finally    :: Parser a b -> ((a, b) -> (a, c)) -> Parser a c
-look_ahead :: Parser a b -> Parser a b -> Parser a b
-nul        :: Monoid b => Parser a b
-on_hit     :: Parser a b -> ((a, b) -> Result a c) -> Parser a c
-oom        :: Semigroup b => Parser a b -> Parser a b
-ou         :: Parser a b -> Parser a b -> Parser a b
-rep        :: Semigroup b => Int -> Parser a b -> Parser a b
-zom        :: Monoid b => Parser a b -> Parser a b
-zoo        :: Monoid b => Parser a b -> Parser a b
+conv           :: Parser a b -> (b -> c) -> Parser a c
+err            :: Parser a b -> String -> Parser a b
+et             :: Semigroup b => Parser a b -> Parser a b -> Parser a b
+except         :: Parser a b -> Parser a b -> Parser a b
+finally        :: Parser a b -> ((a, b) -> (a, c)) -> Parser a c
+look_ahead     :: Parser a b -> Parser a b -> Parser a b
+look_not_ahead :: Parser a b -> Parser a b -> Parser a b
+nul            :: Monoid b => Parser a b
+on_hit         :: Parser a b -> ((a, b) -> Result a c) -> Parser a c
+oom            :: Semigroup b => Parser a b -> Parser a b
+ou             :: Parser a b -> Parser a b -> Parser a b
+rep            :: Semigroup b => Int -> Parser a b -> Parser a b
+zom            :: Monoid b => Parser a b -> Parser a b
+zoo            :: Monoid b => Parser a b -> Parser a b
 
 instance Functor (Result a)
   where
@@ -81,8 +84,8 @@ rep 1 f = f
 rep n f = f `et` rep (n - 1) f
 
 invert :: Result a b -> (a, b) -> Result a b
-invert Miss      ctx  = Hit ctx
 invert (Hit _)   _    = Miss
+invert Miss      ctx  = Hit ctx
 invert (Error e) _    = Error e
 
 except f g = \ x -> f x `on_hit'` invert (g x)
@@ -107,3 +110,8 @@ peek f (i1, o1) = case f i1 of
   r2    -> r2
 
 look_ahead f g = f `on_hit` peek g
+
+peek_not :: Parser a b -> (a, b) -> Result a b
+peek_not f (i1, o1) = invert (f i1) (i1, o1)
+
+look_not_ahead f g = f `on_hit` peek_not g
