@@ -11,7 +11,6 @@ import DiffListTest
 import KDFTest
 import MooMooTest
 import SHA2Test
-import YAMLTest
 
 testmain :: [IO Bool] -> IO Bool
 testmain [] = return True

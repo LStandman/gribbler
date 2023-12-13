@@ -28,7 +28,7 @@ library:
   - gribbler/crypt
   - gribbler/libtest
   - gribbler/misc
-  - gribbler/yaml
+  - gribbler/json
 
 executables:
   gribbler-exe:

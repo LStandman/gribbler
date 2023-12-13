@@ -44,8 +44,6 @@ library
       BNF.Text
       BNF.TextTest
       BNFTest
-      YAML
-      YAMLTest
   other-modules:
       Paths_gribbler
   autogen-modules:
@@ -54,7 +52,7 @@ library
       gribbler/crypt
       gribbler/libtest
       gribbler/misc
-      gribbler/yaml
+      gribbler/json
   build-depends:
       array
     , base >=4.7 && <5

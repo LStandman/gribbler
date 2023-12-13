@@ -110,46 +110,20 @@ test_bnf =
     t10_omiss     = Miss
     t10_ferr      = return t10_errA :: TextParser
     t10_oerr      = t10_errA
-    t11_in        = "ab"
-    t11_success   = Hit ("b", difflist "a")
+    t11_in        = "a"
+    t11_f         = fmap (length . relist)
+    t11_success   = Hit ("", 1)
     t11_hitA      = match_char 'a'
-    t11_hitB      = match_char 'b'
-    t11_hitxhit   = t11_success
-    t11_hitxmiss  = amiss
-    t11_hitxerr   = errorY
-    t11_missxhit  = amiss
-    t11_missxmiss = amiss
-    t11_missxerr  = amiss
-    t11_errxhit   = errorX
-    t11_errxmiss  = errorX
-    t11_errxerr   = errorX
+    t11_hit       = t11_success
+    t11_miss      = Miss :: Result String Int
+    t11_err       = Error "X" :: Result String Int
     t12_in        = "a"
-    t12_f         = fmap (length . relist)
+    t12_f         = Hit . (fmap (length . relist))
     t12_success   = Hit ("", 1)
     t12_hitA      = match_char 'a'
     t12_hit       = t12_success
     t12_miss      = Miss :: Result String Int
     t12_err       = Error "X" :: Result String Int
-    t13_in        = "a"
-    t13_f         = Hit . (fmap (length . relist))
-    t13_success   = Hit ("", 1)
-    t13_hitA      = match_char 'a'
-    t13_hit       = t13_success
-    t13_miss      = Miss :: Result String Int
-    t13_err       = Error "X" :: Result String Int
-    t14_in        = "ab"
-    t14_success   = Hit ("b", difflist "a")
-    t14_hitA      = match_char 'a'
-    t14_hitB      = match_char 'b'
-    t14_hitxhit   = amiss
-    t14_hitxmiss  = t14_success
-    t14_hitxerr   = errorY
-    t14_missxhit  = amiss
-    t14_missxmiss = amiss
-    t14_missxerr  = amiss
-    t14_errxhit   = errorX
-    t14_errxmiss  = errorX
-    t14_errxerr   = errorX
   in
     testsuite "BNF" [
       test "Ou" [
@@ -256,55 +230,17 @@ test_bnf =
         (t10_fmiss `BNF.err` t10_errStr) t10_in,
         expect_memeq "t10_oerr" t10_oerr $
         (t10_ferr `BNF.err` t10_errStr) t10_in],
-      test "LookAhead" [
-        expect_memeq "t11_hitxhit" t11_hitxhit $
-        (t11_hitA `BNF.look_ahead` t11_hitB) t11_in,
-        expect_memeq "t11_hitxmiss" t11_hitxmiss $
-        (t11_hitA `BNF.look_ahead` miss) t11_in,
-        expect_memeq "t11_hitxerr" t11_hitxerr $
-        (t11_hitA `BNF.look_ahead` errY) t11_in,
-        expect_memeq "t11_missxhit" t11_missxhit $
-        (miss `BNF.look_ahead` t11_hitB) t11_in,
-        expect_memeq "t11_missxmiss" t11_missxmiss $
-        (miss `BNF.look_ahead` miss) t11_in,
-        expect_memeq "t11_missxerr" t11_missxerr $
-        (miss `BNF.look_ahead` errY) t11_in,
-        expect_memeq "t11_errxhit" t11_errxhit $
-        (errX `BNF.look_ahead` t11_hitB) t11_in,
-        expect_memeq "t11_errxmiss" t11_errxmiss $
-        (errX `BNF.look_ahead` miss) t11_in,
-        expect_memeq "t11_errxerr" t11_errxerr $
-        (errX `BNF.look_ahead` errY) t11_in],
       test "Finally" [
-        expect_memeq "t12_hit" t12_hit $
-        (t12_hitA `BNF.finally` t12_f) t12_in,
-        expect_memeq "t12_miss" t12_miss $
-        (miss `BNF.finally` t12_f) t12_in,
-        expect_memeq "t12_err" t12_err $
-        (errX `BNF.finally` t12_f) t12_in],
+        expect_memeq "t11_hit" t11_hit $
+        (t11_hitA `BNF.finally` t11_f) t11_in,
+        expect_memeq "t11_miss" t11_miss $
+        (miss `BNF.finally` t11_f) t11_in,
+        expect_memeq "t11_err" t11_err $
+        (errX `BNF.finally` t11_f) t11_in],
       test "on_hit" [
-        expect_memeq "t13_hit" t13_hit $
-        (t13_hitA `BNF.on_hit` t13_f) t13_in,
-        expect_memeq "t13_miss" t13_miss $
-        (miss `BNF.on_hit` t13_f) t13_in,
-        expect_memeq "t13_err" t13_err $
-        (errX `BNF.on_hit` t13_f) t13_in],
-      test "LookNotAhead" [
-        expect_memeq "t14_hitxhit" t14_hitxhit $
-        (t14_hitA `BNF.look_not_ahead` t14_hitB) t14_in,
-        expect_memeq "t14_hitxmiss" t14_hitxmiss $
-        (t14_hitA `BNF.look_not_ahead` miss) t14_in,
-        expect_memeq "t14_hitxerr" t14_hitxerr $
-        (t14_hitA `BNF.look_not_ahead` errY) t14_in,
-        expect_memeq "t14_missxhit" t14_missxhit $
-        (miss `BNF.look_not_ahead` t14_hitB) t14_in,
-        expect_memeq "t14_missxmiss" t14_missxmiss $
-        (miss `BNF.look_not_ahead` miss) t14_in,
-        expect_memeq "t14_missxerr" t14_missxerr $
-        (miss `BNF.look_not_ahead` errY) t14_in,
-        expect_memeq "t14_errxhit" t14_errxhit $
-        (errX `BNF.look_not_ahead` t14_hitB) t14_in,
-        expect_memeq "t14_errxmiss" t14_errxmiss $
-        (errX `BNF.look_not_ahead` miss) t14_in,
-        expect_memeq "t14_errxerr" t14_errxerr $
-        (errX `BNF.look_not_ahead` errY) t14_in]]
+        expect_memeq "t12_hit" t12_hit $
+        (t12_hitA `BNF.on_hit` t12_f) t12_in,
+        expect_memeq "t12_miss" t12_miss $
+        (miss `BNF.on_hit` t12_f) t12_in,
+        expect_memeq "t12_err" t12_err $
+        (errX `BNF.on_hit` t12_f) t12_in]]
