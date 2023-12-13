@@ -25,6 +25,7 @@ module YAML(
   where
 
 import Data.Maybe
+import Data.Semigroup
 --
 import BNF
 import DiffList
@@ -52,11 +53,11 @@ any_char s = foldl1 (ou) $ map (match_char) s
 x_empty = nul :: TextParser
 
 x_start_of_line = \ (xs, n, sol) -> case n == sol of
-  True -> Hit ((xs, n, sol), difflist [])
+  True -> Hit ((xs, n, sol), mempty)
   False -> Miss
 
 x_end_of_input = \ (xs, n, sol) -> case xs == [] of
-  True -> Hit ((xs, n, sol), difflist [])
+  True -> Hit ((xs, n, sol), mempty)
   False -> Miss
 
 presentation :: TextParser -> TextParser
@@ -151,47 +152,6 @@ ns_uri_char =
 
 ns_tag_char = ns_uri_char `except` c_tag `except` c_flow_indicator
 
--- 5.7. Escaped Characters
-c_escape = match_char '\\' `conv` (return $ difflist "")
-ns_esc_null            = match_char '0'    `conv` (return $ difflist "\x00")
-ns_esc_bell            = match_char 'a'    `conv` (return $ difflist "\x07")
-ns_esc_backspace       = match_char 'b'    `conv` (return $ difflist "\x08")
-ns_esc_htab = (match_char 't' `ou` match_char '\x09') `conv` (return $ difflist "\x09")
-ns_esc_line_feed       = match_char 'n'    `conv` (return $ difflist "\x0A")
-ns_esc_vtab            = match_char 'v'    `conv` (return $ difflist "\x0B")
-ns_esc_form_feed       = match_char 'f'    `conv` (return $ difflist "\x0C")
-ns_esc_carriage_return = match_char 'r'    `conv` (return $ difflist "\x0D")
-ns_esc_escape          = match_char 'e'    `conv` (return $ difflist "\x1B")
-ns_esc_space           = match_char '\x20' `conv` (return $ difflist "\x20")
-ns_esc_dquote          = match_char '"'    `conv` (return $ difflist "\x22")
-ns_esc_slash           = match_char '/'    `conv` (return $ difflist "\x2F")
-ns_esc_backslash       = match_char '\\'   `conv` (return $ difflist "\x5C")
-ns_esc_nextline        = match_char 'N'    `conv` (return $ difflist "\x85")
-ns_esc_nbscpace        = match_char '_'    `conv` (return $ difflist "\xA0")
-ns_esc_lseparator      = match_char 'L'    `conv` (return $ difflist "\x2028")
-ns_esc_pseparator      = match_char 'P'    `conv` (return $ difflist "\x2029")
-
-hex2char s = difflist [toEnum . fromJust . hex2num $ tail $ relist s ]
-
-ns_esc_8bit  = match_char 'x' `et` rep 2 ns_hex_digit `conv` hex2char
-
-ns_esc_16bit = match_char 'u' `et` rep 4 ns_hex_digit `conv` hex2char
-
-ns_esc_32bit = match_char 'U' `et` rep 8 ns_hex_digit `conv` hex2char
-
-c_ns_esc_char =
-  c_escape `et`
-  (ns_esc_null      `ou` ns_esc_bell            `ou`
-  ns_esc_backspace  `ou` ns_esc_htab            `ou`
-  ns_esc_line_feed  `ou` ns_esc_vtab            `ou`
-  ns_esc_form_feed  `ou` ns_esc_carriage_return `ou`
-  ns_esc_escape     `ou` ns_esc_space           `ou`
-  ns_esc_dquote     `ou` ns_esc_slash           `ou`
-  ns_esc_backslash  `ou` ns_esc_nextline        `ou`
-  ns_esc_nbscpace   `ou` ns_esc_lseparator      `ou`
-  ns_esc_pseparator `ou` ns_esc_8bit            `ou`
-  ns_esc_16bit      `ou` ns_esc_32bit)
-
 -- 6.1. Indentation Spaces
 s_indent 0 = nul
 s_indent n = s_space `et` s_indent (n - 1)
@@ -202,8 +162,8 @@ s_indent_lt n = s_space `et` s_indent_lt (n - 1) `ou` nul
 s_indent_le 0 = nul
 s_indent_le n = s_space `et` s_indent_le (n - 1) `ou` nul
 
-s_indent_ge 0 = zom s_space
-s_indent_ge n = s_space `et` s_indent_ge (n - 1)
+s_indent_get_m :: Parser TextState (Sum Int)
+s_indent_get_m = zom (s_space `conv` (return $ Sum 1))
 
 -- 6.2. Separation Spaces
 s_separate_in_line = oom s_white `ou` x_start_of_line
@@ -249,8 +209,8 @@ s_separate BlockOut n = s_separate_lines n
 s_separate BlockIn  n = s_separate_lines n
 s_separate FlowOut  n = s_separate_lines n
 s_separate FlowIn   n = s_separate_lines n
-s_separate BlockKey n = s_separate_in_line
-s_separate FlowKey  n = s_separate_in_line
+s_separate BlockKey _ = s_separate_in_line
+s_separate FlowKey  _ = s_separate_in_line
 
 s_separate_lines n =
   (s_l_comments `et` s_flow_line_prefix n) `ou` s_separate_in_line
@@ -299,7 +259,7 @@ e_node   = e_scalar
 
 -- 7.3. Flow Scalar Styles
 -- 7.3.1. Double-Quoted Style
-c_double_quoted c n =
+c_double_quoted _ _ =
   c_double_quote `err` "Double quoted style is not implemented!"
 
 -- 7.3.2. Single-Quoted Style
@@ -313,8 +273,8 @@ c_single_quoted c n = c_single_quote `et` nb_single_text c n `et` c_single_quote
 
 nb_single_text FlowOut  n = nb_single_multi_line n
 nb_single_text FlowIn   n = nb_single_multi_line n
-nb_single_text BlockKey n = nb_single_one_line
-nb_single_text FlowKey  n = nb_single_one_line
+nb_single_text BlockKey _ = nb_single_one_line
+nb_single_text FlowKey  _ = nb_single_one_line
 
 nb_single_one_line = zom nb_single_char
 
@@ -328,9 +288,69 @@ s_single_next_line n =
 nb_single_multi_line n =
   nb_ns_single_in_line `et` (s_single_next_line n `ou` zom s_white)
 
+-- 7.4. Flow Collection Styles
+-- 7.4.1. Flow Sequences
+c_flow_sequence _ _ = c_sequence_start `err` "Flow sequences are not implemented!"
+
+-- 7.4.2. Flow Mappings
+c_flow_mapping _ _ = c_mapping_start `err` "Flow mappings are not implemented!"
+
+-- 7.5. Flow Nodes
+-- WARN: ns-plain cannot be easily deduced to return _unimplemented_ error,
+--   error must be emitted at a higher level
+ns_flow_yaml_content _ _ = return Miss
+
+c_flow_json_content c n =
+  c_flow_sequence c n `ou`
+  c_flow_mapping c n `ou`
+  c_single_quoted c n `ou`
+  c_double_quoted c n
+
+ns_flow_content c n = 
+  ns_flow_yaml_content c n `ou`
+  c_flow_json_content c n
+
+ns_flow_yaml_node c n =
+  c_ns_alias_node `ou`
+  ns_flow_yaml_content c n `ou`
+  (c_ns_properties c n `et`
+    (
+      (s_separate c n `et`
+      ns_flow_yaml_content c n) `ou`
+      e_scalar))
+
+c_flow_json_node c n =
+  zoo (c_ns_properties c n `et`
+    s_separate c n) `et`
+  c_flow_json_content c n
+
+ns_flow_node c n =
+  c_ns_alias_node `ou`
+  ns_flow_content c n `ou`
+  (c_ns_properties c n `et`
+    ( (s_separate c n `et`
+      ns_flow_content c n) `ou`
+    e_scalar))
+
+-- 8.1 Block Scalar Styles
+-- 8.1.2. Literal Style
+c_l_literal _ = c_literal `err` "Literal style is not implemented!"
+
+-- 8.1.2. Folded Style
+c_l_folded _ = c_folded `err` "Folded style is not implemented!"
+
 -- 8.2 Block Collection Styles
 -- 8.2.1. Block Sequences
 
--- l_block_sequence n = oom (s_indent_ge (n + 1) `on_hit` ( \ (ctx, s) -> c_l_block_seq_entry (length s) (ctx, difflist [])))
+l_block_sequence n =
+  oom (s_indent (n + 1) `on_hit` (\ (ctx, _) -> s_indent_get_m ctx) `on_hit`
+    \ (ctx, m) -> c_l_block_seq_entry (n + 1 + (getSum m)) ctx)
 
--- c_l_block_seq_entry = nul
+c_l_block_seq_entry n = c_sequence_entry `look_not_ahead` ns_char `et` s_l_block_indented BlockIn n
+
+s_l_block_indented c n =
+  (s_indent_get_m `on_hit` (\ (ctx, m) ->
+    ( (ns_l_compact_sequence (n + 1 + (getSum m))) `ou`
+      (ns_l_compact_mapping (n + 1 + (getSum m)))) ctx)) `ou`
+  s_l_block_node c n `ou`
+  (e_node `et` s_l_comments)
