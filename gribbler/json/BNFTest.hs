@@ -7,20 +7,20 @@ module BNFTest(test_bnf) where
 import Data.Char
 --
 import Libtest
-import BNF
+import qualified BNF as BNF
 import BNF.Text
 
 test_bnf =
   let
-    errorX        = Error "X" :: TextResult
-    errorY        = Error "Y" :: TextResult
-    amiss         = Miss :: TextResult
+    errorX        = BNF.Error "X" :: TextResult
+    errorY        = BNF.Error "Y" :: TextResult
+    amiss         = BNF.Miss :: TextResult
     errX          = return errorX
     errY          = return errorY
     miss          = return amiss
     t1_in         = ""
-    t1_successA   = Hit ("", difflist "a")
-    t1_successB   = Hit ("", difflist "b")
+    t1_successA   = BNF.Hit ("", difflist "a")
+    t1_successB   = BNF.Hit ("", difflist "b")
     t1_hitA       = return t1_successA
     t1_hitB       = return t1_successB
     t1_hitxhit    = t1_successA
@@ -33,7 +33,7 @@ test_bnf =
     t1_errxmiss   = errorX
     t1_errxerr    = errorX
     t2_in         = "ab"
-    t2_success    = Hit ("", difflist "ab")
+    t2_success    = BNF.Hit ("", difflist "ab")
     t2_hitA       = match_char 'a'
     t2_hitB       = match_char 'b'
     t2_hitxhit    = t2_success
@@ -46,7 +46,7 @@ test_bnf =
     t2_errxmiss   = errorX
     t2_errxerr    = errorX
     t3_in         = "a"
-    t3_success    = Hit ("", difflist "a")
+    t3_success    = BNF.Hit ("", difflist "a")
     t3_hitA       = match_char 'a'
     t3_hitB       = match_char 'a'
     t3_hitxhit    = amiss
@@ -59,12 +59,12 @@ test_bnf =
     t3_errxmiss   = errorX
     t3_errxerr    = errorX
     t4_map        = length . relist
-    t4_ihit       = Hit ("xyz", difflist "abc")
-    t4_ohit       = Hit ("xyz", 3)
-    t4_imiss      = Miss :: TextResult
-    t4_omiss      = Miss :: Result String Int
-    t4_ierr       = Error "X" :: TextResult
-    t4_oerr       = Error "X" :: Result String Int
+    t4_ihit       = BNF.Hit ("xyz", difflist "abc")
+    t4_ohit       = BNF.Hit ("xyz", 3)
+    t4_imiss      = BNF.Miss :: TextResult
+    t4_omiss      = BNF.Miss :: BNF.Result String Int
+    t4_ierr       = BNF.Error "X" :: TextResult
+    t4_oerr       = BNF.Error "X" :: BNF.Result String Int
     t5_in         = ""
     t5_map        = t4_map
     t5_ihit       = return t4_ihit
@@ -76,94 +76,94 @@ test_bnf =
     t6_hit        = match_char 'a'
     t6_reps       = 2
     t6_inA        = "abb"
-    t6_outA       = Miss
+    t6_outA       = BNF.Miss
     t6_inB        = "aab"
-    t6_outB       = Hit ("b", difflist "aa")
+    t6_outB       = BNF.Hit ("b", difflist "aa")
     t6_inC        = "aaa"
-    t6_outC       = Hit ("a", difflist "aa")
+    t6_outC       = BNF.Hit ("a", difflist "aa")
     t7_hit        = match_char 'a'
     t7_inA        = "aa"
-    t7_outA       = Hit ("a", difflist "a")
+    t7_outA       = BNF.Hit ("a", difflist "a")
     t7_inB        = "ba"
-    t7_outB       = Hit ("ba", difflist "")
+    t7_outB       = BNF.Hit ("ba", difflist "")
     t8_hit        = match_char 'a'
     t8_inA        = "bbb"
-    t8_outA       = Hit ("bbb", difflist "")
+    t8_outA       = BNF.Hit ("bbb", difflist "")
     t8_inB        = "abb"
-    t8_outB       = Hit ("bb", difflist "a")
+    t8_outB       = BNF.Hit ("bb", difflist "a")
     t8_inC        = "aab"
-    t8_outC       = Hit ("b", difflist "aa")
+    t8_outC       = BNF.Hit ("b", difflist "aa")
     t9_hit        = match_char 'a'
     t9_inA        = "bbb"
-    t9_outA       = Miss
+    t9_outA       = BNF.Miss
     t9_inB        = "abb"
-    t9_outB       = Hit ("bb", difflist "a")
+    t9_outB       = BNF.Hit ("bb", difflist "a")
     t9_inC        = "aab"
-    t9_outC       = Hit ("b", difflist "aa")
+    t9_outC       = BNF.Hit ("b", difflist "aa")
     t10_in        = ""
     t10_errStr    = "Y"
-    t10_errA      = Error "X"
-    t10_errB      = Error t10_errStr
-    t10_fhit      = return $ Hit ("", difflist "a")
+    t10_errA      = BNF.Error "X"
+    t10_errB      = BNF.Error t10_errStr
+    t10_fhit      = return $ BNF.Hit ("", difflist "a")
     t10_ohit      = t10_errB
-    t10_fmiss     = return Miss :: TextParser
-    t10_omiss     = Miss
+    t10_fmiss     = return BNF.Miss :: TextParser
+    t10_omiss     = BNF.Miss
     t10_ferr      = return t10_errA :: TextParser
     t10_oerr      = t10_errA
     t11_in        = "a"
     t11_f         = fmap (length . relist)
-    t11_success   = Hit ("", 1)
+    t11_success   = BNF.Hit ("", 1)
     t11_hitA      = match_char 'a'
     t11_hit       = t11_success
-    t11_miss      = Miss :: Result String Int
-    t11_err       = Error "X" :: Result String Int
+    t11_miss      = BNF.Miss :: BNF.Result String Int
+    t11_err       = BNF.Error "X" :: BNF.Result String Int
     t12_in        = "a"
-    t12_f         = Hit . (fmap (length . relist))
-    t12_success   = Hit ("", 1)
+    t12_f         = BNF.Hit . (fmap (length . relist))
+    t12_success   = BNF.Hit ("", 1)
     t12_hitA      = match_char 'a'
     t12_hit       = t12_success
-    t12_miss      = Miss :: Result String Int
-    t12_err       = Error "X" :: Result String Int
+    t12_miss      = BNF.Miss :: BNF.Result String Int
+    t12_err       = BNF.Error "X" :: BNF.Result String Int
   in
     testsuite "BNF" [
       test "Ou" [
         expect_memeq "t1_hitxhit" t1_hitxhit $
-        (t1_hitA `BNF.ou` t1_hitB) t1_in,
+        (t1_hitA `BNF.or` t1_hitB) t1_in,
         expect_memeq "t1_hitxmiss" t1_hitxmiss $
-        (t1_hitA `BNF.ou` miss) t1_in,
+        (t1_hitA `BNF.or` miss) t1_in,
         expect_memeq "t1_hitxerr" t1_hitxerr $
-        (t1_hitA `BNF.ou` errY) t1_in,
+        (t1_hitA `BNF.or` errY) t1_in,
         expect_memeq "t1_missxhit" t1_missxhit $
-        (miss `BNF.ou` t1_hitB) t1_in,
+        (miss `BNF.or` t1_hitB) t1_in,
         expect_memeq "t1_missxmiss" t1_missxmiss $
-        (miss `BNF.ou` miss) t1_in,
+        (miss `BNF.or` miss) t1_in,
         expect_memeq "t1_missxerr" t1_missxerr $
-        (miss `BNF.ou` errY) t1_in,
+        (miss `BNF.or` errY) t1_in,
         expect_memeq "t1_errxhit" t1_errxhit $
-        (errX `BNF.ou` t1_hitB) t1_in,
+        (errX `BNF.or` t1_hitB) t1_in,
         expect_memeq "t1_errxmiss" t1_errxmiss $
-        (errX `BNF.ou` miss) t1_in,
+        (errX `BNF.or` miss) t1_in,
         expect_memeq "t1_errxerr" t1_errxerr $
-        (errX `BNF.ou` errY) t1_in],
+        (errX `BNF.or` errY) t1_in],
       test "Et" [
         expect_memeq "t2_hitxhit" t2_hitxhit $
-        (t2_hitA `BNF.et` t2_hitB) t2_in,
+        (t2_hitA `BNF.and` t2_hitB) t2_in,
         expect_memeq "t2_hitxmiss" t2_hitxmiss $
-        (t2_hitA `BNF.et` miss) t2_in,
+        (t2_hitA `BNF.and` miss) t2_in,
         expect_memeq "t2_hitxerr" t2_hitxerr $
-        (t2_hitA `BNF.et` errY) t2_in,
+        (t2_hitA `BNF.and` errY) t2_in,
         expect_memeq "t2_missxhit" t2_missxhit $
-        (miss `BNF.et` t2_hitB) t2_in,
+        (miss `BNF.and` t2_hitB) t2_in,
         expect_memeq "t2_missxmiss" t2_missxmiss $
-        (miss `BNF.et` miss) t2_in,
+        (miss `BNF.and` miss) t2_in,
         expect_memeq "t2_missxerr" t2_missxerr $
-        (miss `BNF.et` errY) t2_in,
+        (miss `BNF.and` errY) t2_in,
         expect_memeq "t2_errxhit" t2_errxhit $
-        (errX `BNF.et` t2_hitB) t2_in,
+        (errX `BNF.and` t2_hitB) t2_in,
         expect_memeq "t2_errxmiss" t2_errxmiss $
-        (errX `BNF.et` miss) t2_in,
+        (errX `BNF.and` miss) t2_in,
         expect_memeq "t2_errxerr" t2_errxerr $
-        (errX `BNF.et` errY) t2_in],
+        (errX `BNF.and` errY) t2_in],
       test "Except" [
         expect_memeq "t3_hitxhit" t3_hitxhit $
         (t3_hitA `BNF.except` t3_hitB) t3_in,
