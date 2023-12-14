@@ -29,66 +29,63 @@ infixl 1 `on_miss`
 infixl 1 `or`
 infixl 1 `except`
 
-data Result a b =
-    Hit (a, b)   |
+data Result s a =
+    Hit (a, s)   |
     Miss         |
     Error String
   deriving (Eq, Show)
 
-type Parser a b = a -> Result a b
+type Parser s a = s -> Result s a
 
-and     :: Semigroup b => Parser a b -> Parser a b -> Parser a b
-conv    :: Parser a b -> (b -> c) -> Parser a c
-err     :: Parser a b -> String -> Parser a b
-except  :: Parser a b -> Parser a b -> Parser a b
-finally :: Parser a b -> ((a, b) -> (a, c)) -> Parser a c
-null    :: Monoid b => Parser a b
-on_hit  :: Parser a b -> ((a, b) -> Result a c) -> Parser a c
-oom     :: Semigroup b => Parser a b -> Parser a b
-or      :: Parser a b -> Parser a b -> Parser a b
-rep     :: Semigroup b => Int -> Parser a b -> Parser a b
-zom     :: Monoid b => Parser a b -> Parser a b
-zoo     :: Monoid b => Parser a b -> Parser a b
+and     :: Semigroup a => Parser s a -> Parser s a -> Parser s a
+conv    :: Parser s a -> (a -> b) -> Parser s b
+err     :: Parser s a -> String -> Parser s a
+except  :: Parser s a -> Parser s a -> Parser s a
+finally :: Parser s a -> ((a, s) -> (b, s)) -> Parser s b
+null    :: Monoid a => Parser s a
+on_hit  :: Parser s a -> ((a, s) -> Result s b) -> Parser s b
+oom     :: Semigroup a => Parser s a -> Parser s a
+or      :: Parser s a -> Parser s a -> Parser s a
+rep     :: Semigroup a => Int -> Parser s a -> Parser s a
+zom     :: Monoid a => Parser s a -> Parser s a
+zoo     :: Monoid a => Parser s a -> Parser s a
 
-instance Functor (Result a)
+instance Functor (Result s)
   where
-    fmap f (Hit ctx) = Hit $ fmap (f) ctx
-    fmap _ Miss      = Miss
-    fmap _ (Error e) = Error e
+    fmap f (Hit (x, s)) = Hit $ (f x, s)
+    fmap _ Miss         = Miss
+    fmap _ (Error e)    = Error e
 
-on_miss :: Result a b -> Result a b -> Result a b
+on_miss :: Result s a -> Result s a -> Result s a
 on_miss Miss r2 = r2
 on_miss r1   _  = r1
 
 or f g = \ x -> f x `on_miss` g x
 
-on_hit' :: Result a b -> ((a, b) -> Result a c) -> Result a c
-on_hit' (Hit ctx) f = f ctx
+on_hit' :: Result s a -> ((a, s) -> Result s b) -> Result s b
+on_hit' (Hit h)   f = f h
 on_hit' Miss      _ = Miss
 on_hit' (Error e) _ = Error e
 
 on_hit f g = \ x -> f x `on_hit'` g
 
-cat :: Semigroup b => Parser a b -> (a, b) -> Result a b
-cat f (i, o) = fmap (o <>) $ f i
-
-and f g = f `on_hit` cat g
+and f g = f `on_hit` \ (x, s) -> fmap (x <>) $ g s
 
 rep 1 f = f
 rep n f = f `BNF.and` rep (n - 1) f
 
-invert :: Result a b -> (a, b) -> Result a b
-invert (Hit _)   _    = Miss
-invert Miss      ctx  = Hit ctx
-invert (Error e) _    = Error e
+invert :: Result s a -> (a, s) -> Result s a
+invert (Hit _)   _ = Miss
+invert Miss      h = Hit h
+invert (Error e) _ = Error e
 
 except f g = \ x -> f x `on_hit'` invert (g x)
 
-null i = Hit (i, mempty)
+null s = Hit (mempty, s)
 
 finally f g = f `on_hit` (Hit . g)
 
-conv f g = f `finally` fmap (g)
+conv f g = f `finally` \ (x, s) -> (g x, s)
 
 zoo f = f `BNF.or` BNF.null
 

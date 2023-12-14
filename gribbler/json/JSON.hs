@@ -7,13 +7,13 @@ module JSON() where
 import qualified BNF as BNF
 import BNF.Text
 
-data JSON =
-  JObject JSON     |
-  JArray  JSON     |
-  JSring  String   |
-  JNumber Rational |
-  JTrue            |
-  JFalse           |
+data JValue =
+  JObject [(String, JValue)] |
+  JArray  [JValue]           |
+  JSring  String             |
+  JNumber String             |
+  JTrue                      |
+  JFalse                     |
   JNull
 
 json =

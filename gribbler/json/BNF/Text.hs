@@ -24,7 +24,7 @@ match_text :: [Char] -> TextParser
 match_char c = \ xs -> case xs of
   []     -> BNF.Miss
   (y:ys) -> case c == y of
-    True  -> BNF.Hit (ys, difflist [c])
+    True  -> BNF.Hit (difflist [c], ys)
     False -> BNF.Miss
 
 match_text [] = BNF.null
