@@ -11,7 +11,7 @@ module DiffList(
 
 import Data.Monoid
 
-data DiffList a = DiffList (Endo ([a]))
+newtype DiffList a = DiffList (Endo ([a]))
 type DiffString = DiffList Char
 
 difflist :: [a] -> DiffList a

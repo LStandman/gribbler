@@ -3,94 +3,114 @@
 -- Copyright (C) 2021-2023 LStandman
 
 module BNF(
-    Parser,
-    Result (..),
+    Parser(..),
+    Result(..),
     BNF.and,
     BNF.null,
     BNF.or,
-    conv,
     err,
+    evalParser,
     except,
-    finally,
-    on_hit,
+    execParser,
     oom,
     rep,
+    runParser,
     zom,
     zoo)
   where
 
-infixl 1 `conv`
+import Control.Monad
+
 infixl 1 `err`
 infixl 1 `and`
-infixl 1 `finally`
-infixl 1 `on_hit`
-infixl 1 `on_hit'`
-infixl 1 `on_miss`
 infixl 1 `or`
 infixl 1 `except`
 
-data Result s a =
-    Hit (a, s)   |
+data Result a =
+    Hit a        |
     Miss         |
     Error String
   deriving (Eq, Show)
 
-type Parser s a = s -> Result s a
+newtype Parser s a = Parser (s -> Result (a, s))
 
-and     :: Semigroup a => Parser s a -> Parser s a -> Parser s a
-conv    :: Parser s a -> (a -> b) -> Parser s b
-err     :: Parser s a -> String -> Parser s a
-except  :: Parser s a -> Parser s a -> Parser s a
-finally :: Parser s a -> ((a, s) -> (b, s)) -> Parser s b
-null    :: Monoid a => Parser s a
-on_hit  :: Parser s a -> ((a, s) -> Result s b) -> Parser s b
-oom     :: Semigroup a => Parser s a -> Parser s a
-or      :: Parser s a -> Parser s a -> Parser s a
-rep     :: Semigroup a => Int -> Parser s a -> Parser s a
-zom     :: Monoid a => Parser s a -> Parser s a
-zoo     :: Monoid a => Parser s a -> Parser s a
+and        :: Semigroup a => Parser s a -> Parser s a -> Parser s a
+err        :: Parser s a -> String -> Parser s a
+evalParser :: Parser s a -> s -> Result a
+except     :: Parser s a -> Parser s a -> Parser s a
+execParser :: Parser s a -> s -> Result s
+null       :: Monoid a => Parser s a
+oom        :: Semigroup a => Parser s a -> Parser s a
+or         :: Parser s a -> Parser s a -> Parser s a
+rep        :: Semigroup a => Int -> Parser s a -> Parser s a
+runParser  :: Parser s a -> (s -> Result (a, s))
+zom        :: Monoid a => Parser s a -> Parser s a
+zoo        :: Monoid a => Parser s a -> Parser s a
 
-instance Functor (Result s)
+instance Monad Result
   where
-    fmap f (Hit (x, s)) = Hit $ (f x, s)
-    fmap _ Miss         = Miss
-    fmap _ (Error e)    = Error e
+    return = Hit
+    (Hit h)   >>= f = f h
+    Miss      >>= _ = Miss
+    (Error e) >>= _ = Error e
 
-on_miss :: Result s a -> Result s a -> Result s a
-on_miss Miss r2 = r2
-on_miss r1   _  = r1
+instance Applicative Result
+  where
+    pure  = return
+    (<*>) = ap
 
-or f g = \ x -> f x `on_miss` g x
+instance Functor Result
+  where
+    fmap = liftM
 
-on_hit' :: Result s a -> ((a, s) -> Result s b) -> Result s b
-on_hit' (Hit h)   f = f h
-on_hit' Miss      _ = Miss
-on_hit' (Error e) _ = Error e
+instance Monad (Parser s)
+  where
+    return x = Parser (\ s -> Hit (x, s))
+    (Parser f') >>= g =
+      Parser (\ s -> f' s >>= \ (x, s') -> runParser (g x) s')
 
-on_hit f g = \ x -> f x `on_hit'` g
+instance Applicative (Parser s)
+  where
+    pure  = return
+    (<*>) = ap
 
-and f g = f `on_hit` \ (x, s) -> fmap (x <>) $ g s
+instance Functor (Parser s)
+  where
+    fmap = liftM
+
+runParser (Parser f') = f'
+
+evalParser f s = runParser f s >>= return . fst
+
+execParser f s = runParser f s >>= return . snd
+
+or (Parser f') (Parser g') =
+  Parser (\ s -> case f' s of
+    Miss -> g' s
+    r'   -> r')
+
+and f g =
+  f >>= \ x -> g >>= \ x' -> return (x <> x')
+
+err' :: String -> Parser s a
+err' e = Parser (\ _ -> Error e)
+
+err f e = f >>= \ _ -> err' e
 
 rep 1 f = f
 rep n f = f `BNF.and` rep (n - 1) f
 
-invert :: Result s a -> (a, s) -> Result s a
-invert (Hit _)   _ = Miss
-invert Miss      h = Hit h
-invert (Error e) _ = Error e
+except f (Parser g') =
+  Parser (\ s -> runParser 
+    (f >>= \ x -> case g' s of
+      Hit   _ -> Parser (\ _ -> Miss)
+      Miss    -> return x
+      Error e -> err' e) s)
 
-except f g = \ x -> f x `on_hit'` invert (g x)
-
-null s = Hit (mempty, s)
-
-finally f g = f `on_hit` (Hit . g)
-
-conv f g = f `finally` \ (x, s) -> (g x, s)
+null = return mempty
 
 zoo f = f `BNF.or` BNF.null
 
 zom f = f `BNF.and` zom f `BNF.or` BNF.null
 
 oom f = f `BNF.and` oom f `BNF.or` f
-
-err f e = f `on_hit` return (Error e)
