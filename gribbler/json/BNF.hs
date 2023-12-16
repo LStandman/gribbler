@@ -21,7 +21,6 @@ module BNF(
   where
 
 import Control.Monad
-import qualified Magma as Magma
 
 infixl 1 `err`
 infixl 1 `and`
@@ -36,19 +35,19 @@ data Result a =
 
 newtype Parser s a = Parser (s -> Result (a, s))
 
-and         :: Magma.Magma a => Parser s a -> Parser s a -> Parser s a
-drop        :: Magma.UnitalMagma b => Parser s a -> Parser s b
+and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
+drop        :: Monoid b => Parser s a -> Parser s b
 err         :: Parser s a -> String -> Parser s a
 eval_parser :: Parser s a -> s -> Result a
 except      :: Parser s a -> Parser s a -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
-null        :: Magma.UnitalMagma a => Parser s a
-oom         :: Magma.Magma a => Parser s a -> Parser s a
+null        :: Monoid a => Parser s a
+oom         :: Semigroup a => Parser s a -> Parser s a
 or          :: Parser s a -> Parser s a -> Parser s a
-rep         :: Magma.Magma a => Int -> Parser s a -> Parser s a
+rep         :: Semigroup a => Int -> Parser s a -> Parser s a
 run_parser  :: Parser s a -> (s -> Result (a, s))
-zom         :: Magma.UnitalMagma a => Parser s a -> Parser s a
-zoo         :: Magma.UnitalMagma a => Parser s a -> Parser s a
+zom         :: Monoid a => Parser s a -> Parser s a
+zoo         :: Monoid a => Parser s a -> Parser s a
 
 instance Monad Result
   where
@@ -93,7 +92,7 @@ or (Parser f') (Parser g') =
     r    -> r)
 
 and f g =
-  f >>= \ x -> g >>= \ x' -> return (x Magma.<> x')
+  f >>= \ x -> g >>= \ x' -> return (x <> x')
 
 err' :: String -> Parser s a
 err' e = Parser (\ _ -> Error e)
@@ -110,7 +109,7 @@ except f (Parser g') =
       Miss    -> return x
       Error e -> err' e) s)
 
-null = return Magma.mempty
+null = return mempty
 
 zoo f = f `BNF.or` BNF.null
 

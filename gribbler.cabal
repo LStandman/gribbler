@@ -38,8 +38,6 @@ library
       DicewareTest
       DiffList
       DiffListTest
-      Magma
-      MagmaTest
       MemUtils
       MemUtilsTest
       BNF
