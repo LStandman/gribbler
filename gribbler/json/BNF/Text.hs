@@ -5,29 +5,31 @@
 module BNF.Text(
     module DiffList,
     TextParser,
-    TextResult,
-    any_char,
-    match_char,
-    match_text)
+    drop_char,
+    get_any_char,
+    get_char,
+    get_text)
   where
 
 import qualified BNF as BNF
 import DiffList
 
 type TextParser = BNF.Parser String DiffString
-type TextResult = BNF.Result (DiffString, String)
 
-any_char   :: [Char] -> TextParser
-match_char :: Char -> TextParser
-match_text :: [Char] -> TextParser
+get_char     :: Char -> TextParser
+get_any_char :: [Char] -> TextParser
+get_text     :: [Char] -> TextParser
+drop_char    :: Monoid a => Char -> BNF.Parser String a
 
-match_char c = BNF.Parser (\ xs -> case xs of
+get_char c = BNF.Parser (\ xs -> case xs of
   []     -> BNF.Miss
   (y:ys) -> case c == y of
     True  -> BNF.Hit (difflist [c], ys)
     False -> BNF.Miss)
 
-match_text [] = BNF.null
-match_text s  = foldl1 (BNF.and) $ map (match_char) s
+get_text [] = BNF.null
+get_text s  = foldl1 (BNF.and) $ map (get_char) s
 
-any_char s = foldl1 (BNF.or) $ map (match_char) s
+get_any_char s = foldl1 (BNF.or) $ map (get_char) s
+
+drop_char c = BNF.drop $ get_char c

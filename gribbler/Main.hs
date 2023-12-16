@@ -1,7 +1,12 @@
 module Main where
 
-import BNF
+import qualified BNF as BNF
+import BNF.Text
+import JSON
 
 main :: IO ()
 main = do
-  print ""
+  print $ json "{\"test\": \"abc\"}"
+  print $ json "\"test\""
+  print $ BNF.run_parser string "\"test\""
+  print $ BNF.run_parser (drop_char '"' :: TextParser) "\"test"
