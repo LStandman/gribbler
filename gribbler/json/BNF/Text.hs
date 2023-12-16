@@ -13,13 +13,14 @@ module BNF.Text(
 
 import qualified BNF as BNF
 import DiffList
+import qualified Magma as Magma
 
 type TextParser = BNF.Parser String DiffString
 
 get_char     :: Char -> TextParser
 get_any_char :: [Char] -> TextParser
 get_text     :: [Char] -> TextParser
-drop_char    :: Monoid a => Char -> BNF.Parser String a
+drop_char    :: Magma.UnitalMagma a => Char -> BNF.Parser String a
 
 get_char c = BNF.Parser (\ xs -> case xs of
   []     -> BNF.Miss

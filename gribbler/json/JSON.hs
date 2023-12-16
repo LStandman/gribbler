@@ -14,19 +14,20 @@ import Data.Maybe
 import qualified BNF as BNF
 import BNF.Text
 import DiffList
+import qualified Magma as Magma
 import MemUtils
 
 newtype SafeString =
     SafeString String
   deriving (Eq, Show)
 
-instance Semigroup SafeString
+instance Magma.Magma SafeString
   where
-    (SafeString a) <> (SafeString b) = SafeString (a <> b)
+    (SafeString a) <> (SafeString b) = SafeString (a Magma.<> b)
 
-instance Monoid SafeString
+instance Magma.UnitalMagma SafeString
   where
-    mempty = SafeString mempty
+    mempty = SafeString Magma.mempty
 
 newtype SafeDict a =
     SafeDict [(SafeString, a)]
@@ -168,7 +169,7 @@ sign =
     get_char '+' `BNF.or`
     get_char '-')
 
-ws :: Monoid a => BNF.Parser String a
+ws :: Magma.UnitalMagma a => BNF.Parser String a
 ws =
   BNF.drop (BNF.zom (
     get_char '\x0020' `BNF.or`

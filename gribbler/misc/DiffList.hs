@@ -10,6 +10,7 @@ module DiffList(
   where
 
 import Data.Monoid
+import qualified Magma as Magma
 
 newtype DiffList a = DiffList (Endo ([a]))
 type DiffString = DiffList Char
@@ -23,7 +24,15 @@ instance Semigroup (DiffList a)
 
 instance Monoid (DiffList a)
   where
-    mempty = difflist []
+    mempty = difflist mempty
+
+instance Magma.Magma (DiffList a)
+  where
+    (<>) = (Data.Monoid.<>)
+
+instance Magma.UnitalMagma (DiffList a)
+  where
+    mempty = Data.Monoid.mempty
 
 instance Eq a => Eq (DiffList a)
   where

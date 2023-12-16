@@ -6,6 +6,7 @@ module DiffListTest(test_difflist) where
 
 import DiffList
 import Libtest
+import qualified Magma as Magma
 
 test_difflist =
   let
