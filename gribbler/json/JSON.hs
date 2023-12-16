@@ -116,7 +116,7 @@ escape =
   (get_char 'r'  >>= \ _ -> return $ difflist ['\r']) `BNF.or`
   (get_char 't'  >>= \ _ -> return $ difflist ['\t']) `BNF.or`
   ( drop_char 'u' `BNF.and` BNF.rep 4 hex >>=
-    \ s -> return . difflist $ [toEnum . fromJust . hex2num . relist $ s])
+    \ s -> return . difflist . (:[]) . toEnum . fromJust . hex2num . relist $ s)
   
 
 hex :: TextParser
