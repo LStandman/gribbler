@@ -11,10 +11,10 @@ module JSON(
 
 import Data.Maybe
 
-import qualified BNF as BNF
-import BNF.Text
-import DiffList
-import MemUtils
+import qualified JSON.BNF as BNF
+import JSON.BNF.Text
+import Misc.DiffList
+import Misc.MemUtils
 
 newtype SafeString =
     SafeString String

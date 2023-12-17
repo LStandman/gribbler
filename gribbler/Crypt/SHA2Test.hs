@@ -1,12 +1,12 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- SHA2Test.hs: Unit tests for SHA2
+-- Crypt/SHA2Test.hs: Unit tests for SHA2
 -- Copyright (C) 2021-2023 LStandman
 
-module SHA2Test(test_sha256) where
+module Crypt.SHA2Test(test_sha256) where
 
+import qualified Crypt.SHA2 as SHA2
 import Libtest
-import SHA2
-import MemUtils
+import Misc.MemUtils
 
 test_sha256 =
   let

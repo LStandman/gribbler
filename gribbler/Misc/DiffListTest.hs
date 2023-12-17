@@ -1,10 +1,10 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- DiffListTest.hs: Unit tests for DiffList
+-- Misc/DiffListTest.hs: Unit tests for DiffList
 -- Copyright (C) 2023 LStandman
 
-module DiffListTest(test_difflist) where
+module Misc.DiffListTest(test_difflist) where
 
-import DiffList
+import Misc.DiffList
 import Libtest
 
 test_difflist =

@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- MemUtilsTest.hs: Unit tests for MemUtils
+-- JSONTest.hs: Unit tests for JSON module.
 -- Copyright (C) 2023 LStandman
 
-module MemUtilsTest() where
+module JSONTest() where

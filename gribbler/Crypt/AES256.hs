@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- AES256.hs: AES256 module
--- Copyright (C) 2021-2022 LStandman
+-- Crypt/AES256.hs: AES256 module
+-- Copyright (C) 2021-2023 LStandman
 
-module AES256(
+module Crypt.AES256(
     size_block,
     size_key,
     encrypt,

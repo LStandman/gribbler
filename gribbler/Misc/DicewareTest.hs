@@ -1,10 +1,10 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- DicewareTest.hs: Unit tests for Diceware
+-- Misc/DicewareTest.hs: Unit tests for Diceware
 -- Copyright (C) 2021-2023 LStandman
 
-module DicewareTest(test_diceware) where
+module Misc.DicewareTest(test_diceware) where
 
-import Diceware
+import qualified Misc.Diceware as Diceware
 import Libtest
 
 test_diceware =

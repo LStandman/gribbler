@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- DiffList.hs: DiffList implementation
+-- Misc/DiffList.hs: DiffList implementation
 -- Copyright (C) 2021-2023 LStandman
 
-module DiffList(
+module Misc.DiffList(
     DiffList (..),
     DiffString,
     difflist,

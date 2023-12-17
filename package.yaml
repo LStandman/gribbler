@@ -25,14 +25,11 @@ dependencies:
 
 library:
   source-dirs:
-  - gribbler/crypt
-  - gribbler/libtest
-  - gribbler/misc
-  - gribbler/json
+  - gribbler
 
 executables:
   gribbler-exe:
-    main:                gribbler/Main.hs
+    main:                app/Main.hs
     ghc-options:
     - -threaded
     - -rtsopts
@@ -42,7 +39,7 @@ executables:
 
 tests:
   gribbler-test:
-    main:                gribbler/Spec.hs
+    main:                tests/Spec.hs
     ghc-options:
     - -threaded
     - -rtsopts

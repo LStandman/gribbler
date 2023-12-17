@@ -1,9 +1,9 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- BNF/Text.hs: Functions for BNF syntax analysis of text
+-- JSON/BNF/Text.hs: Functions for BNF syntax analysis of text
 -- Copyright (C) 2022-2023 LStandman
 
-module BNF.Text(
-    module DiffList,
+module JSON.BNF.Text(
+    module Misc.DiffList,
     CharParser,
     TextParser,
     drop_char,
@@ -14,8 +14,8 @@ module BNF.Text(
     get_text)
   where
 
-import qualified BNF as BNF
-import DiffList
+import qualified JSON.BNF as BNF
+import Misc.DiffList
 
 type CharParser = BNF.Parser String Char
 type TextParser = BNF.Parser String DiffString

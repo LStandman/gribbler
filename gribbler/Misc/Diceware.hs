@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Diceware.hs: Encode and decode numbers to dictionary entries
+-- Misc/Diceware.hs: Encode and decode numbers to dictionary entries
 -- Copyright (C) 2021-2023 LStandman
 
-module Diceware(
+module Misc.Diceware(
     decode,
     encode,
     is_sanitized)
@@ -12,8 +12,8 @@ import Data.Char
 import Data.List
 import Data.Maybe
 --
-import DiffList
-import MemUtils
+import Misc.DiffList
+import Misc.MemUtils
   
 -- Decodes a number from list `hits` of entries from `dictionary`.
 -- First entry represents the most significant digit.

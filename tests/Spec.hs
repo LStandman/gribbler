@@ -2,15 +2,17 @@
 -- Spec.hs: Unit test suite
 -- Copyright (C) 2021-2023 LStandman
 
+module Main where
+
 import System.Exit
 --
-import AES256Test
-import BNFTest
-import DicewareTest
-import DiffListTest
-import KDFTest
-import MooMooTest
-import SHA2Test
+import Crypt.AES256Test
+import Crypt.KDFTest
+import Crypt.MooMooTest
+import Crypt.SHA2Test
+import JSON.BNFTest
+import Misc.DicewareTest
+import Misc.DiffListTest
 
 testmain :: [IO Bool] -> IO Bool
 testmain [] = return True

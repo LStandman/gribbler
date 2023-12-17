@@ -25,42 +25,45 @@ source-repository head
 
 library
   exposed-modules:
-      AES256
-      AES256Test
-      KDF
-      KDFTest
-      MooMoo
-      MooMooTest
-      SHA2
-      SHA2Test
-      Libtest
-      Diceware
-      DicewareTest
-      DiffList
-      DiffListTest
-      MemUtils
-      MemUtilsTest
-      BNF
-      BNF.Text
-      BNF.TextTest
-      BNFTest
+      Crypt
+      Crypt.AES256
+      Crypt.AES256Test
+      Crypt.KDF
+      Crypt.KDFTest
+      Crypt.MooMoo
+      Crypt.MooMooTest
+      Crypt.SHA2
+      Crypt.SHA2Test
+      CryptTest
       JSON
+      JSON.BNF
+      JSON.BNF.Text
+      JSON.BNF.TextTest
+      JSON.BNFTest
+      JSONTest
+      Libtest
+      LibtestTest
+      Misc
+      Misc.Diceware
+      Misc.DicewareTest
+      Misc.DiffList
+      Misc.DiffListTest
+      Misc.MemUtils
+      Misc.MemUtilsTest
+      MiscTest
   other-modules:
       Paths_gribbler
   autogen-modules:
       Paths_gribbler
   hs-source-dirs:
-      gribbler/crypt
-      gribbler/libtest
-      gribbler/misc
-      gribbler/json
+      gribbler
   build-depends:
       array
     , base >=4.7 && <5
   default-language: Haskell2010
 
 executable gribbler-exe
-  main-is: gribbler/Main.hs
+  main-is: app/Main.hs
   other-modules:
       Paths_gribbler
   autogen-modules:
@@ -74,7 +77,7 @@ executable gribbler-exe
 
 test-suite gribbler-test
   type: exitcode-stdio-1.0
-  main-is: gribbler/Spec.hs
+  main-is: tests/Spec.hs
   other-modules:
       Paths_gribbler
   autogen-modules:

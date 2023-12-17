@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- KDF.hs: KDF module
--- Copyright (C) 2021-2022 LStandman
+-- Crypt/KDF.hs: KDF module
+-- Copyright (C) 2021-2023 LStandman
 
-module KDF(
+module Crypt.KDF(
     hmac,
     hmac1,
     pbkdf2,

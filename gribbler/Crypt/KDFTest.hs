@@ -1,16 +1,16 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- KDFTest.hs: Unit tests for KDF
+-- Crypt/KDFTest.hs: Unit tests for KDF
 -- Copyright (C) 2021-2023 LStandman
 
-module KDFTest(
+module Crypt.KDFTest(
     test_hmac_sha256,
     test_pbkdf2_hmac_sha256)
   where
 
-import KDF
+import qualified Crypt.KDF as KDF
+import qualified Crypt.SHA2 as SHA2
 import Libtest
-import SHA2
-import MemUtils
+import Misc.MemUtils
 
 test_hmac_sha256 =
   let

@@ -1,14 +1,14 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- BNF.hs: Abstract Backus–Naur form implementation
+-- JSON/BNF.hs: Abstract Backus–Naur form implementation
 -- Copyright (C) 2021-2023 LStandman
 
-module BNF(
+module JSON.BNF(
     Parser(..),
     Result(..),
-    BNF.and,
-    BNF.drop,
-    BNF.null,
-    BNF.or,
+    JSON.BNF.and,
+    JSON.BNF.drop,
+    JSON.BNF.null,
+    JSON.BNF.or,
     err,
     eval_parser,
     except,
@@ -100,7 +100,7 @@ err' e = Parser (\ _ -> Error e)
 err f e = f >>= \ _ -> err' e
 
 rep 1 f = f
-rep n f = f `BNF.and` rep (n - 1) f
+rep n f = f `JSON.BNF.and` rep (n - 1) f
 
 except f (Parser g') =
   Parser (\ s -> run_parser 
@@ -111,10 +111,10 @@ except f (Parser g') =
 
 null = return mempty
 
-zoo f = f `BNF.or` BNF.null
+zoo f = f `JSON.BNF.or` JSON.BNF.null
 
-zom f = f `BNF.and` zom f `BNF.or` BNF.null
+zom f = f `JSON.BNF.and` zom f `JSON.BNF.or` JSON.BNF.null
 
-oom f = f `BNF.and` oom f `BNF.or` f
+oom f = f `JSON.BNF.and` oom f `JSON.BNF.or` f
 
-drop f = f >>= \ _ -> BNF.null
+drop f = f >>= \ _ -> JSON.BNF.null

@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- MooMoo.hs: Block cipher modes of operation
+-- Crypt/MooMoo.hs: Block cipher modes of operation
 -- Copyright (C) 2021-2023 LStandman
 
-module MooMoo(
+module Crypt.MooMoo(
     cbc_encrypt,
     cbc_encrypt1,
     cbc_decrypt)

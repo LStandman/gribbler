@@ -1,12 +1,12 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- MooMooTest.hs: Unit tests for MooMoo
+-- Crypt/MooMooTest.hs: Unit tests for MooMoo
 -- Copyright (C) 2021-2023 LStandman
 
-module MooMooTest(test_aes256_cbc) where
+module Crypt.MooMooTest(test_aes256_cbc) where
 
-import AES256
+import qualified Crypt.AES256 as AES256
+import qualified Crypt.MooMoo as MooMoo
 import Libtest
-import MooMoo
 
 test_aes256_cbc =
   let

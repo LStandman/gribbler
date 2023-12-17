@@ -1,14 +1,14 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- BNFTest.hs: Unit tests for BNF
+-- JSON/BNFTest.hs: Unit tests for BNF
 -- Copyright (C) 2022-2023 LStandman
 
-module BNFTest(test_bnf) where
+module JSON.BNFTest(test_bnf) where
 
 import Data.Char
 --
 import Libtest
-import qualified BNF as BNF
-import BNF.Text
+import qualified JSON.BNF as BNF
+import JSON.BNF.Text
 
 test_bnf =
   let

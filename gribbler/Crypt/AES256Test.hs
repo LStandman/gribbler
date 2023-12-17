@@ -1,12 +1,12 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- AES256Test.hs: Unit tests for AES256
+-- Crypt/AES256Test.hs: Unit tests for AES256
 -- Copyright (C) 2021-2023 LStandman
 
-module AES256Test(test_aes256) where
+module Crypt.AES256Test(test_aes256) where
 
 import Data.Word
 --
-import AES256
+import qualified Crypt.AES256 as AES256
 import Libtest
 
 nomod_aes256 :: Bool -> [Word8] -> [Word8] -> [Word8]
