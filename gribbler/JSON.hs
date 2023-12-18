@@ -88,7 +88,7 @@ characters =
 
 character :: TextParser
 character =
-  get_any_char ['\x0020'..'\x10FFFF'] `BNF.except` get_char '"' `BNF.except` get_char '\\' `BNF.or`
+  get_char_in_range ('\x0020', '\x10FFFF') `BNF.except` get_char '"' `BNF.except` get_char '\\' `BNF.or`
   (drop_char '\\' `BNF.and` escape)
 
 escape :: TextParser

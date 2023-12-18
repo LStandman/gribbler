@@ -4,42 +4,40 @@
 
 module JSON.BNF.Text(
     module Misc.DiffList,
-    CharParser,
     TextParser,
     drop_char,
     get_any_char,
-    get_any_char1,
     get_char,
-    get_char1,
+    get_char_in_range,
     get_text)
   where
 
 import qualified JSON.BNF as BNF
 import Misc.DiffList
 
-type CharParser = BNF.Parser String Char
 type TextParser = BNF.Parser String DiffString
 
-get_char      :: Char -> TextParser
-get_char1     :: Char -> CharParser
-get_any_char  :: [Char] -> TextParser
-get_any_char1 :: [Char] -> CharParser
-get_text      :: [Char] -> TextParser
-drop_char     :: Monoid a => Char -> BNF.Parser String a
+get_any_char       :: [Char] -> TextParser
+get_char           :: Char -> TextParser
+get_char_in_range  :: (Char, Char) -> TextParser
+get_text           :: [Char] -> TextParser
+drop_char          :: Monoid a => Char -> BNF.Parser String a
 
-get_char1 c = BNF.Parser (\ xs -> case xs of
+get_char c = BNF.Parser (\ xs -> case xs of
   []     -> BNF.Miss
   (y:ys) -> case c == y of
-    True  -> BNF.Hit (c, ys)
+    True  -> BNF.Hit (difflist [c], ys)
     False -> BNF.Miss)
 
-get_char c = get_char1 c >>= return . difflist . (:[])
+get_char_in_range (a, b) = BNF.Parser (\ xs -> case xs of
+  []     -> BNF.Miss
+  (y:ys) -> case (a <= y) && (y <= b) of
+    True  -> BNF.Hit (difflist [y], ys)
+    False -> BNF.Miss)
 
 get_text [] = BNF.null
 get_text s  = foldl1 (BNF.and) $ map (get_char) s
 
-get_any_char1 s = foldl1 (BNF.or) $ map (get_char1) s
-
-get_any_char s = get_any_char1 s >>= return . difflist . (:[])
+get_any_char s = foldl1 (BNF.or) $ map (get_char) s
 
 drop_char c = BNF.drop $ get_char c

@@ -28,7 +28,7 @@ main = do
 \  \"last_name\": \"Smith\",\
 \  \"is_alive\": true,\
 \  \"age\": 27}"
-  time $ json "{\
+  print $ json "{\
 \  \"first_name\": \"John\",\
 \  \"last_name\": \"Smith\",\
 \  \"is_alive\": true,\
@@ -55,4 +55,4 @@ main = do
 \    \"Trevor\"\
 \  ],\
 \  \"spouse\": null\
-\}" `seq` return ()
+\}"
