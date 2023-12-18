@@ -13,6 +13,7 @@ module JSON.BNF(
     eval_parser,
     except,
     exec_parser,
+    once,
     oom,
     rep,
     run_parser,
@@ -86,9 +87,9 @@ eval_parser f s = run_parser f s >>= return . fst
 
 exec_parser f s = run_parser f s >>= return . snd
 
-or (Parser f') (Parser g') =
+or (Parser f') g =
   Parser (\ s -> case f' s of
-    Miss -> g' s
+    Miss -> run_parser g s
     r    -> r)
 
 and f g =
@@ -102,12 +103,14 @@ err f e = f >>= \ _ -> err' e
 rep 1 f = f
 rep n f = f `JSON.BNF.and` rep (n - 1) f
 
-except f (Parser g') =
+not :: Result a -> b -> Parser s b
+not (Hit   _) = return $ Parser (\ _ -> Miss)
+not Miss      = \ x -> return x
+not (Error e) = return $ err' e
+
+except f g =
   Parser (\ s -> run_parser 
-    (f >>= \ x -> case g' s of
-      Hit   _ -> Parser (\ _ -> Miss)
-      Miss    -> return x
-      Error e -> err' e) s)
+    (f >>= JSON.BNF.not (run_parser g s)) s)
 
 null = return mempty
 
@@ -118,3 +121,7 @@ zom f = f `JSON.BNF.and` zom f `JSON.BNF.or` JSON.BNF.null
 oom f = f `JSON.BNF.and` oom f `JSON.BNF.or` f
 
 drop f = f >>= \ _ -> JSON.BNF.null
+
+once (Parser f') =
+  Parser (\ s -> f' s >>=
+    \ (x, s') -> run_parser (JSON.BNF.not (f' s') x) s')

@@ -48,6 +48,7 @@ library
       Misc.DicewareTest
       Misc.DiffList
       Misc.DiffListTest
+      Misc.LookupTable
       Misc.MemUtils
       Misc.MemUtilsTest
       MiscTest

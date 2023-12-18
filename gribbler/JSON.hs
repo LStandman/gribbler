@@ -3,7 +3,7 @@
 -- Copyright (C) 2023 LStandman
 
 module JSON(
-    JValue(..),
+    JSValue(..),
     json,
     string,
     characters)
@@ -14,87 +14,72 @@ import Data.Maybe
 import qualified JSON.BNF as BNF
 import JSON.BNF.Text
 import Misc.DiffList
+import Misc.LookupTable
 import Misc.MemUtils
 
-newtype SafeString =
-    SafeString String
+data JSValue =
+    JSObject (LookupTable String JSValue) |
+    JArray  [JSValue]                     |
+    JSString String                       |
+    JSNumber String                       |
+    JSTrue                                |
+    JSFalse                               |
+    JSNull
   deriving (Eq, Show)
 
-instance Semigroup SafeString
-  where
-    (SafeString a) <> (SafeString b) = SafeString (a <> b)
-
-instance Monoid SafeString
-  where
-    mempty = SafeString mempty
-
-newtype SafeDict a =
-    SafeDict [(SafeString, a)]
-  deriving (Eq, Show)
-
-data JValue =
-    JObject (SafeDict JValue) |
-    JArray  [JValue]          |
-    JString SafeString        |
-    JNumber String            |
-    JTrue                     |
-    JFalse                    |
-    JNull
-  deriving (Eq, Show)
-
-json :: String -> BNF.Result JValue
+json :: String -> BNF.Result JSValue
 
 json s =
   BNF.eval_parser element s
 
-value :: BNF.Parser String JValue
+value :: BNF.Parser String JSValue
 value =
-  object                                      `BNF.or`
-  array                                       `BNF.or`
-  (string >>= \ s -> return $ JString s)      `BNF.or`
-  number                                      `BNF.or`
-  (get_text "true"  >>= \ _ -> return JTrue)  `BNF.or`
-  (get_text "false" >>= \ _ -> return JFalse) `BNF.or`
-  (get_text "null"  >>= \ _ -> return JNull)
+  object                                       `BNF.or`
+  array                                        `BNF.or`
+  (string >>= return . JSString)               `BNF.or`
+  number                                       `BNF.or`
+  (get_text "true"  >>= \ _ -> return JSTrue)  `BNF.or`
+  (get_text "false" >>= \ _ -> return JSFalse) `BNF.or`
+  (get_text "null"  >>= \ _ -> return JSNull)
 
-object :: BNF.Parser String JValue
+object :: BNF.Parser String JSValue
 object =
    drop_char '{' `BNF.and` ws      `BNF.and` drop_char '}' `BNF.or`
   (drop_char '{' `BNF.and` members `BNF.and` drop_char '}') >>=
-  \ ms -> return . JObject . SafeDict $ relist ms
+    return . JSObject . LookupTable . relist
 
-members :: BNF.Parser String (DiffList (SafeString, JValue))
+members :: BNF.Parser String (DiffList (String, JSValue))
 members =
-  (member >>= \ m -> return $ difflist [m]) `BNF.and`
+  (member >>= return . difflist . (:[])) `BNF.and`
   BNF.zoo (drop_char ',' `BNF.and` members)
 
-member :: BNF.Parser String (SafeString, JValue)
+member :: BNF.Parser String (String, JSValue)
 member =
   ws `BNF.and` string `BNF.and` ws `BNF.and` drop_char ':' >>=
-  \ s -> element >>= \ e -> return (s, e)
+    \ s -> element >>= \ e -> return (s, e)
 
-array :: BNF.Parser String JValue
+array :: BNF.Parser String JSValue
 array =
    drop_char '[' `BNF.and` ws       `BNF.and` drop_char ']' `BNF.or`
   (drop_char '[' `BNF.and` elements `BNF.and` drop_char ']') >>=
-  \ es -> return . JArray $ relist es
+    return . JArray . relist
 
-elements :: BNF.Parser String (DiffList JValue)
+elements :: BNF.Parser String (DiffList JSValue)
 elements =
-  (element >>= \ e -> return $ difflist [e]) `BNF.and`
+  (element >>= return . difflist. (:[])) `BNF.and`
   BNF.zoo (drop_char ',' `BNF.and` elements)
 
-element :: BNF.Parser String JValue
+element :: BNF.Parser String JSValue
 element =
   (ws :: TextParser) >>= \ _ ->
     value >>= \ v ->
       (ws :: TextParser) >>= \ _ ->
         return v
 
-string :: BNF.Parser String SafeString
+string :: BNF.Parser String String
 string =
   drop_char '"' `BNF.and` characters `BNF.and` drop_char '"' >>=
-  \ s -> return . SafeString . relist $ s
+    return . relist
 
 characters :: TextParser
 characters =
@@ -116,7 +101,7 @@ escape =
   (get_char 'r'  >>= \ _ -> return $ difflist ['\r']) `BNF.or`
   (get_char 't'  >>= \ _ -> return $ difflist ['\t']) `BNF.or`
   ( drop_char 'u' `BNF.and` BNF.rep 4 hex >>=
-    \ s -> return . difflist . (:[]) . toEnum . fromJust . hex2num . relist $ s)
+      return . difflist . (:[]) . toEnum . fromJust . hex2num . relist)
   
 
 hex :: TextParser
@@ -125,16 +110,16 @@ hex =
   get_any_char ['A'..'F'] `BNF.or`
   get_any_char ['a'..'f']
 
-number :: BNF.Parser String JValue
+number :: BNF.Parser String JSValue
 number =
   integer `BNF.and` fraction `BNF.and` JSON.exponent >>=
-  \ s -> return . JNumber . relist $ s
+    return . JSNumber . relist
 
 integer :: TextParser
 integer =
-  digit `BNF.or`
+  (BNF.once digit) `BNF.or`
   (onenine `BNF.and` digits) `BNF.or`
-  (get_char '-' `BNF.and` digit) `BNF.or`
+  (get_char '-' `BNF.and` (BNF.once digit)) `BNF.or`
   (get_char '-' `BNF.and` onenine `BNF.and` digits)
 
 digits :: TextParser
