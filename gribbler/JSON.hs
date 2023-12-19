@@ -3,6 +3,7 @@
 -- Copyright (C) 2023 LStandman
 
 module JSON(
+    BNF.from_hit,
     JSValue(..),
     json,
     string,

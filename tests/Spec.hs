@@ -10,6 +10,7 @@ import Crypt.AES256Test
 import Crypt.KDFTest
 import Crypt.MooMooTest
 import Crypt.SHA2Test
+import JSONTest
 import JSON.BNFTest
 import Misc.DicewareTest
 import Misc.DiffListTest
@@ -27,6 +28,7 @@ main =
     test_diceware,
     test_difflist,
     test_hmac_sha256,
+    test_json,
     test_pbkdf2_hmac_sha256,
     test_sha256] >>=
   \ x -> if x then exitSuccess else exitFailure

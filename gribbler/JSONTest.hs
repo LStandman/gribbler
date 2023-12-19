@@ -2,4 +2,66 @@
 -- JSONTest.hs: Unit tests for JSON module.
 -- Copyright (C) 2023 LStandman
 
-module JSONTest() where
+module JSONTest(test_json) where
+
+import JSON
+import qualified JSON.BNF as BNF
+import Libtest
+import Misc.LookupTable
+
+test_json =
+  let
+    t1_string = "{\
+\  \"first_name\": \"John\",\
+\  \"last_name\": \"Smith\",\
+\  \"is_alive\": true,\
+\  \"age\": 27,\
+\  \"address\": {\
+\    \"street_address\": \"21 2nd Street\",\
+\    \"city\": \"New York\",\
+\    \"state\": \"NY\",\
+\    \"postal_code\": \"10021-3100\"\
+\  },\
+\  \"phone_numbers\": [\
+\    {\
+\      \"type\": \"home\",\
+\      \"number\": \"212 555-1234\"\
+\    },\
+\    {\
+\      \"type\": \"office\",\
+\      \"number\": \"646 555-4567\"\
+\    }\
+\  ],\
+\  \"children\": [\
+\    \"Catherine\",\
+\    \"Thomas\",\
+\    \"Trevor\"\
+\  ],\
+\  \"spouse\": null\
+\}"
+    t1_json = BNF.Hit (JSObject (LookupTable [
+      ("first_name",JSString "John"),
+      ("last_name",JSString "Smith"),
+      ("is_alive",JSTrue),
+      ("age",JSNumber "27"),
+      ("address",JSObject (LookupTable [
+        ("street_address",JSString "21 2nd Street"),
+        ("city",JSString "New York"),("state",JSString "NY"),
+        ("postal_code",JSString "10021-3100")])),
+        ("phone_numbers",JArray [
+          JSObject (LookupTable [
+            ("type",JSString "home"),
+            ("number",JSString "212 555-1234")]),
+          JSObject (LookupTable [
+            ("type",JSString "office"),
+            ("number",JSString "646 555-4567")])
+        ]),
+      ("children",JArray [
+        JSString "Catherine",
+        JSString "Thomas",
+        JSString "Trevor"]),
+      ("spouse",JSNull)]))
+  in
+    testsuite "JSON" [
+      test "FromString" [
+        expect_memeq "t1_json" t1_json $ json t1_string]]
