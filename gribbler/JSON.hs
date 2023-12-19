@@ -15,16 +15,15 @@ import Data.Maybe
 import qualified JSON.BNF as BNF
 import JSON.BNF.Text
 import Misc.DiffList
-import Misc.LookupTable
 import Misc.MemUtils
 
 data JSValue =
-    JSObject (LookupTable String JSValue) |
-    JArray  [JSValue]                     |
-    JSString String                       |
-    JSNumber String                       |
-    JSTrue                                |
-    JSFalse                               |
+    JSObject [(String, JSValue)] |
+    JArray  [JSValue]            |
+    JSString String              |
+    JSNumber String              |
+    JSTrue                       |
+    JSFalse                      |
     JSNull
   deriving (Eq, Show)
 
@@ -47,7 +46,7 @@ object :: BNF.Parser String JSValue
 object =
    drop_char '{' `BNF.and` ws      `BNF.and` drop_char '}' `BNF.or`
   (drop_char '{' `BNF.and` members `BNF.and` drop_char '}') >>=
-    return . JSObject . LookupTable . relist
+    return . JSObject . relist
 
 members :: BNF.Parser String (DiffList (String, JSValue))
 members =

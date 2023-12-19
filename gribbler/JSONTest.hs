@@ -7,7 +7,6 @@ module JSONTest(test_json) where
 import JSON
 import qualified JSON.BNF as BNF
 import Libtest
-import Misc.LookupTable
 
 test_json =
   let
@@ -39,28 +38,31 @@ test_json =
 \  ],\
 \  \"spouse\": null\
 \}"
-    t1_json = BNF.Hit (JSObject (LookupTable [
-      ("first_name",JSString "John"),
-      ("last_name",JSString "Smith"),
-      ("is_alive",JSTrue),
-      ("age",JSNumber "27"),
-      ("address",JSObject (LookupTable [
-        ("street_address",JSString "21 2nd Street"),
-        ("city",JSString "New York"),("state",JSString "NY"),
-        ("postal_code",JSString "10021-3100")])),
-        ("phone_numbers",JArray [
-          JSObject (LookupTable [
-            ("type",JSString "home"),
-            ("number",JSString "212 555-1234")]),
-          JSObject (LookupTable [
-            ("type",JSString "office"),
-            ("number",JSString "646 555-4567")])
+    t1_json = BNF.Hit (JSObject [
+      ("first_name", JSString "John"),
+      ("last_name", JSString "Smith"),
+      ("is_alive", JSTrue),
+      ("age", JSNumber "27"),
+      ("address",JSObject [
+        ("street_address", JSString "21 2nd Street"),
+        ("city", JSString "New York"),
+        ("state", JSString "NY"),
+        ("postal_code", JSString "10021-3100")]),
+        ("phone_numbers", JArray [
+          JSObject [
+            ("type", JSString "home"),
+            ("number", JSString "212 555-1234")
+          ],
+          JSObject [
+            ("type", JSString "office"),
+            ("number", JSString "646 555-4567")
+          ]
         ]),
-      ("children",JArray [
+      ("children", JArray [
         JSString "Catherine",
         JSString "Thomas",
         JSString "Trevor"]),
-      ("spouse",JSNull)]))
+      ("spouse", JSNull)])
   in
     testsuite "JSON" [
       test "FromString" [
