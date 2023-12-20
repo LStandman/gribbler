@@ -65,5 +65,5 @@ test_json =
       ("spouse", JSNull)])
   in
     testsuite "JSON" [
-      test "FromString" [
+      test "Wikipedia" [
         expect_memeq "t1_json" t1_json $ json t1_string]]
