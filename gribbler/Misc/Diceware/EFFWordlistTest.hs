@@ -16,6 +16,6 @@ test_effwordlist =
   in
     testsuite "EFFWordlist" [
       test "IsSanitized" [
-        expect_memeq "t1_result" t1_result $ Diceware.is_sanitized $ drop 2 $ EFFWordlist.eff_large_wordlist],
+        expect_memeq "t1_result" t1_result $ Diceware.is_sanitized EFFWordlist.eff_large_wordlist],
       test "CorrectLength" [
         expect_memeq "t2_result" t2_result $ length EFFWordlist.eff_large_wordlist]]

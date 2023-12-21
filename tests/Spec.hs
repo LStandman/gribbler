@@ -6,31 +6,15 @@ module Main where
 
 import System.Exit
 --
-import Crypt.AES256Test
-import Crypt.KDFTest
-import Crypt.MooMooTest
-import Crypt.SHA2Test
+import CryptTest
+import MiscTest
 import JSONTest
-import JSON.BNFTest
-import Misc.DicewareTest
-import Misc.Diceware.EFFWordlistTest
-import Misc.DiffListTest
-
-testmain :: [IO Bool] -> IO Bool
-testmain [] = return True
-testmain (t:ts) = t >>= \ x -> testmain ts >>= \ y -> return (x && y)
+import Libtest
 
 main :: IO ()
 main =
-  testmain [
-    test_aes256,
-    test_aes256_cbc,
-    test_bnf,
-    test_diceware,
-    test_difflist,
-    test_effwordlist,
-    test_hmac_sha256,
-    test_json,
-    test_pbkdf2_hmac_sha256,
-    test_sha256] >>=
+  runtests [
+    test_crypt,
+    test_misc,
+    test_json] >>=
   \ x -> if x then exitSuccess else exitFailure

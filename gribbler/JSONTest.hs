@@ -6,9 +6,17 @@ module JSONTest(test_json) where
 
 import JSON
 import qualified JSON.BNF as BNF
+import JSON.BNFTest
 import Libtest
 
+test_json' :: IO Bool
+
 test_json =
+  runtests [
+    test_bnf,
+    test_json']
+
+test_json' =
   let
     t1_string = "{\
 \  \"first_name\": \"John\",\
