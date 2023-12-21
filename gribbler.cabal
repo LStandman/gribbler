@@ -45,6 +45,8 @@ library
       LibtestTest
       Misc
       Misc.Diceware
+      Misc.Diceware.EFFWordlist
+      Misc.Diceware.EFFWordlistTest
       Misc.DicewareTest
       Misc.DiffList
       Misc.DiffListTest

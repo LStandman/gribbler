@@ -23,12 +23,12 @@ decode :: [String] -> [String] -> Maybe Int
 -- First entry represents the most significant digit.
 encode :: [String] -> Int -> Int -> [String]
 
--- To avoid undefined behavior the dictionary should be:
+-- To avoid ambiguity the dictionary should be:
 -- * Sorted.
 -- * Unique.
--- * Only containining letters of the alphabet.
--- * And only in lower case.
-is_sanitized :: [String] -> Bool
+-- * Alphabet caharacters and dashes (-) only.
+-- * Lower case only.
+is_sanitized :: [String] -> Either String ()
 
 decode dictionary hits =
   maybeMap (flip elemIndex dictionary) hits >>=
@@ -45,11 +45,17 @@ encode dictionary digits number =
   relist $ 
   encode' dictionary (length dictionary) digits number
 
-is_sanitized' :: String -> Bool
-is_sanitized' = isNothing . (find (not . isLower))
+is_sanitized' :: String -> Either String ()
+is_sanitized' s
+    | isNothing $ (find (not . \ c -> isLower c || c == '-')) s = Right ()
+    | otherwise = Left $ "Word <" ++ s ++ "> is not exclusively lowercase alphabet!"
 
-is_sanitized [] = True
+is_sanitized [] = Right ()
 is_sanitized (x:xs) =
-  is_sanitized' x &&
-  (isNothing $ find (<= x) xs) &&
-  is_sanitized xs
+    is_sanitized' x >>=
+    return e >>=
+    \ _ -> is_sanitized xs
+  where
+    e = case find (<= x) xs of
+      Just y -> Left $ "Word <" ++ x ++ "> is either not sorted or not unique (compare to <" ++ y ++ ">)!"
+      Nothing -> Right ()

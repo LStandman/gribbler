@@ -13,6 +13,7 @@ import Crypt.SHA2Test
 import JSONTest
 import JSON.BNFTest
 import Misc.DicewareTest
+import Misc.Diceware.EFFWordlistTest
 import Misc.DiffListTest
 
 testmain :: [IO Bool] -> IO Bool
@@ -27,6 +28,7 @@ main =
     test_bnf,
     test_diceware,
     test_difflist,
+    test_effwordlist,
     test_hmac_sha256,
     test_json,
     test_pbkdf2_hmac_sha256,

@@ -2,8 +2,11 @@
 -- Misc/DicewareTest.hs: Unit tests for Diceware
 -- Copyright (C) 2021-2023 LStandman
 
-module Misc.DicewareTest(test_diceware) where
+module Misc.DicewareTest(test_diceware)
+  where
 
+import Data.Either
+--
 import qualified Misc.Diceware as Diceware
 import Libtest
 
@@ -38,16 +41,16 @@ test_diceware =
         expect_memeq "t1_hits" t1_hits $
           Diceware.encode t1_dictionary (length t1_hits) t1_number],
       test "IsSanitizedPass" [
-        expect_true $ Diceware.is_sanitized t1_dictionary],
+        expect_true $ isRight $ Diceware.is_sanitized t1_dictionary],
       test "IsSanitizedFailUnsorted" [
-        expect_false $ Diceware.is_sanitized t1_unsorted],
+        expect_false $ isRight $ Diceware.is_sanitized t1_unsorted],
       test "IsSanitizedFailRepeating" [
-        expect_false $ Diceware.is_sanitized t1_repeating],
+        expect_false $ isRight $ Diceware.is_sanitized t1_repeating],
       test "IsSanitizedFailUppercase" [
-        expect_false $ Diceware.is_sanitized t1_uppercase],
+        expect_false $ isRight $ Diceware.is_sanitized t1_uppercase],
       test "IsSanitizedFailNumeric" [
-        expect_false $ Diceware.is_sanitized t1_numeric],
+        expect_false $ isRight $ Diceware.is_sanitized t1_numeric],
       test "IsSanitizedFailSpace" [
-        expect_false $ Diceware.is_sanitized t1_space],
+        expect_false $ isRight $ Diceware.is_sanitized t1_space],
       test "IsSanitizedFailSymbol" [
-        expect_false $ Diceware.is_sanitized t1_symbol]]
+        expect_false $ isRight $ Diceware.is_sanitized t1_symbol]]
