@@ -33,13 +33,13 @@ json s =
 value :: BNF.Parser String JSValue
 value =
   BNF.expect "Unidentified JSON value" (
-    object                                       `BNF.or`
-    array                                        `BNF.or`
-    (string >>= return . JSString)               `BNF.or`
-    number                                       `BNF.or`
-    (get_text "true"  >>= \ _ -> return JSTrue)  `BNF.or`
-    (get_text "false" >>= \ _ -> return JSFalse) `BNF.or`
-    (get_text "null"  >>= \ _ -> return JSNull))
+    object                               `BNF.or`
+    array                                `BNF.or`
+    (string >>= return . JSString)       `BNF.or`
+    number                               `BNF.or`
+    (get_text "true"  >> return JSTrue)  `BNF.or`
+    (get_text "false" >> return JSFalse) `BNF.or`
+    (get_text "null"  >> return JSNull))
 
 object :: BNF.Parser String JSValue
 object =
@@ -70,9 +70,9 @@ elements =
 
 element :: BNF.Parser String JSValue
 element =
-  (ws :: TextParser) >>= \ _ ->
+  (ws :: TextParser) >>
     value >>= \ v ->
-      (ws :: TextParser) >>= \ _ ->
+      (ws :: TextParser) >>
         return v
 
 string :: BNF.Parser String String
@@ -94,16 +94,16 @@ character =
 
 escape :: TextParser
 escape =
-  BNF.expect "Unsupported escape sequence" (
-    ((meta_char '"'  :: TextParser) >>= \ _ -> return $ difflist ['"'])  `BNF.or`
-    ((meta_char '\\' :: TextParser) >>= \ _ -> return $ difflist ['\\']) `BNF.or`
-    ((meta_char 'b'  :: TextParser) >>= \ _ -> return $ difflist ['\b']) `BNF.or`
-    ((meta_char 'f'  :: TextParser) >>= \ _ -> return $ difflist ['\f']) `BNF.or`
-    ((meta_char 'n'  :: TextParser) >>= \ _ -> return $ difflist ['\n']) `BNF.or`
-    ((meta_char 'r'  :: TextParser) >>= \ _ -> return $ difflist ['\r']) `BNF.or`
-    ((meta_char 't'  :: TextParser) >>= \ _ -> return $ difflist ['\t']) `BNF.or`
+  BNF.expect "Unsupported escape sequence" $
+    ((meta_char '"'  :: TextParser) >> (return $ difflist ['"']))  `BNF.or`
+    ((meta_char '\\' :: TextParser) >> (return $ difflist ['\\'])) `BNF.or`
+    ((meta_char 'b'  :: TextParser) >> (return $ difflist ['\b'])) `BNF.or`
+    ((meta_char 'f'  :: TextParser) >> (return $ difflist ['\f'])) `BNF.or`
+    ((meta_char 'n'  :: TextParser) >> (return $ difflist ['\n'])) `BNF.or`
+    ((meta_char 'r'  :: TextParser) >> (return $ difflist ['\r'])) `BNF.or`
+    ((meta_char 't'  :: TextParser) >> (return $ difflist ['\t'])) `BNF.or`
     (meta_char 'u' `BNF.and` BNF.rep 4 hex >>=
-      return . difflist . (:[]) . toEnum . fromJust . hex2num . relist))
+      return . difflist . (:[]) . toEnum . fromJust . hex2num . relist)
 
 hex :: TextParser
 hex =

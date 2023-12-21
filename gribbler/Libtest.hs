@@ -34,10 +34,10 @@ test' (e:es) =
 
 test name es =
   print ("[ RUN      ] " ++ name) >>
-  test' es >>=
-  \ x ->
-    print ((if not x then "[  FAILED  ] " else "[       OK ] ") ++ name) >>
-    return x
+    test' es >>=
+      \ x ->
+        print ((if not x then "[  FAILED  ] " else "[       OK ] ") ++ name) >>
+          return x
 
 testsuite' :: [IO Bool] -> IO Bool
 testsuite' [] = return True
@@ -45,8 +45,8 @@ testsuite' (t:ts) = t >>= \ x -> testsuite' ts >>= \ y -> return (x && y)
 
 testsuite name tests =
   print ("[----------] tests from " ++ name) >>
-  testsuite' tests >>=
-  \ x -> print "[----------]" >> return x
+    testsuite' tests >>=
+      \ x -> print "[----------]" >> return x
 
 expect_that matcher = matcher
 
@@ -57,9 +57,9 @@ memeq varname expected actual =
       return True
     else
       print ("Value of: " ++ varname) >>
-      print ("  Actual: " ++ (show actual)) >>
-      print ("Expected: " ++ (show expected)) >>
-      return False
+        print ("  Actual: " ++ (show actual)) >>
+          print ("Expected: " ++ (show expected)) >>
+            return False
 
 expect_memeq varname expected = expect_that (memeq varname expected)
 

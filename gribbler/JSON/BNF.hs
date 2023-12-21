@@ -133,4 +133,4 @@ zom f = f `JSON.BNF.and` zom f `JSON.BNF.or` JSON.BNF.null
 
 oom f = f `JSON.BNF.and` oom f `JSON.BNF.or` f
 
-drop f = f >>= \ _ -> JSON.BNF.null
+drop f = f >> JSON.BNF.null

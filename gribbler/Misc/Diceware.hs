@@ -32,7 +32,7 @@ is_sanitized :: [String] -> Either String ()
 
 decode dictionary hits =
   maybeMap (flip elemIndex dictionary) hits >>=
-  Just . (foldl (\ a b -> a * (length dictionary) + b) 0)
+    Just . (foldl (\ a b -> a * (length dictionary) + b) 0)
 
 encode' :: [String] -> Int -> Int -> Int -> DiffList String
 encode' _ _ 0 _ = difflist []
@@ -48,14 +48,14 @@ encode dictionary digits number =
 is_sanitized' :: String -> Either String ()
 is_sanitized' s
     | isNothing $ (find (not . \ c -> isLower c || c == '-')) s = Right ()
-    | otherwise = Left $ "Word <" ++ s ++ "> is not exclusively lowercase alphabet!"
+    | otherwise = Left $ "Word <" ++ s ++ "> " ++
+        "is not exclusively lowercase alphabet!"
 
 is_sanitized [] = Right ()
 is_sanitized (x:xs) =
-    is_sanitized' x >>=
-    return e >>=
-    \ _ -> is_sanitized xs
+    is_sanitized' x >>= return e >> is_sanitized xs
   where
     e = case find (<= x) xs of
-      Just y -> Left $ "Word <" ++ x ++ "> is either not sorted or not unique (compare to <" ++ y ++ ">)!"
+      Just y -> Left $ "Word <" ++ x ++ "> " ++
+        "is either not sorted or not unique (compare to <" ++ y ++ ">)!"
       Nothing -> Right ()
