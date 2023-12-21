@@ -18,7 +18,7 @@ time a = do
 
 main :: IO ()
 main = do
-  print $ json "{\"age\": 27}"
+  print $ json "[{\"age\": 27]"
   print $ json "\"test\""
   print $ json "\"\\u0100\""
 --  print $ BNF.run_parser string "\"test\""

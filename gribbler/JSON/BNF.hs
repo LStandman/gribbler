@@ -12,6 +12,7 @@ module JSON.BNF(
     err,
     eval_parser,
     except,
+    expect,
     exec_parser,
     from_hit,
     miss,
@@ -42,6 +43,7 @@ and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
 drop        :: Monoid b => Parser s a -> Parser s b
 eval_parser :: Parser s a -> s -> Result a
 except      :: Parser s a -> Parser s a -> Parser s a
+expect      :: String -> Parser s a -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
 from_hit    :: HasCallStack => Result a -> a
 null        :: Monoid a => Parser s a
@@ -116,6 +118,12 @@ except f g =
       Hit   _ -> miss
       Miss    -> return x
       Error e -> err e) s)
+
+expect e1 (Parser f') =
+  Parser (\ s -> case f' s of
+    Hit   x  -> return x
+    Miss     -> Error e1
+    Error e2 -> Error e2)
 
 null = return mempty
 
