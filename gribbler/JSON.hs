@@ -117,10 +117,10 @@ number =
 
 integer :: TextParser
 integer =
-  (BNF.once digit) `BNF.or`
   (onenine `BNF.and` digits) `BNF.or`
-  (get_char '-' `BNF.and` (BNF.once digit)) `BNF.or`
-  (get_char '-' `BNF.and` onenine `BNF.and` digits)
+  digit `BNF.or`
+  (get_char '-' `BNF.and` onenine `BNF.and` digits) `BNF.or`
+  (get_char '-' `BNF.and` digit)
 
 digits :: TextParser
 digits =

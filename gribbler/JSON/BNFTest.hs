@@ -88,16 +88,6 @@ test_bnf =
     t7_outB       = BNF.Hit (difflist "a", "bb")
     t7_inC        = "aab"
     t7_outC       = BNF.Hit (difflist "aa", "b")
-    t8_in        = ""
-    t8_errStr    = "Y"
-    t8_errA      = BNF.Error "X"
-    t8_errB      = BNF.Error t8_errStr
-    t8_fhit      = return $ BNF.Hit (difflist "a", "")
-    t8_ohit      = t8_errB
-    t8_fmiss     = BNF.Parser (\ _ -> BNF.Miss) :: TextParser
-    t8_omiss     = BNF.Miss
-    t8_ferr      = BNF.Parser (\ _ -> t8_errA) :: TextParser
-    t8_oerr      = t8_errA
   in
     testsuite "BNF" [
       test "Or" [
@@ -182,11 +172,4 @@ test_bnf =
         expect_memeq "t7_outB" t7_outB $
         BNF.run_parser (BNF.oom t7_hit) t7_inB,
         expect_memeq "t7_outC" t7_outC $
-        BNF.run_parser (BNF.oom t7_hit) t7_inC],
-      test "Err" [
-        expect_memeq "t8_ohit" t8_ohit $
-        BNF.run_parser (t8_fhit `BNF.err` t8_errStr) t8_in,
-        expect_memeq "t8_omiss" t8_omiss $
-        BNF.run_parser (t8_fmiss `BNF.err` t8_errStr) t8_in,
-        expect_memeq "t8_oerr" t8_oerr $
-        BNF.run_parser (t8_ferr `BNF.err` t8_errStr) t8_in]]
+        BNF.run_parser (BNF.oom t7_hit) t7_inC]]

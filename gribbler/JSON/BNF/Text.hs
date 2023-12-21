@@ -23,17 +23,20 @@ get_char_in_range  :: (Char, Char) -> TextParser
 get_text           :: [Char] -> TextParser
 drop_char          :: Monoid a => Char -> BNF.Parser String a
 
-get_char c = BNF.Parser (\ xs -> case xs of
+get_char' :: BNF.Parser String Char
+get_char' = BNF.Parser (\ xs -> case xs of
   []     -> BNF.Miss
-  (y:ys) -> case c == y of
-    True  -> BNF.Hit (difflist [c], ys)
-    False -> BNF.Miss)
+  (y:ys) -> BNF.Hit (y, ys))
 
-get_char_in_range (a, b) = BNF.Parser (\ xs -> case xs of
-  []     -> BNF.Miss
-  (y:ys) -> case (a <= y) && (y <= b) of
-    True  -> BNF.Hit (difflist [y], ys)
-    False -> BNF.Miss)
+get_char c = get_char' >>=
+  \ y -> case c == y of
+    True  -> return $ difflist [c]
+    False -> BNF.miss
+
+get_char_in_range (a, b) = get_char' >>=
+  \ y -> case  (a <= y) && (y <= b) of
+    True  -> return $ difflist [y]
+    False -> BNF.miss
 
 get_text [] = BNF.null
 get_text s  = foldl1 (BNF.and) $ map (get_char) s

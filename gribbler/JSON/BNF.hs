@@ -14,7 +14,7 @@ module JSON.BNF(
     except,
     exec_parser,
     from_hit,
-    once,
+    miss,
     oom,
     rep,
     run_parser,
@@ -40,7 +40,6 @@ newtype Parser s a = Parser (s -> Result (a, s))
 
 and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
 drop        :: Monoid b => Parser s a -> Parser s b
-err         :: Parser s a -> String -> Parser s a
 eval_parser :: Parser s a -> s -> Result a
 except      :: Parser s a -> Parser s a -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
@@ -102,22 +101,21 @@ or (Parser f') g =
 and f g =
   f >>= \ x -> g >>= \ x' -> return (x <> x')
 
-err' :: String -> Parser s a
-err' e = Parser (\ _ -> Error e)
+err :: String -> Parser s a
+err e = Parser (\ _ -> Error e)
 
-err f e = f >>= \ _ -> err' e
+miss :: Parser s a
+miss = Parser (\ _ -> Miss)
 
 rep 1 f = f
 rep n f = f `JSON.BNF.and` rep (n - 1) f
 
-not :: Result a -> b -> Parser s b
-not (Hit   _) = return $ Parser (\ _ -> Miss)
-not Miss      = \ x -> return x
-not (Error e) = return $ err' e
-
 except f g =
   Parser (\ s -> run_parser 
-    (f >>= JSON.BNF.not (run_parser g s)) s)
+    (f >>= \ x -> case run_parser g s of
+      Hit   _ -> miss
+      Miss    -> return x
+      Error e -> err e) s)
 
 null = return mempty
 
@@ -128,7 +126,3 @@ zom f = f `JSON.BNF.and` zom f `JSON.BNF.or` JSON.BNF.null
 oom f = f `JSON.BNF.and` oom f `JSON.BNF.or` f
 
 drop f = f >>= \ _ -> JSON.BNF.null
-
-once (Parser f') =
-  Parser (\ s -> f' s >>=
-    \ (x, s') -> run_parser (JSON.BNF.not (f' s') x) s')
