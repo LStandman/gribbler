@@ -9,6 +9,7 @@ module JSON.BNF.Text(
     get_any_char,
     get_char,
     get_char_in_range,
+    get_eof,
     get_text)
   where
 
@@ -17,15 +18,20 @@ import Misc.DiffList
 
 type TextParser = BNF.Parser String DiffString
 
-get_any_char       :: [Char] -> TextParser
-get_char           :: Char -> TextParser
-get_char_in_range  :: (Char, Char) -> TextParser
-get_text           :: [Char] -> TextParser
-drop_char          :: Monoid a => Char -> BNF.Parser String a
+drop_char         :: Monoid a => Char -> BNF.Parser String a
+get_eof           :: Monoid a => BNF.Parser String a
+get_any_char      :: [Char] -> TextParser
+get_char          :: Char -> TextParser
+get_char_in_range :: (Char, Char) -> TextParser
+get_text          :: [Char] -> TextParser
+
+get_eof = BNF.Parser (\ ys -> case ys of
+  [] -> return mempty
+  _  -> BNF.Miss)
 
 get_char' :: BNF.Parser String Char
 get_char' = BNF.Parser (\ xs -> case xs of
-  []     -> BNF.Miss
+  []     -> BNF.Error "Unexpected EOF"
   (y:ys) -> BNF.Hit (y, ys))
 
 get_char c = get_char' >>=

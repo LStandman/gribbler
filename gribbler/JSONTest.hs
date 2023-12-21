@@ -9,8 +9,6 @@ import qualified JSON.BNF as BNF
 import JSON.BNFTest
 import Libtest
 
-test_json' :: IO Bool
-
 test_json =
   runtests [
     test_bnf,

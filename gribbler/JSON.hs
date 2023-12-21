@@ -30,7 +30,11 @@ data JSValue =
 json :: String -> BNF.Result JSValue
 
 json s =
-  BNF.eval_parser element s
+  BNF.eval_parser (
+  (ws :: TextParser) >>= \ _ ->
+    value >>= \ v ->
+      (ws_or_eof :: TextParser) >>= \ _ ->
+        return v) s
 
 value :: BNF.Parser String JSValue
 value =
@@ -102,7 +106,6 @@ escape =
   (get_char 't'  >>= \ _ -> return $ difflist ['\t']) `BNF.or`
   ( drop_char 'u' `BNF.and` BNF.rep 4 hex >>=
       return . difflist . (:[]) . toEnum . fromJust . hex2num . relist)
-  
 
 hex :: TextParser
 hex =
@@ -153,10 +156,18 @@ sign =
     get_char '+' `BNF.or`
     get_char '-')
 
-ws :: Monoid a => BNF.Parser String a
-ws =
-  BNF.drop (BNF.zom (
+ws' :: Monoid a => BNF.Parser String a
+ws' =
+  BNF.drop (
     get_char '\x0020' `BNF.or`
     get_char '\x000A' `BNF.or`
     get_char '\x000D' `BNF.or`
-    get_char '\x0009'))
+    get_char '\x0009')
+
+ws :: Monoid a => BNF.Parser String a
+ws =
+  BNF.zom ws'
+
+ws_or_eof :: Monoid a => BNF.Parser String a
+ws_or_eof =
+  get_eof `BNF.or` (ws' `BNF.and` ws_or_eof)
