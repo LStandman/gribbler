@@ -104,10 +104,10 @@ and f g =
   f >>= \ x -> g >>= \ x' -> return (x <> x')
 
 err :: String -> Parser s a
-err e = Parser (\ _ -> Error e)
+err e = Parser (return $ Error e)
 
 miss :: Parser s a
-miss = Parser (\ _ -> Miss)
+miss = Parser (return $ Miss)
 
 rep 1 f = f
 rep n f = f `JSON.BNF.and` rep (n - 1) f
