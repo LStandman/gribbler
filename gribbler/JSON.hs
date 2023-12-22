@@ -27,12 +27,11 @@ data JSValue =
 
 json :: String -> BNF.Result JSValue
 
-json s =
-  BNF.eval_parser element s
+json s = BNF.eval_parser element s
 
 value :: BNF.Parser String JSValue
 value =
-  BNF.expect "Unidentified JSON value" (
+  BNF.throw "Could not deduce JSON type" (
     object                               `BNF.or`
     array                                `BNF.or`
     (string >>= return . JSString)       `BNF.or`
@@ -44,7 +43,7 @@ value =
 object :: BNF.Parser String JSValue
 object =
   meta_char '{' `BNF.and` (members `BNF.or` ws) `BNF.and`
-    (BNF.expect "Unterminated braces '{}'" $ meta_char '}') >>=
+    (BNF.throw "Unterminated braces '{}'" $ meta_char '}') >>=
       return . JSObject . relist
 
 members :: BNF.Parser String (DiffList (String, JSValue))
@@ -60,7 +59,7 @@ member =
 array :: BNF.Parser String JSValue
 array =
   meta_char '[' `BNF.and` (elements `BNF.or` ws) `BNF.and`
-    (BNF.expect "Unterminated brackets '[]'" $ meta_char ']') >>=
+    (BNF.throw "Unterminated brackets '[]'" $ meta_char ']') >>=
       return . JArray . relist
 
 elements :: BNF.Parser String (DiffList JSValue)
@@ -78,23 +77,21 @@ element =
 string :: BNF.Parser String String
 string =
   meta_char '"' `BNF.and` characters `BNF.and`
-    (BNF.expect "Unterminated string" $ meta_char '"') >>=
+    (BNF.throw "Unterminated string" $ meta_char '"') >>=
       return . relist
 
 characters :: TextParser
-characters =
-  BNF.zom (
-    character)
+characters = BNF.zom (character)
 
 character :: TextParser
 character =
-  (BNF.expect "Unsupported character" $ get_char_in_range ('\x0020', '\x10FFFF'))
-    `BNF.except` get_char '"' `BNF.except` get_char '\\' `BNF.or`
+  (BNF.throw "Unsupported character" $ get_char_in_range ('\x0020', '\x10FFFF'))
+    `BNF.excl` get_char '"' `BNF.excl` get_char '\\' `BNF.or`
   (meta_char '\\' `BNF.and` escape)
 
 escape :: TextParser
 escape =
-  BNF.expect "Unsupported escape sequence" $
+  BNF.throw "Unsupported escape sequence" $
     ((meta_char '"'  :: TextParser) >> (return $ difflist ['"']))  `BNF.or`
     ((meta_char '\\' :: TextParser) >> (return $ difflist ['\\'])) `BNF.or`
     ((meta_char 'b'  :: TextParser) >> (return $ difflist ['\b'])) `BNF.or`

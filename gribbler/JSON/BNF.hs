@@ -11,8 +11,8 @@ module JSON.BNF(
     JSON.BNF.or,
     err,
     eval_parser,
-    except,
-    expect,
+    excl,
+    throw,
     exec_parser,
     from_hit,
     miss,
@@ -29,7 +29,7 @@ import GHC.Stack
 infixl 1 `err`
 infixl 1 `and`
 infixl 1 `or`
-infixl 1 `except`
+infixl 1 `excl`
 
 data Result a =
     Hit a        |
@@ -42,8 +42,8 @@ newtype Parser s a = Parser (s -> Result (a, s))
 and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
 drop        :: Monoid b => Parser s a -> Parser s b
 eval_parser :: Parser s a -> s -> Result a
-except      :: Parser s a -> Parser s a -> Parser s a
-expect      :: String -> Parser s a -> Parser s a
+excl      :: Parser s a -> Parser s a -> Parser s a
+throw      :: String -> Parser s a -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
 from_hit    :: HasCallStack => Result a -> a
 null        :: Monoid a => Parser s a
@@ -112,14 +112,14 @@ miss = Parser (\ _ -> Miss)
 rep 1 f = f
 rep n f = f `JSON.BNF.and` rep (n - 1) f
 
-except f g =
+excl f g =
   Parser (\ s -> run_parser 
     (f >>= \ x -> case run_parser g s of
       Hit   _ -> miss
       Miss    -> return x
       Error e -> err e) s)
 
-expect e1 (Parser f') =
+throw e1 (Parser f') =
   Parser (\ s -> case f' s of
     Hit   x  -> return x
     Miss     -> Error e1

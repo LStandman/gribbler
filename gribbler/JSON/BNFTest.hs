@@ -88,6 +88,12 @@ test_bnf =
     t7_outB       = BNF.Hit (difflist "a", "bb")
     t7_inC        = "aab"
     t7_outC       = BNF.Hit (difflist "aa", "b")
+    t8_in         = "a"
+    t8_e          = "Z"
+    t8_hitA       = get_char 'a'
+    t8_hit        = BNF.Hit (difflist "a", "")
+    t8_miss       = BNF.Error t8_e :: BNF.Result (DiffString, String)
+    t8_error      = errorX
   in
     testsuite "BNF" [
       test "Or" [
@@ -128,25 +134,25 @@ test_bnf =
         BNF.run_parser (errX `BNF.and` miss) t2_in,
         expect_memeq "t2_errxerr" t2_errxerr $
         BNF.run_parser (errX `BNF.and` errY) t2_in],
-      test "Except" [
+      test "Excl" [
         expect_memeq "t3_hitxhit" t3_hitxhit $
-        BNF.run_parser (t3_hitA `BNF.except` t3_hitB) t3_in,
+        BNF.run_parser (t3_hitA `BNF.excl` t3_hitB) t3_in,
         expect_memeq "t3_hitxmiss" t3_hitxmiss $
-        BNF.run_parser (t3_hitA `BNF.except` miss) t3_in,
+        BNF.run_parser (t3_hitA `BNF.excl` miss) t3_in,
         expect_memeq "t3_hitxerr" t3_hitxerr $
-        BNF.run_parser (t3_hitA `BNF.except` errY) t3_in,
+        BNF.run_parser (t3_hitA `BNF.excl` errY) t3_in,
         expect_memeq "t3_missxhit" t3_missxhit $
-        BNF.run_parser (miss `BNF.except` t3_hitB) t3_in,
+        BNF.run_parser (miss `BNF.excl` t3_hitB) t3_in,
         expect_memeq "t3_missxmiss" t3_missxmiss $
-        BNF.run_parser (miss `BNF.except` miss) t3_in,
+        BNF.run_parser (miss `BNF.excl` miss) t3_in,
         expect_memeq "t3_missxerr" t3_missxerr $
-        BNF.run_parser (miss `BNF.except` errY) t3_in,
+        BNF.run_parser (miss `BNF.excl` errY) t3_in,
         expect_memeq "t3_errxhit" t3_errxhit $
-        BNF.run_parser (errX `BNF.except` t3_hitB) t3_in,
+        BNF.run_parser (errX `BNF.excl` t3_hitB) t3_in,
         expect_memeq "t3_errxmiss" t3_errxmiss $
-        BNF.run_parser (errX `BNF.except` miss) t3_in,
+        BNF.run_parser (errX `BNF.excl` miss) t3_in,
         expect_memeq "t3_errxerr" t3_errxerr $
-        BNF.run_parser (errX `BNF.except` errY) t3_in],
+        BNF.run_parser (errX `BNF.excl` errY) t3_in],
       test "Rep" [
         expect_memeq "t4_outA" t4_outA $
         BNF.run_parser (BNF.rep t4_reps t4_hit) t4_inA,
@@ -172,4 +178,11 @@ test_bnf =
         expect_memeq "t7_outB" t7_outB $
         BNF.run_parser (BNF.oom t7_hit) t7_inB,
         expect_memeq "t7_outC" t7_outC $
-        BNF.run_parser (BNF.oom t7_hit) t7_inC]]
+        BNF.run_parser (BNF.oom t7_hit) t7_inC],
+      test "Throw" [
+        expect_memeq "t8_hit" t8_hit $
+        BNF.run_parser (BNF.throw t8_e t8_hitA) t8_in,
+        expect_memeq "t8_miss" t8_miss $
+        BNF.run_parser (BNF.throw t8_e miss) t8_in,
+        expect_memeq "t8_error" t8_error $
+        BNF.run_parser (BNF.throw t8_e errX) t8_in]]
