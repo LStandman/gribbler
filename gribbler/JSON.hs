@@ -31,7 +31,7 @@ json s = BNF.eval_parser element s
 
 value :: BNF.Parser String JSValue
 value =
-  BNF.throw "Could not deduce JSON type" (
+  BNF.throw "Could not deduce JSON value" (
     object                               `BNF.or`
     array                                `BNF.or`
     (string >>= return . JSString)       `BNF.or`
@@ -43,7 +43,7 @@ value =
 object :: BNF.Parser String JSValue
 object =
   meta_char '{' `BNF.and` (members `BNF.or` ws) `BNF.and`
-    (BNF.throw "Unterminated braces '{}'" $ meta_char '}') >>=
+    BNF.throw "Unterminated braces '{}'" (meta_char '}') >>=
       return . JSObject . relist
 
 members :: BNF.Parser String (DiffList (String, JSValue))
@@ -59,7 +59,7 @@ member =
 array :: BNF.Parser String JSValue
 array =
   meta_char '[' `BNF.and` (elements `BNF.or` ws) `BNF.and`
-    (BNF.throw "Unterminated brackets '[]'" $ meta_char ']') >>=
+    BNF.throw "Unterminated brackets '[]'" (meta_char ']') >>=
       return . JArray . relist
 
 elements :: BNF.Parser String (DiffList JSValue)
@@ -77,7 +77,7 @@ element =
 string :: BNF.Parser String String
 string =
   meta_char '"' `BNF.and` characters `BNF.and`
-    (BNF.throw "Unterminated string" $ meta_char '"') >>=
+    BNF.throw "Unterminated string" (meta_char '"') >>=
       return . relist
 
 characters :: TextParser
@@ -85,7 +85,7 @@ characters = BNF.zom (character)
 
 character :: TextParser
 character =
-  (BNF.throw "Unsupported character" $ get_char_in_range ('\x0020', '\x10FFFF'))
+  BNF.throw "Unsupported character" (get_char_in_range ('\x0020', '\x10FFFF'))
     `BNF.excl` get_char '"' `BNF.excl` get_char '\\' `BNF.or`
   (meta_char '\\' `BNF.and` escape)
 
