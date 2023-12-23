@@ -113,6 +113,9 @@ number =
   integer `BNF.and` fraction `BNF.and` JSON.exponent >>=
     return . JSNumber . relist
 
+-- NOTE: Variable length matcher _digits_ MUST come before fixed length
+--   matcher _digit_. Otherwise, the composed matcher _integer_ will ALWAYS
+--   short-circuit on first digit.
 integer :: TextParser
 integer =
   (onenine `BNF.and` digits) `BNF.or`
@@ -143,8 +146,9 @@ sign = BNF.zoo (get_char '+' `BNF.or` get_char '-')
 
 ws :: Monoid a => BNF.Parser String a
 ws =
-  BNF.zom (
-    meta_char '\x0020' `BNF.or`
-    meta_char '\x000A' `BNF.or`
-    meta_char '\x000D' `BNF.or`
-    meta_char '\x0009')
+  BNF.drop (
+    BNF.zom (
+      get_char '\x0020' `BNF.or`
+      get_char '\x000A' `BNF.or`
+      get_char '\x000D' `BNF.or`
+      get_char '\x0009'))

@@ -24,9 +24,10 @@ get_text          :: [Char] -> TextParser
 meta_char         :: Monoid a => Char -> BNF.Parser String a
 
 get_char' :: BNF.Parser String Char
-get_char' = BNF.Parser (\ xs -> case xs of
-  []     -> BNF.Miss
-  (y:ys) -> BNF.Hit (y, ys))
+get_char' = BNF.Parser (
+  \ xs -> case xs of
+    []     -> BNF.Miss
+    (y:ys) -> BNF.Hit (y, ys))
 
 get_char c = get_char' >>=
   \ y -> case c == y of
