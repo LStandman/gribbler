@@ -27,11 +27,11 @@ data JSValue =
 
 json :: String -> BNF.Result JSValue
 
-json s = BNF.eval_parser element s
+json s = BNF.eval_parser element $ text_state s
 
-value :: BNF.Parser String JSValue
+value :: BNF.Parser TextState JSValue
 value =
-  BNF.throw "Could not deduce JSON value" (
+  try_here "Could not deduce JSON value" (
     object                               `BNF.or`
     array                                `BNF.or`
     (string >>= return . JSString)       `BNF.or`
@@ -40,44 +40,44 @@ value =
     (get_text "false" >> return JSFalse) `BNF.or`
     (get_text "null"  >> return JSNull))
 
-object :: BNF.Parser String JSValue
+object :: BNF.Parser TextState JSValue
 object =
-  meta_char '{' `BNF.and` (members `BNF.or` ws) `BNF.and`
-    BNF.throw "Unterminated braces '{}'" (meta_char '}') >>=
+  store_ctx (meta_char '{') `BNF.and` (members `BNF.or` ws) `BNF.and`
+    try_ctx "Unterminated braces '{}'" (meta_char '}') >>=
       return . JSObject . relist
 
-members :: BNF.Parser String (DiffList (String, JSValue))
+members :: BNF.Parser TextState (DiffList (String, JSValue))
 members =
   (member >>= return . difflist . (:[])) `BNF.and`
     BNF.zoo (meta_char ',' `BNF.and` members)
 
-member :: BNF.Parser String (String, JSValue)
+member :: BNF.Parser TextState (String, JSValue)
 member =
   ws `BNF.and` string `BNF.and` ws `BNF.and` meta_char ':' >>=
     \ s -> element >>= \ e -> return (s, e)
 
-array :: BNF.Parser String JSValue
+array :: BNF.Parser TextState JSValue
 array =
-  meta_char '[' `BNF.and` (elements `BNF.or` ws) `BNF.and`
-    BNF.throw "Unterminated brackets '[]'" (meta_char ']') >>=
+  store_ctx (meta_char '[') `BNF.and` (elements `BNF.or` ws) `BNF.and`
+    try_ctx "Unterminated brackets '[]'" (meta_char ']') >>=
       return . JArray . relist
 
-elements :: BNF.Parser String (DiffList JSValue)
+elements :: BNF.Parser TextState (DiffList JSValue)
 elements =
   (element >>= return . difflist. (:[])) `BNF.and`
     BNF.zoo (meta_char ',' `BNF.and` elements)
 
-element :: BNF.Parser String JSValue
+element :: BNF.Parser TextState JSValue
 element =
-  (ws :: TextParser) >>
+  (ws :: BNF.Parser TextState ()) >>
     value >>= \ v ->
-      (ws :: TextParser) >>
+      (ws :: BNF.Parser TextState ()) >>
         return v
 
-string :: BNF.Parser String String
+string :: BNF.Parser TextState String
 string =
-  meta_char '"' `BNF.and` characters `BNF.and`
-    BNF.throw "Unterminated string" (meta_char '"') >>=
+  store_ctx (meta_char '"') `BNF.and` characters `BNF.and`
+    try_ctx "Unterminated string" (meta_char '"') >>=
       return . relist
 
 characters :: TextParser
@@ -85,13 +85,13 @@ characters = BNF.zom (character)
 
 character :: TextParser
 character =
-  BNF.throw "Unsupported character" (get_char_in_range ('\x0020', '\x10FFFF'))
+  try_here "Unsupported character" (get_char_in_range ('\x0020', '\x10FFFF'))
     `BNF.excl` get_char '"' `BNF.excl` get_char '\\' `BNF.or`
   (meta_char '\\' `BNF.and` escape)
 
 escape :: TextParser
 escape =
-  BNF.throw "Unsupported escape sequence" $
+  try_here "Unsupported escape sequence" $
     ((meta_char '"'  :: TextParser) >> (return $ difflist ['"']))  `BNF.or`
     ((meta_char '\\' :: TextParser) >> (return $ difflist ['\\'])) `BNF.or`
     ((meta_char 'b'  :: TextParser) >> (return $ difflist ['\b'])) `BNF.or`
@@ -108,7 +108,7 @@ hex =
   get_any_char ['A'..'F'] `BNF.or`
   get_any_char ['a'..'f']
 
-number :: BNF.Parser String JSValue
+number :: BNF.Parser TextState JSValue
 number =
   integer `BNF.and` fraction `BNF.and` JSON.exponent >>=
     return . JSNumber . relist
@@ -144,11 +144,10 @@ exponent =
 sign :: TextParser
 sign = BNF.zoo (get_char '+' `BNF.or` get_char '-')
 
-ws :: Monoid a => BNF.Parser String a
+-- NOTE: Line breaks are normalized within BNF.Text.
+ws :: Monoid a => BNF.Parser TextState a
 ws =
-  BNF.drop (
-    BNF.zom (
-      get_char '\x0020' `BNF.or`
-      get_char '\x000A' `BNF.or`
-      get_char '\x000D' `BNF.or`
-      get_char '\x0009'))
+  BNF.zom (
+    meta_char '\x0020' `BNF.or`
+    meta_char '\x0009' `BNF.or`
+    meta_break)

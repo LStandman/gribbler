@@ -12,13 +12,13 @@ module JSON.BNF(
     err,
     eval_parser,
     excl,
-    throw,
     exec_parser,
     from_hit,
     miss,
     oom,
     rep,
     run_parser,
+    try,
     zom,
     zoo)
   where
@@ -42,8 +42,7 @@ newtype Parser s a = Parser (s -> Result (a, s))
 and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
 drop        :: Monoid b => Parser s a -> Parser s b
 eval_parser :: Parser s a -> s -> Result a
-excl      :: Parser s a -> Parser s a -> Parser s a
-throw      :: String -> Parser s a -> Parser s a
+excl        :: Parser s a -> Parser s a -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
 from_hit    :: HasCallStack => Result a -> a
 null        :: Monoid a => Parser s a
@@ -51,6 +50,7 @@ oom         :: Semigroup a => Parser s a -> Parser s a
 or          :: Parser s a -> Parser s a -> Parser s a
 rep         :: Semigroup a => Int -> Parser s a -> Parser s a
 run_parser  :: Parser s a -> (s -> Result (a, s))
+try         :: String -> Parser s a -> Parser s a
 zom         :: Monoid a => Parser s a -> Parser s a
 zoo         :: Monoid a => Parser s a -> Parser s a
 
@@ -121,7 +121,7 @@ excl f g =
         Miss    -> return x
         Error e -> err e) s)
 
-throw e1 (Parser f') =
+try e1 (Parser f') =
   Parser (
     \ s -> case f' s of
       Hit   x  -> return x

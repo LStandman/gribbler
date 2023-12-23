@@ -187,10 +187,10 @@ test_bnf =
         BNF.run_parser (BNF.oom t7_hit) t7_inB,
         expect_memeq "t7_outC" t7_outC $
         BNF.run_parser (BNF.oom t7_hit) t7_inC],
-      test "Throw" [
+      test "Try" [
         expect_memeq "t8_hit" t8_hit $
-        BNF.run_parser (BNF.throw t8_e t8_hitA) t8_in,
+        BNF.run_parser (BNF.try t8_e t8_hitA) t8_in,
         expect_memeq "t8_miss" t8_miss $
-        BNF.run_parser (BNF.throw t8_e emit_miss0) t8_in,
+        BNF.run_parser (BNF.try t8_e emit_miss0) t8_in,
         expect_memeq "t8_error" t8_error $
-        BNF.run_parser (BNF.throw t8_e emit_errX) t8_in]]
+        BNF.run_parser (BNF.try t8_e emit_errX) t8_in]]
