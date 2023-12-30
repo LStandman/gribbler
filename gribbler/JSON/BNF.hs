@@ -9,6 +9,7 @@ module JSON.BNF(
     JSON.BNF.drop,
     JSON.BNF.null,
     JSON.BNF.or,
+    assert,
     err,
     eval_parser,
     excl,
@@ -18,7 +19,6 @@ module JSON.BNF(
     oom,
     rep,
     run_parser,
-    try,
     zom,
     zoo)
   where
@@ -39,6 +39,7 @@ data Result a =
 
 newtype Parser s a = Parser (s -> Result (a, s))
 
+assert      :: String -> Parser s a -> Parser s a
 and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
 drop        :: Monoid b => Parser s a -> Parser s b
 eval_parser :: Parser s a -> s -> Result a
@@ -50,7 +51,6 @@ oom         :: Semigroup a => Parser s a -> Parser s a
 or          :: Parser s a -> Parser s a -> Parser s a
 rep         :: Semigroup a => Int -> Parser s a -> Parser s a
 run_parser  :: Parser s a -> (s -> Result (a, s))
-try         :: String -> Parser s a -> Parser s a
 zom         :: Monoid a => Parser s a -> Parser s a
 zoo         :: Monoid a => Parser s a -> Parser s a
 
@@ -121,7 +121,7 @@ excl f g =
         Miss    -> return x
         Error e -> err e) s)
 
-try e1 (Parser f') =
+assert e1 (Parser f') =
   Parser (
     \ s -> case f' s of
       Hit   x  -> return x

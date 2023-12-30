@@ -31,7 +31,7 @@ json s = BNF.eval_parser element $ text_state s
 
 value :: BNF.Parser TextState JSValue
 value =
-  try_here "Could not deduce JSON value" (
+  assert_noop "Could not deduce JSON value" (
     object                               `BNF.or`
     array                                `BNF.or`
     (string >>= return . JSString)       `BNF.or`
@@ -42,8 +42,8 @@ value =
 
 object :: BNF.Parser TextState JSValue
 object =
-  store_ctx (meta_char '{') `BNF.and` (members `BNF.or` ws) `BNF.and`
-    try_ctx "Unterminated braces '{}'" (meta_char '}') >>=
+  assert_push (meta_char '{') `BNF.and` (members `BNF.or` ws) `BNF.and`
+    assert_pop "Unterminated braces '{}'" (meta_char '}') >>=
       return . JSObject . relist
 
 members :: BNF.Parser TextState (DiffList (String, JSValue))
@@ -58,8 +58,8 @@ member =
 
 array :: BNF.Parser TextState JSValue
 array =
-  store_ctx (meta_char '[') `BNF.and` (elements `BNF.or` ws) `BNF.and`
-    try_ctx "Unterminated brackets '[]'" (meta_char ']') >>=
+  assert_push (meta_char '[') `BNF.and` (elements `BNF.or` ws) `BNF.and`
+    assert_pop "Unterminated brackets '[]'" (meta_char ']') >>=
       return . JArray . relist
 
 elements :: BNF.Parser TextState (DiffList JSValue)
@@ -76,8 +76,8 @@ element =
 
 string :: BNF.Parser TextState String
 string =
-  store_ctx (meta_char '"') `BNF.and` characters `BNF.and`
-    try_ctx "Unterminated string" (meta_char '"') >>=
+  assert_push (meta_char '"') `BNF.and` characters `BNF.and`
+    assert_pop "Unterminated string" (meta_char '"') >>=
       return . relist
 
 characters :: TextParser
@@ -85,13 +85,13 @@ characters = BNF.zom (character)
 
 character :: TextParser
 character =
-  try_here "Unsupported character" (get_char_in_range ('\x0020', '\x10FFFF'))
+  assert_noop "Unsupported character" (get_char_in_range ('\x0020', '\x10FFFF'))
     `BNF.excl` get_char '"' `BNF.excl` get_char '\\' `BNF.or`
   (meta_char '\\' `BNF.and` escape)
 
 escape :: TextParser
 escape =
-  try_here "Unsupported escape sequence" $
+  assert_noop "Unsupported escape sequence" $
     ((meta_char '"'  :: TextParser) >> (return $ difflist ['"']))  `BNF.or`
     ((meta_char '\\' :: TextParser) >> (return $ difflist ['\\'])) `BNF.or`
     ((meta_char 'b'  :: TextParser) >> (return $ difflist ['\b'])) `BNF.or`
