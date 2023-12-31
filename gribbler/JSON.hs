@@ -4,8 +4,10 @@
 
 module JSON(
     BNF.Result(..),
+    JSChar(..),
     JSValue(..),
-    json)
+    json,
+    to_jsstring)
   where
 
 import Data.Maybe
@@ -15,17 +17,32 @@ import JSON.BNF.Text
 import Misc.DiffList
 import Misc.MemUtils
 
+newtype JSChar =
+    JSChar Char 
+  deriving (Eq, Show)
+
 data JSValue =
-    JSObject [(String, JSValue)] |
-    JArray  [JSValue]            |
-    JSString String              |
-    JSNumber String              |
-    JSTrue                       |
-    JSFalse                      |
+    JSObject [([JSChar], JSValue)] |
+    JArray [JSValue]               |
+    JSString [JSChar]              |
+    JSNumber String                |
+    JSTrue                         |
+    JSFalse                        |
     JSNull
   deriving (Eq, Show)
 
-json :: String -> BNF.Result JSValue
+json        :: String -> BNF.Result JSValue
+to_jsstring :: String -> Either String [JSChar]
+
+
+to_jsstring' :: Char -> Either String JSChar
+to_jsstring' c
+  | ('\x0020' <= c) && (c <= '\x10FFFF') = Right . JSChar $ c
+  | otherwise =
+      Left $
+        "Cannot create a JSON string with unsupported character <" ++ [c] ++ ">"
+
+to_jsstring s = mapM (to_jsstring') s
 
 json s = BNF.eval_parser element $ text_state s
 
@@ -46,12 +63,12 @@ object =
     assert_pop "Unterminated braces '{}'" (meta_char '}') >>=
       return . JSObject . relist
 
-members :: BNF.Parser TextState (DiffList (String, JSValue))
+members :: BNF.Parser TextState (DiffList ([JSChar], JSValue))
 members =
   (member >>= return . difflist . (:[])) `BNF.and`
     BNF.zoo (meta_char ',' `BNF.and` members)
 
-member :: BNF.Parser TextState (String, JSValue)
+member :: BNF.Parser TextState ([JSChar], JSValue)
 member =
   ws `BNF.and` string `BNF.and` ws `BNF.and` meta_char ':' >>=
     \ s -> element >>= \ e -> return (s, e)
@@ -74,39 +91,39 @@ element =
       (ws :: BNF.Parser TextState ()) >>
         return v
 
-string :: BNF.Parser TextState String
+string :: BNF.Parser TextState [JSChar]
 string =
   assert_push (meta_char '"') `BNF.and` characters `BNF.and`
     assert_pop "Unterminated string" (meta_char '"') >>=
       return . relist
 
-characters :: TextParser
-characters = BNF.zom (character)
+characters :: BNF.Parser TextState (DiffList JSChar)
+characters = BNF.zom (character >>= return . difflist. (:[]))
 
-character :: TextParser
+character :: BNF.Parser TextState JSChar
 character =
   assert_noop "Unsupported character" (get_char_in_range ('\x0020', '\x10FFFF'))
     `BNF.excl` get_char '"' `BNF.excl` get_char '\\' `BNF.or`
-  (meta_char '\\' `BNF.and` escape)
+  ((meta_char '\\' :: BNF.Parser TextState ()) >> escape) >>= return . JSChar
 
-escape :: TextParser
+escape :: BNF.Parser TextState Char
 escape =
   assert_noop "Unsupported escape sequence" $
-    ((meta_char '"'  :: TextParser) >> (return $ difflist ['"']))  `BNF.or`
-    ((meta_char '\\' :: TextParser) >> (return $ difflist ['\\'])) `BNF.or`
-    ((meta_char 'b'  :: TextParser) >> (return $ difflist ['\b'])) `BNF.or`
-    ((meta_char 'f'  :: TextParser) >> (return $ difflist ['\f'])) `BNF.or`
-    ((meta_char 'n'  :: TextParser) >> (return $ difflist ['\n'])) `BNF.or`
-    ((meta_char 'r'  :: TextParser) >> (return $ difflist ['\r'])) `BNF.or`
-    ((meta_char 't'  :: TextParser) >> (return $ difflist ['\t'])) `BNF.or`
-    (meta_char 'u' `BNF.and` BNF.rep 4 hex >>=
-      return . difflist . (:[]) . toEnum . fromJust . hex2num . relist)
+    ((meta_char '"'  :: BNF.Parser TextState ()) >> (return '"'))  `BNF.or`
+    ((meta_char '\\' :: BNF.Parser TextState ()) >> (return '\\')) `BNF.or`
+    ((meta_char 'b'  :: BNF.Parser TextState ()) >> (return '\b')) `BNF.or`
+    ((meta_char 'f'  :: BNF.Parser TextState ()) >> (return '\f')) `BNF.or`
+    ((meta_char 'n'  :: BNF.Parser TextState ()) >> (return '\n')) `BNF.or`
+    ((meta_char 'r'  :: BNF.Parser TextState ()) >> (return '\r')) `BNF.or`
+    ((meta_char 't'  :: BNF.Parser TextState ()) >> (return '\t')) `BNF.or`
+    ((meta_char 'u'  :: BNF.Parser TextState ()) >> BNF.rep 4 hex >>=
+      return . toEnum . fromJust . hex2num . relist)
 
-hex :: TextParser
+hex :: BNF.Parser TextState DiffString
 hex =
   digit `BNF.or`
-  get_any_char ['A'..'F'] `BNF.or`
-  get_any_char ['a'..'f']
+  get_any_char1 ['A'..'F'] `BNF.or`
+  get_any_char1 ['a'..'f']
 
 number :: BNF.Parser TextState JSValue
 number =
@@ -116,33 +133,33 @@ number =
 -- NOTE: Variable length matcher _digits_ MUST come before fixed length
 --   matcher _digit_. Otherwise, the composed matcher _integer_ will ALWAYS
 --   short-circuit on first digit.
-integer :: TextParser
+integer :: BNF.Parser TextState DiffString
 integer =
   (onenine `BNF.and` digits) `BNF.or`
   digit `BNF.or`
-  (get_char '-' `BNF.and` onenine `BNF.and` digits) `BNF.or`
-  (get_char '-' `BNF.and` digit)
+  (get_char1 '-' `BNF.and` onenine `BNF.and` digits) `BNF.or`
+  (get_char1 '-' `BNF.and` digit)
 
-digits :: TextParser
+digits :: BNF.Parser TextState DiffString
 digits = BNF.oom (digit)
 
-digit :: TextParser
-digit = get_char '0' `BNF.or` onenine
+digit :: BNF.Parser TextState DiffString
+digit = get_char1 '0' `BNF.or` onenine
 
-onenine :: TextParser
-onenine = get_any_char ['1'..'9']
+onenine :: BNF.Parser TextState DiffString
+onenine = get_any_char1 ['1'..'9']
 
-fraction :: TextParser
-fraction = BNF.zoo (get_char '.' `BNF.and` digits)
+fraction :: BNF.Parser TextState DiffString
+fraction = BNF.zoo (get_char1 '.' `BNF.and` digits)
 
-exponent :: TextParser
+exponent :: BNF.Parser TextState DiffString
 exponent =
   BNF.zoo (
-     get_char 'E' `BNF.and` sign `BNF.and` digits `BNF.or`
-    (get_char 'e' `BNF.and` sign `BNF.and` digits))
+     get_char1 'E' `BNF.and` sign `BNF.and` digits `BNF.or`
+    (get_char1 'e' `BNF.and` sign `BNF.and` digits))
 
-sign :: TextParser
-sign = BNF.zoo (get_char '+' `BNF.or` get_char '-')
+sign :: BNF.Parser TextState DiffString
+sign = BNF.zoo (get_char1 '+' `BNF.or` get_char1 '-')
 
 -- NOTE: Line breaks are normalized within BNF.Text.
 ws :: Monoid a => BNF.Parser TextState a

@@ -4,6 +4,7 @@
 
 module JSONTest(test_json) where
 
+import GHC.Stack
 import JSON
 import qualified JSON.BNF as BNF
 import JSON.BNFTest
@@ -13,6 +14,11 @@ test_json =
   runtests [
     test_bnf,
     test_json']
+
+to_jsstring1 :: HasCallStack => String -> [JSChar]
+to_jsstring1 s = case to_jsstring s of
+  Right js -> js
+  Left  e  -> error e
 
 test_json' =
   let
@@ -45,30 +51,30 @@ test_json' =
 \  \"spouse\": null\
 \}"
     t1_json = BNF.Hit (JSObject [
-      ("first_name", JSString "John"),
-      ("last_name", JSString "Smith"),
-      ("is_alive", JSTrue),
-      ("age", JSNumber "27"),
-      ("address",JSObject [
-        ("street_address", JSString "21 2nd Street"),
-        ("city", JSString "New York"),
-        ("state", JSString "NY"),
-        ("postal_code", JSString "10021-3100")]),
-        ("phone_numbers", JArray [
+      (to_jsstring1 "first_name", JSString $ to_jsstring1 "John"),
+      (to_jsstring1 "last_name", JSString $ to_jsstring1 "Smith"),
+      (to_jsstring1 "is_alive", JSTrue),
+      (to_jsstring1 "age", JSNumber "27"),
+      (to_jsstring1 "address",JSObject [
+        (to_jsstring1 "street_address", JSString $ to_jsstring1 "21 2nd Street"),
+        (to_jsstring1 "city", JSString $ to_jsstring1 "New York"),
+        (to_jsstring1 "state", JSString $ to_jsstring1 "NY"),
+        (to_jsstring1 "postal_code", JSString $ to_jsstring1 "10021-3100")]),
+        (to_jsstring1 "phone_numbers", JArray [
           JSObject [
-            ("type", JSString "home"),
-            ("number", JSString "212 555-1234")
+            (to_jsstring1 "type", JSString $ to_jsstring1 "home"),
+            (to_jsstring1 "number", JSString $ to_jsstring1 "212 555-1234")
           ],
           JSObject [
-            ("type", JSString "office"),
-            ("number", JSString "646 555-4567")
+            (to_jsstring1 "type", JSString $ to_jsstring1 "office"),
+            (to_jsstring1 "number", JSString $ to_jsstring1 "646 555-4567")
           ]
         ]),
-      ("children", JArray [
-        JSString "Catherine",
-        JSString "Thomas",
-        JSString "Trevor"]),
-      ("spouse", JSNull)])
+      (to_jsstring1 "children", JArray [
+        JSString $ to_jsstring1 "Catherine",
+        JSString $ to_jsstring1 "Thomas",
+        JSString $ to_jsstring1 "Trevor"]),
+      (to_jsstring1 "spouse", JSNull)])
   in
     testsuite "JSON" [
       test "Wikipedia" [

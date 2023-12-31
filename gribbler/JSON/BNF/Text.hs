@@ -4,13 +4,14 @@
 
 module JSON.BNF.Text(
     module Misc.DiffList,
-    TextParser,
     TextState,
     assert_noop,
     assert_pop,
     assert_push,
     get_any_char,
+    get_any_char1,
     get_char,
+    get_char1,
     get_char_in_range,
     get_text,
     meta_break,
@@ -22,15 +23,16 @@ import qualified JSON.BNF as BNF
 import Misc.DiffList
 
 type TextState = (String, (Int, Int), [((Int, Int), String)])
-type TextParser = BNF.Parser TextState DiffString
 
 assert_noop       :: String -> BNF.Parser TextState a -> BNF.Parser TextState a
 assert_pop        :: String -> BNF.Parser TextState a -> BNF.Parser TextState a
 assert_push       :: BNF.Parser TextState a -> BNF.Parser TextState a
-get_any_char      :: [Char] -> TextParser
-get_char          :: Char -> TextParser
-get_char_in_range :: (Char, Char) -> TextParser
-get_text          :: [Char] -> TextParser
+get_any_char      :: [Char] -> BNF.Parser TextState Char
+get_any_char1     :: [Char] -> BNF.Parser TextState DiffString
+get_char          :: Char -> BNF.Parser TextState Char
+get_char1         :: Char -> BNF.Parser TextState DiffString
+get_char_in_range :: (Char, Char) -> BNF.Parser TextState Char
+get_text          :: [Char] -> BNF.Parser TextState DiffString
 meta_break        :: Monoid a => BNF.Parser TextState a
 meta_char         :: Monoid a => Char -> BNF.Parser TextState a
 text_state        :: String -> TextState
@@ -39,27 +41,39 @@ size_trace = 10
 
 text_state s = (s, (0, 0), [])
 
-get_char' :: BNF.Parser TextState Char
-get_char' =
+to_difflist :: Char -> BNF.Parser TextState DiffString
+to_difflist = return . difflist . (:[])
+
+get_symbol :: BNF.Parser TextState Char
+get_symbol =
   BNF.Parser (
     \ (xs, (line, col), stack) -> case xs of
       []     -> BNF.Miss
       (y:ys) -> BNF.Hit (y, (ys, (line, col + 1), stack)))
 
-get_char c = get_char' >>=
-  \ y -> case c == y of
-    True  -> return $ difflist [c]
-    False -> BNF.miss
+get_char c =
+  get_symbol >>=
+    \ y -> case c == y of
+      True  -> return c
+      False -> BNF.miss
 
-get_char_in_range (a, b) = get_char' >>=
-  \ y -> case  (a <= y) && (y <= b) of
-    True  -> return $ difflist [y]
-    False -> BNF.miss
+
+get_char_in_range (a, b) =
+  get_symbol >>=
+    \ y -> case  (a <= y) && (y <= b) of
+      True  -> return $ y
+      False -> BNF.miss
 
 get_text [] = BNF.null
-get_text s  = foldl1 (BNF.and) $ map (get_char) s
+get_text s  =
+  foldl1 (BNF.and) $
+  map (\ c -> get_char c >>= to_difflist) s
 
 get_any_char s = foldl1 (BNF.or) $ map (get_char) s
+
+get_char1 c = get_char c >>= to_difflist
+
+get_any_char1 s = get_any_char s >>= to_difflist
 
 meta_char c = BNF.drop $ get_char c
 
@@ -85,7 +99,7 @@ assert_noop e f =
 meta_break =
   BNF.Parser (
     \  (s, (line, col), stack) -> BNF.exec_parser (
-        get_char '\x000A' `BNF.and` get_char '\x000D' `BNF.or`
+        get_char '\x000A' >> get_char '\x000D' `BNF.or`
         get_char '\x000D' `BNF.or`
         get_char '\x000A')
       (s, (line, col), stack) >>=
