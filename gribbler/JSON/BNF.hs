@@ -43,7 +43,7 @@ assert      :: String -> Parser s a -> Parser s a
 and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
 drop        :: Monoid b => Parser s a -> Parser s b
 eval_parser :: Parser s a -> s -> Result a
-excl        :: Parser s a -> Parser s a -> Parser s a
+excl        :: Parser s a -> Parser s b -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
 from_hit    :: HasCallStack => Result a -> a
 null        :: Monoid a => Parser s a

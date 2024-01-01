@@ -40,7 +40,7 @@ is_jschar c = ('\x0020' <= c) && (c <= '\x10FFFF')
 to_jsstring' :: Char -> Either String JSChar
 to_jsstring' c
   | is_jschar c = Right . JSChar $ c
-  | otherwise =
+  | otherwise   =
       Left $
         "Cannot create a JSON string with unsupported character <" ++ [c] ++ ">"
 
@@ -54,10 +54,10 @@ value =
     object                               `BNF.or`
     array                                `BNF.or`
     (string >>= return . JSString)       `BNF.or`
-    number                               `BNF.or`
     (get_text "true"  >> return JSTrue)  `BNF.or`
     (get_text "false" >> return JSFalse) `BNF.or`
-    (get_text "null"  >> return JSNull))
+    (get_text "null"  >> return JSNull)  `BNF.or`
+    number)
 
 object :: BNF.Parser TextState JSValue
 object =
@@ -104,9 +104,10 @@ characters = BNF.zom (character >>= return . difflist. (:[]))
 
 character :: BNF.Parser TextState JSChar
 character =
-  assert_noop "Unsupported character" (get_char_with (is_jschar))
-    `BNF.excl` get_char '"' `BNF.excl` get_char '\\' `BNF.or`
-  ((meta_char '\\' :: BNF.Parser TextState ()) >> escape) >>= return . JSChar
+  (meta_char '\\' :: BNF.Parser TextState ()) >> escape `BNF.or`
+  (assert_noop "Unsupported character" (get_char_with (is_jschar))
+    `BNF.excl` (meta_char '"' :: BNF.Parser TextState ())) >>=
+      return . JSChar
 
 escape :: BNF.Parser TextState Char
 escape =
@@ -132,15 +133,12 @@ number =
   integer `BNF.and` fraction `BNF.and` JSON.exponent >>=
     return . JSNumber . relist
 
--- NOTE: Variable length matcher _digits_ MUST come before fixed length
---   matcher _digit_. Otherwise, the composed matcher _integer_ will ALWAYS
---   short-circuit on first digit.
 integer :: BNF.Parser TextState DiffString
 integer =
   (onenine `BNF.and` digits) `BNF.or`
-  digit `BNF.or`
+  get_char1 '0' `BNF.or`
   (get_char1 '-' `BNF.and` onenine `BNF.and` digits) `BNF.or`
-  (get_char1 '-' `BNF.and` digit)
+  (get_char1 '-' `BNF.and` get_char1 '0')
 
 digits :: BNF.Parser TextState DiffString
 digits = BNF.oom (digit)
@@ -168,5 +166,5 @@ ws :: Monoid a => BNF.Parser TextState a
 ws =
   BNF.zom (
     meta_char '\x0020' `BNF.or`
-    meta_char '\x0009' `BNF.or`
-    meta_break)
+    meta_break `BNF.or`
+    meta_char '\x0009')
