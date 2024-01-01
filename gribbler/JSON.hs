@@ -34,10 +34,12 @@ data JSValue =
 json        :: String -> BNF.Result JSValue
 to_jsstring :: String -> Either String [JSChar]
 
+is_jschar :: Char -> Bool
+is_jschar c = ('\x0020' <= c) && (c <= '\x10FFFF')
 
 to_jsstring' :: Char -> Either String JSChar
 to_jsstring' c
-  | ('\x0020' <= c) && (c <= '\x10FFFF') = Right . JSChar $ c
+  | is_jschar c = Right . JSChar $ c
   | otherwise =
       Left $
         "Cannot create a JSON string with unsupported character <" ++ [c] ++ ">"
@@ -102,7 +104,7 @@ characters = BNF.zom (character >>= return . difflist. (:[]))
 
 character :: BNF.Parser TextState JSChar
 character =
-  assert_noop "Unsupported character" (get_char_in_range ('\x0020', '\x10FFFF'))
+  assert_noop "Unsupported character" (get_char_with (is_jschar))
     `BNF.excl` get_char '"' `BNF.excl` get_char '\\' `BNF.or`
   ((meta_char '\\' :: BNF.Parser TextState ()) >> escape) >>= return . JSChar
 

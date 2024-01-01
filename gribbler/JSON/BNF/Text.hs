@@ -12,7 +12,7 @@ module JSON.BNF.Text(
     get_any_char1,
     get_char,
     get_char1,
-    get_char_in_range,
+    get_char_with,
     get_text,
     meta_break,
     meta_char,
@@ -31,7 +31,7 @@ get_any_char      :: [Char] -> BNF.Parser TextState Char
 get_any_char1     :: [Char] -> BNF.Parser TextState DiffString
 get_char          :: Char -> BNF.Parser TextState Char
 get_char1         :: Char -> BNF.Parser TextState DiffString
-get_char_in_range :: (Char, Char) -> BNF.Parser TextState Char
+get_char_with     :: (Char -> Bool) -> BNF.Parser TextState Char
 get_text          :: [Char] -> BNF.Parser TextState DiffString
 meta_break        :: Monoid a => BNF.Parser TextState a
 meta_char         :: Monoid a => Char -> BNF.Parser TextState a
@@ -58,9 +58,9 @@ get_char c =
       False -> BNF.miss
 
 
-get_char_in_range (a, b) =
+get_char_with f =
   get_symbol >>=
-    \ y -> case  (a <= y) && (y <= b) of
+    \ y -> case  f y of
       True  -> return $ y
       False -> BNF.miss
 
