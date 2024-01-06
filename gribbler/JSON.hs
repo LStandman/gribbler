@@ -4,12 +4,11 @@
 
 module JSON(
     BNF.Result(..),
-    JSChar(..),
     JSValue(..),
-    json,
-    to_jsstring)
+    json)
   where
 
+import Data.Char
 import Data.Maybe
 
 import qualified JSON.BNF as BNF
@@ -17,34 +16,17 @@ import JSON.BNF.Text
 import Misc.DiffList
 import Misc.MemUtils
 
-newtype JSChar =
-    JSChar Char 
-  deriving (Eq, Show)
-
 data JSValue =
-    JSObject [([JSChar], JSValue)] |
-    JArray [JSValue]               |
-    JSString [JSChar]              |
-    JSNumber String                |
-    JSTrue                         |
-    JSFalse                        |
+    JSObject [(String, JSValue)] |
+    JArray [JSValue]             |
+    JSString String              |
+    JSNumber String              |
+    JSTrue                       |
+    JSFalse                      |
     JSNull
   deriving (Eq, Show)
 
 json        :: String -> BNF.Result JSValue
-to_jsstring :: String -> Either String [JSChar]
-
-is_jschar :: Char -> Bool
-is_jschar c = ('\x0020' <= c) && (c <= '\x10FFFF')
-
-to_jsstring' :: Char -> Either String JSChar
-to_jsstring' c
-  | is_jschar c = Right . JSChar $ c
-  | otherwise   =
-      Left $
-        "Cannot create a JSON string with unsupported character <" ++ [c] ++ ">"
-
-to_jsstring s = mapM (to_jsstring') s
 
 json s = BNF.eval_parser element $ text_state s
 
@@ -64,12 +46,12 @@ object =
     assert_pop "Unterminated braces '{}'" (meta_char '}') >>=
       return . JSObject . relist
 
-members :: BNF.Parser TextState (DiffList ([JSChar], JSValue))
+members :: BNF.Parser TextState (DiffList (String, JSValue))
 members =
   (member >>= return . difflist . (:[])) `BNF.and`
     BNF.zoo (meta_char ',' `BNF.and` members)
 
-member :: BNF.Parser TextState ([JSChar], JSValue)
+member :: BNF.Parser TextState (String, JSValue)
 member =
   ws `BNF.and` string `BNF.and` ws `BNF.and` meta_char ':' >>=
     \ s -> element >>= \ e -> return (s, e)
@@ -92,21 +74,21 @@ element =
       (ws :: BNF.Parser TextState ()) >>
         return v
 
-string :: BNF.Parser TextState [JSChar]
+string :: BNF.Parser TextState String
 string =
   assert_push (meta_char '"') `BNF.and` characters `BNF.and`
     assert_pop "Unterminated string" (meta_char '"') >>=
       return . relist
 
-characters :: BNF.Parser TextState (DiffList JSChar)
+characters :: BNF.Parser TextState DiffString
 characters = BNF.zom (character >>= return . difflist. (:[]))
 
-character :: BNF.Parser TextState JSChar
+character :: BNF.Parser TextState Char
 character =
   (meta_char '\\' :: BNF.Parser TextState ()) >> escape `BNF.or`
-  (assert_noop "Unsupported character" (get_char_with (is_jschar))
+  (assert_noop "Unsupported character" (get_char_with (\ c -> ('\x0020' <= c) && (c <= '\x10FFFF')))
     `BNF.excl` (meta_char '"' :: BNF.Parser TextState ())) >>=
-      return . JSChar
+      return
 
 escape :: BNF.Parser TextState Char
 escape =
