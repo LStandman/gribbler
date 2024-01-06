@@ -133,12 +133,15 @@ number =
   integer `BNF.and` fraction `BNF.and` JSON.exponent >>=
     return . JSNumber . relist
 
+-- NOTE: Variable length matcher _digits_ MUST come before fixed length
+--   matcher _digit_. Otherwise, the composed matcher _integer_ will ALWAYS
+--   short-circuit on first digit.
 integer :: BNF.Parser TextState DiffString
 integer =
   (onenine `BNF.and` digits) `BNF.or`
-  get_char1 '0' `BNF.or`
+  digit `BNF.or`
   (get_char1 '-' `BNF.and` onenine `BNF.and` digits) `BNF.or`
-  (get_char1 '-' `BNF.and` get_char1 '0')
+  (get_char1 '-' `BNF.and` digit)
 
 digits :: BNF.Parser TextState DiffString
 digits = BNF.oom (digit)
@@ -166,5 +169,5 @@ ws :: Monoid a => BNF.Parser TextState a
 ws =
   BNF.zom (
     meta_char '\x0020' `BNF.or`
-    meta_break `BNF.or`
+    meta_break         `BNF.or`
     meta_char '\x0009')
