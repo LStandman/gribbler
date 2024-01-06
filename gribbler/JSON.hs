@@ -50,14 +50,13 @@ json s = BNF.eval_parser element $ text_state s
 
 value :: BNF.Parser TextState JSValue
 value =
-  assert_noop "Could not deduce JSON value" (
-    object                               `BNF.or`
-    array                                `BNF.or`
-    (string >>= return . JSString)       `BNF.or`
-    (get_text "true"  >> return JSTrue)  `BNF.or`
-    (get_text "false" >> return JSFalse) `BNF.or`
-    (get_text "null"  >> return JSNull)  `BNF.or`
-    number)
+  object                               `BNF.or`
+  array                                `BNF.or`
+  (string >>= return . JSString)       `BNF.or`
+  (get_text "true"  >> return JSTrue)  `BNF.or`
+  (get_text "false" >> return JSFalse) `BNF.or`
+  (get_text "null"  >> return JSNull)  `BNF.or`
+  number
 
 object :: BNF.Parser TextState JSValue
 object =
