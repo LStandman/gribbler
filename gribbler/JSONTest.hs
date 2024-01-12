@@ -4,6 +4,8 @@
 
 module JSONTest(test_json) where
 
+import Data.Either
+
 import GHC.Stack
 import JSON
 import qualified JSON.BNF as BNF
@@ -17,7 +19,7 @@ test_json =
 
 test_json' =
   let
-    t1_string = "{\
+    t01_string = "{\
 \  \"first_name\": \"John\",\
 \  \"last_name\": \"Smith\",\
 \  \"is_alive\": true,\
@@ -45,7 +47,7 @@ test_json' =
 \  ],\
 \  \"spouse\": null\
 \}"
-    t1_json = Right (JSObject [
+    t01_json = Right (JSObject [
       ("first_name", JSString "John"),
       ("last_name",  JSString "Smith"),
       ("is_alive",   JSTrue),
@@ -74,7 +76,7 @@ test_json' =
           JSString "Trevor"
         ]),
       ("spouse", JSNull)])
-    t2_string = "[\
+    t02_string = "[\
 \    \"JSON Test Pattern pass1\",\
 \    {\"object with 1 member\":[\"array with 1 element\"]},\
 \    {},\
@@ -132,7 +134,7 @@ test_json' =
 \1e-1,\
 \1e00,2e+00,2e-00\
 \,\"rosebud\"]"
-    t2_json = Right (JArray [
+    t02_json = Right (JArray [
       JSString "JSON Test Pattern pass1",
       JSObject [
         ( "object with 1 member",
@@ -212,10 +214,72 @@ test_json' =
       JSNumber "2e+00",
       JSNumber "2e-00",
       JSString "rosebud"])
+    t03_string = "[\"Unclosed array\""
+    t04_string = "{unquoted_key: \"keys must be quoted\"}"
+    t05_string = "[\"extra comma\",]"
+    t06_string = "[\"double extra comma\",,]"
+    t07_string = "[   , \"<-- missing value\"]"
+    t08_string = "[\"Comma after the close\"],"
+    t09_string = "[\"Extra close\"]]"
+    t10_string = "{\"Extra comma\": true,}"
+    t11_string = "{\"Extra value after close\": true} \"misplaced quoted value\""
+    t12_string = "{\"Illegal expression\": 1 + 2}"
+    t13_string = "{\"Illegal invocation\": alert()}"
+    t14_string = "{\"Numbers cannot have leading zeroes\": 013}"
+    t15_string = "{\"Numbers cannot be hex\": 0x14}"
+    t16_string = "[\"Illegal backslash escape: \\x15\"]"
+    t17_string = "[\\naked]"
+    t18_string = "[\"Illegal backslash escape: \\017\"]"
+    t19_string = "{\"Missing colon\" null}"
+    t20_string = "{\"Double colon\":: null}"
+    t21_string = "{\"Comma instead of colon\", null}"
+    t22_string = "[\"Colon instead of comma\": false]"
+    t23_string = "[\"Bad value\", truth]"
+    t24_string = "['single quote']"
+    t25_string = "[\"\ttab\tcharacter\tin\tstring\t\"]"
+    t26_string = "[\"tab\\\tcharacter\\\tin\\\tstring\\\t\"]"
+    t27_string = "[\"line\nbreak\"]"
+    t28_string = "[\"line\\\nbreak\"]"
+    t29_string = "[0e]"
+    t30_string = "[0e+]"
+    t31_string = "[0e+-1]"
+    t32_string = "{\"Comma instead if closing brace\": true,"
+    t33_string = "[\"mismatch\"}"
   in
     testsuite "JSON" [
       test "Wikipedia" [
-        expect_memeq "t1_json" t1_json $ json t1_string],
-      test "Galois Inc." [
-        expect_memeq "t2_json" t2_json $ json t2_string]
-      ]
+        expect_memeq "t01_json" t01_json $ json t01_string],
+      test "GaloisIncPass" [
+        expect_memeq "t02_json" t02_json $ json t02_string],
+      test "GaloisIncFail" [
+        expect_false $ isRight $ json t03_string,
+        expect_false $ isRight $ json t04_string,
+        expect_false $ isRight $ json t05_string,
+        expect_false $ isRight $ json t06_string,
+        expect_false $ isRight $ json t07_string,
+        expect_false $ isRight $ json t08_string,
+        expect_false $ isRight $ json t09_string,
+        expect_false $ isRight $ json t10_string,
+        expect_false $ isRight $ json t11_string,
+        expect_false $ isRight $ json t12_string,
+        expect_false $ isRight $ json t13_string,
+        expect_false $ isRight $ json t14_string,
+        expect_false $ isRight $ json t15_string,
+        expect_false $ isRight $ json t16_string,
+        expect_false $ isRight $ json t17_string,
+        expect_false $ isRight $ json t18_string,
+        expect_false $ isRight $ json t19_string,
+        expect_false $ isRight $ json t20_string,
+        expect_false $ isRight $ json t21_string,
+        expect_false $ isRight $ json t22_string,
+        expect_false $ isRight $ json t23_string,
+        expect_false $ isRight $ json t24_string,
+        expect_false $ isRight $ json t25_string,
+        expect_false $ isRight $ json t26_string,
+        expect_false $ isRight $ json t27_string,
+        expect_false $ isRight $ json t28_string,
+        expect_false $ isRight $ json t29_string,
+        expect_false $ isRight $ json t30_string,
+        expect_false $ isRight $ json t31_string,
+        expect_false $ isRight $ json t32_string,
+        expect_false $ isRight $ json t33_string]]

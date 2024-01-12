@@ -19,6 +19,7 @@ time a = do
 
 main :: IO ()
 main = do
+  print $ json "[\"Comma after the close\"],"
   print $ json "[{\"age\": 27]"
   print $ json "[{\"age\x001\": 27]"
   print $ json "\"test\""

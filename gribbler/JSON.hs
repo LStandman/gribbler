@@ -28,10 +28,16 @@ data JSValue =
 json :: String -> Either String JSValue
 
 json s =
-  case BNF.eval_parser element $ text_state s of
-    BNF.Hit   j -> Right j
-    BNF.Error e -> Left e
-    BNF.Miss    -> Left "Unspecified error"
+  case BNF.eval_parser
+    (element >>= \ x -> assert_eof >> return x) $ text_state s of
+      BNF.Hit   j -> Right j
+      BNF.Error e -> Left e
+      BNF.Miss    -> Left "Unspecified error"
+  where
+    assert_eof =
+      assert_noop
+        "JSON object is terminated but stream is not empty"
+        (meta_eof :: BNF.Parser TextState ())
 
 value :: BNF.Parser TextState JSValue
 value =

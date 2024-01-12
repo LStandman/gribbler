@@ -16,6 +16,7 @@ module JSON.BNF.Text(
     get_text,
     meta_break,
     meta_char,
+    meta_eof,
     text_state)
   where
 
@@ -35,6 +36,7 @@ get_char_with     :: (Char -> Bool) -> BNF.Parser TextState Char
 get_text          :: [Char] -> BNF.Parser TextState DiffString
 meta_break        :: Monoid a => BNF.Parser TextState a
 meta_char         :: Monoid a => Char -> BNF.Parser TextState a
+meta_eof          :: Monoid a => BNF.Parser TextState a
 text_state        :: String -> TextState
 
 size_trace = 10
@@ -105,3 +107,9 @@ meta_break =
       (s, (line, col), stack) >>=
         \ (s', _, stack') ->
           return (mempty, (s', (line + 1, 0), stack')))
+
+meta_eof =
+  BNF.Parser (
+    \ (s, ctx, stack) -> case s of
+      [] -> BNF.Hit (mempty, (s, ctx, stack))
+      _  -> BNF.Miss)
