@@ -45,30 +45,34 @@ test_json' =
 \  ],\
 \  \"spouse\": null\
 \}"
-    t1_json = BNF.Hit (JSObject [
+    t1_json = Right (JSObject [
       ("first_name", JSString "John"),
-      ("last_name", JSString "Smith"),
-      ("is_alive", JSTrue),
-      ("age", JSNumber "27"),
-      ("address",JSObject [
-        ("street_address", JSString "21 2nd Street"),
-        ("city", JSString "New York"),
-        ("state", JSString "NY"),
-        ("postal_code", JSString "10021-3100")]),
-        ("phone_numbers", JArray [
-          JSObject [
-            ("type", JSString "home"),
-            ("number", JSString "212 555-1234")
-          ],
-          JSObject [
-            ("type", JSString "office"),
-            ("number", JSString "646 555-4567")
-          ]
+      ("last_name",  JSString "Smith"),
+      ("is_alive",   JSTrue),
+      ("age",        JSNumber "27"),
+      ( "address",
+        JSObject [
+          ("street_address", JSString "21 2nd Street"),
+          ("city",           JSString "New York"),
+          ("state",          JSString "NY"),
+          ("postal_code",    JSString "10021-3100")]),
+          ( "phone_numbers",
+            JArray [
+              JSObject [
+                ("type",   JSString "home"),
+                ("number", JSString "212 555-1234")
+              ],
+              JSObject [
+                ("type",   JSString "office"),
+                ("number", JSString "646 555-4567")
+              ]
+          ]),
+      ( "children",
+        JArray [
+          JSString "Catherine",
+          JSString "Thomas",
+          JSString "Trevor"
         ]),
-      ("children", JArray [
-        JSString "Catherine",
-        JSString "Thomas",
-        JSString "Trevor"]),
       ("spouse", JSNull)])
     t2_string = "[\
 \    \"JSON Test Pattern pass1\",\
@@ -128,11 +132,13 @@ test_json' =
 \1e-1,\
 \1e00,2e+00,2e-00\
 \,\"rosebud\"]"
-    t2_json = BNF.Hit (JArray [
+    t2_json = Right (JArray [
       JSString "JSON Test Pattern pass1",
       JSObject [
-        ("object with 1 member", JArray [
-          JSString "array with 1 element"])
+        ( "object with 1 member",
+          JArray [
+            JSString "array with 1 element"
+          ])
       ],
       JSObject [],
       JArray [],
@@ -141,51 +147,53 @@ test_json' =
       JSFalse,
       JSNull,
       JSObject [
-        ("integer", JSNumber "1234567890"),
-        ("real", JSNumber "-9876.543210"),
-        ("e", JSNumber "0.123456789e-12"),
-        ("E", JSNumber "1.234567890E+34"),
-        ("", JSNumber "23456789012E66"),
-        ("zero", JSNumber "0"),
-        ("one", JSNumber "1"),
-        ("space", JSString " "),
-        ("quote", JSString "\""),
-        ("backslash", JSString "\\"),
-        ("controls", JSString "\b\f\n\r\t"),
-        ("slash", JSString "/"),
-        ("alpha", JSString "abcdefghijklmnopqrstuvwyz"),
-        ("ALPHA", JSString "ABCDEFGHIJKLMNOPQRSTUVWYZ"),
-        ("digit", JSString "0123456789"),
-        ("0123456789", JSString "digit"),
-        ("special", JSString "`1~!@#$%^&*()_+-={':[,]}|;.</>?"),
-        ("hex", JSString "\x0123\x4567\x89AB\xCDEF\xABCD\xEF4A"),
-        ("true", JSTrue),
-        ("false", JSFalse),
-        ("null", JSNull),
-        ("array", JArray []),
-        ("object", JSObject []),
-        ("address", JSString "50 St. James Street"),
-        ("url", JSString "http://www.JSON.org/"),
-        ("comment", JSString "// /* <!-- --"),
+        ("integer",     JSNumber "1234567890"),
+        ("real",        JSNumber "-9876.543210"),
+        ("e",           JSNumber "0.123456789e-12"),
+        ("E",           JSNumber "1.234567890E+34"),
+        ("",            JSNumber "23456789012E66"),
+        ("zero",        JSNumber "0"),
+        ("one",         JSNumber "1"),
+        ("space",       JSString " "),
+        ("quote",       JSString "\""),
+        ("backslash",   JSString "\\"),
+        ("controls",    JSString "\b\f\n\r\t"),
+        ("slash",       JSString "/"),
+        ("alpha",       JSString "abcdefghijklmnopqrstuvwyz"),
+        ("ALPHA",       JSString "ABCDEFGHIJKLMNOPQRSTUVWYZ"),
+        ("digit",       JSString "0123456789"),
+        ("0123456789",  JSString "digit"),
+        ("special",     JSString "`1~!@#$%^&*()_+-={':[,]}|;.</>?"),
+        ("hex",         JSString "\x0123\x4567\x89AB\xCDEF\xABCD\xEF4A"),
+        ("true",        JSTrue),
+        ("false",       JSFalse),
+        ("null",        JSNull),
+        ("array",       JArray []),
+        ("object",      JSObject []),
+        ("address",     JSString "50 St. James Street"),
+        ("url",         JSString "http://www.JSON.org/"),
+        ("comment",     JSString "// /* <!-- --"),
         ("# -- --> */", JSString " "),
-        (" s p a c e d ", JArray [
-          JSNumber "1",
-          JSNumber "2",
-          JSNumber "3",
-          JSNumber "4",
-          JSNumber "5",
-          JSNumber "6",
-          JSNumber "7"
-        ]),
-        ("compact", JArray [
-          JSNumber "1",
-          JSNumber "2",
-          JSNumber "3",
-          JSNumber "4",
-          JSNumber "5",
-          JSNumber "6",
-          JSNumber "7"
-        ]),
+        ( " s p a c e d ",
+          JArray [
+            JSNumber "1",
+            JSNumber "2",
+            JSNumber "3",
+            JSNumber "4",
+            JSNumber "5",
+            JSNumber "6",
+            JSNumber "7"
+          ]),
+        ( "compact",
+          JArray [
+            JSNumber "1",
+            JSNumber "2",
+            JSNumber "3",
+            JSNumber "4",
+            JSNumber "5",
+            JSNumber "6",
+            JSNumber "7"
+          ]),
         ( "jsontext",
           JSString "{\"object with 1 member\":[\"array with 1 element\"]}"),
         ( "quotes",

@@ -3,7 +3,6 @@
 -- Copyright (C) 2023 LStandman
 
 module JSON(
-    BNF.Result(..),
     JSValue(..),
     json)
   where
@@ -26,9 +25,13 @@ data JSValue =
     JSNull
   deriving (Eq, Show)
 
-json        :: String -> BNF.Result JSValue
+json :: String -> Either String JSValue
 
-json s = BNF.eval_parser element $ text_state s
+json s =
+  case BNF.eval_parser element $ text_state s of
+    BNF.Hit   j -> Right j
+    BNF.Error e -> Left e
+    BNF.Miss    -> Left "Unspecified error"
 
 value :: BNF.Parser TextState JSValue
 value =
