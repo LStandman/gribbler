@@ -20,8 +20,8 @@ type Mat = UArray (Word8, Word8) Word8
 
 size_block  :: Int
 size_key    :: Int
-encrypt     :: [Word8] -> [Word8] -> [Word8]
-decrypt     :: [Word8] -> [Word8] -> [Word8]
+encrypt     :: HasCallStack => [Word8] -> [Word8] -> [Word8]
+decrypt     :: HasCallStack => [Word8] -> [Word8] -> [Word8]
 
 bounds_sbox   = ((0, 0), (15, 15))
 bounds_side   = (0, 3)
@@ -220,10 +220,10 @@ runcons (x:xs) = (y, x:ys)
     (y, ys) = runcons xs
 
 -- `tail` drops a duplicate of key1 from schedule.y
-schedule_helper :: (Mat, Mat) -> (Mat, [Mat])
+schedule_helper :: HasCallStack => (Mat, Mat) -> (Mat, [Mat])
 schedule_helper = runcons . tail . key_expansion
 
-cipher :: Mat -> Mat -> Mat -> Mat
+cipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
 cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
   where
     f p k             =
@@ -232,7 +232,7 @@ cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
     ptext'            = add_round_key ptext key1
     ptext''           = foldl (f) ptext' schedule
 
-inv_cipher :: Mat -> Mat -> Mat -> Mat
+inv_cipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
 inv_cipher ctext key1 key2 =
   add_round_key (inv_sub_bytes . inv_shift_rows $ ctext'') key1
   where

@@ -59,7 +59,7 @@ test_json' =
           ("state",          JSString "NY"),
           ("postal_code",    JSString "10021-3100")]),
           ( "phone_numbers",
-            JArray [
+            JSArray [
               JSObject [
                 ("type",   JSString "home"),
                 ("number", JSString "212 555-1234")
@@ -70,7 +70,7 @@ test_json' =
               ]
           ]),
       ( "children",
-        JArray [
+        JSArray [
           JSString "Catherine",
           JSString "Thomas",
           JSString "Trevor"
@@ -134,16 +134,16 @@ test_json' =
 \1e-1,\
 \1e00,2e+00,2e-00\
 \,\"rosebud\"]"
-    t02_json = Right (JArray [
+    t02_json = Right (JSArray [
       JSString "JSON Test Pattern pass1",
       JSObject [
         ( "object with 1 member",
-          JArray [
+          JSArray [
             JSString "array with 1 element"
           ])
       ],
       JSObject [],
-      JArray [],
+      JSArray [],
       JSNumber "-42",
       JSTrue,
       JSFalse,
@@ -170,14 +170,14 @@ test_json' =
         ("true",        JSTrue),
         ("false",       JSFalse),
         ("null",        JSNull),
-        ("array",       JArray []),
+        ("array",       JSArray []),
         ("object",      JSObject []),
         ("address",     JSString "50 St. James Street"),
         ("url",         JSString "http://www.JSON.org/"),
         ("comment",     JSString "// /* <!-- --"),
         ("# -- --> */", JSString " "),
         ( " s p a c e d ",
-          JArray [
+          JSArray [
             JSNumber "1",
             JSNumber "2",
             JSNumber "3",
@@ -187,7 +187,7 @@ test_json' =
             JSNumber "7"
           ]),
         ( "compact",
-          JArray [
+          JSArray [
             JSNumber "1",
             JSNumber "2",
             JSNumber "3",
@@ -248,38 +248,38 @@ test_json' =
   in
     testsuite "JSON" [
       test "Wikipedia" [
-        expect_memeq "t01_json" t01_json $ json t01_string],
+        expect_memeq "t01_json" t01_json $ deserialize t01_string],
       test "GaloisIncPass" [
-        expect_memeq "t02_json" t02_json $ json t02_string],
+        expect_memeq "t02_json" t02_json $ deserialize t02_string],
       test "GaloisIncFail" [
-        expect_false $ isRight $ json t03_string,
-        expect_false $ isRight $ json t04_string,
-        expect_false $ isRight $ json t05_string,
-        expect_false $ isRight $ json t06_string,
-        expect_false $ isRight $ json t07_string,
-        expect_false $ isRight $ json t08_string,
-        expect_false $ isRight $ json t09_string,
-        expect_false $ isRight $ json t10_string,
-        expect_false $ isRight $ json t11_string,
-        expect_false $ isRight $ json t12_string,
-        expect_false $ isRight $ json t13_string,
-        expect_false $ isRight $ json t14_string,
-        expect_false $ isRight $ json t15_string,
-        expect_false $ isRight $ json t16_string,
-        expect_false $ isRight $ json t17_string,
-        expect_false $ isRight $ json t18_string,
-        expect_false $ isRight $ json t19_string,
-        expect_false $ isRight $ json t20_string,
-        expect_false $ isRight $ json t21_string,
-        expect_false $ isRight $ json t22_string,
-        expect_false $ isRight $ json t23_string,
-        expect_false $ isRight $ json t24_string,
-        expect_false $ isRight $ json t25_string,
-        expect_false $ isRight $ json t26_string,
-        expect_false $ isRight $ json t27_string,
-        expect_false $ isRight $ json t28_string,
-        expect_false $ isRight $ json t29_string,
-        expect_false $ isRight $ json t30_string,
-        expect_false $ isRight $ json t31_string,
-        expect_false $ isRight $ json t32_string,
-        expect_false $ isRight $ json t33_string]]
+        expect_false $ isRight $ deserialize t03_string,
+        expect_false $ isRight $ deserialize t04_string,
+        expect_false $ isRight $ deserialize t05_string,
+        expect_false $ isRight $ deserialize t06_string,
+        expect_false $ isRight $ deserialize t07_string,
+        expect_false $ isRight $ deserialize t08_string,
+        expect_false $ isRight $ deserialize t09_string,
+        expect_false $ isRight $ deserialize t10_string,
+        expect_false $ isRight $ deserialize t11_string,
+        expect_false $ isRight $ deserialize t12_string,
+        expect_false $ isRight $ deserialize t13_string,
+        expect_false $ isRight $ deserialize t14_string,
+        expect_false $ isRight $ deserialize t15_string,
+        expect_false $ isRight $ deserialize t16_string,
+        expect_false $ isRight $ deserialize t17_string,
+        expect_false $ isRight $ deserialize t18_string,
+        expect_false $ isRight $ deserialize t19_string,
+        expect_false $ isRight $ deserialize t20_string,
+        expect_false $ isRight $ deserialize t21_string,
+        expect_false $ isRight $ deserialize t22_string,
+        expect_false $ isRight $ deserialize t23_string,
+        expect_false $ isRight $ deserialize t24_string,
+        expect_false $ isRight $ deserialize t25_string,
+        expect_false $ isRight $ deserialize t26_string,
+        expect_false $ isRight $ deserialize t27_string,
+        expect_false $ isRight $ deserialize t28_string,
+        expect_false $ isRight $ deserialize t29_string,
+        expect_false $ isRight $ deserialize t30_string,
+        expect_false $ isRight $ deserialize t31_string,
+        expect_false $ isRight $ deserialize t32_string,
+        expect_false $ isRight $ deserialize t33_string]]

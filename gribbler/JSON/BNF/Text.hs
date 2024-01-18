@@ -90,7 +90,7 @@ assert_pop e f =
       BNF.run_parser (
         BNF.assert
           (e ++ " :: starting at line " ++ (show line') ++ ", col " ++
-          (show col') ++ ", " ++ "trace :: " ++ trace) f)
+          (show col') ++ ", " ++ "trace :: " ++ show trace) f)
         (s, ctx, stack))
 
 assert_noop e f =

@@ -4,11 +4,15 @@
 
 module JSON(
     JSValue(..),
-    json)
+    deserialize,
+    jsstring,
+    serialize)
   where
 
 import Data.Char
+import Data.List
 import Data.Maybe
+import GHC.Stack
 
 import qualified JSON.BNF as BNF
 import JSON.BNF.Text
@@ -17,7 +21,7 @@ import Misc.MemUtils
 
 data JSValue =
     JSObject [(String, JSValue)] |
-    JArray [JSValue]             |
+    JSArray  [JSValue]           |
     JSString String              |
     JSNumber String              |
     JSTrue                       |
@@ -25,19 +29,14 @@ data JSValue =
     JSNull
   deriving (Eq, Show)
 
-json :: String -> Either String JSValue
+deserialize :: String -> Either String JSValue
+jsstring    :: String -> Either String JSValue
+serialize   :: HasCallStack => Bool -> JSValue -> String
 
-json s =
-  case BNF.eval_parser
-    (element >>= \ x -> assert_eof >> return x) $ text_state s of
-      BNF.Hit   j -> Right j
-      BNF.Error e -> Left e
-      BNF.Miss    -> Left "Unspecified error"
-  where
-    assert_eof =
-      assert_noop
-        "JSON object is terminated but stream is not empty"
-        (meta_eof :: BNF.Parser TextState ())
+padding = 2
+
+is_printable :: Char -> Bool
+is_printable c = ('\x0020' <= c) && (c <= '\x10FFFF')
 
 value :: BNF.Parser TextState JSValue
 value =
@@ -69,7 +68,7 @@ array :: BNF.Parser TextState JSValue
 array =
   assert_push (meta_char '[') `BNF.and` (elements `BNF.or` ws) `BNF.and`
     assert_pop "Unterminated brackets '[]'" (meta_char ']') >>=
-      return . JArray . relist
+      return . JSArray . relist
 
 elements :: BNF.Parser TextState (DiffList JSValue)
 elements =
@@ -95,7 +94,7 @@ characters = BNF.zom (character >>= return . difflist. (:[]))
 character :: BNF.Parser TextState Char
 character =
   (meta_char '\\' :: BNF.Parser TextState ()) >> escape `BNF.or`
-  (assert_noop "Unsupported character" (get_char_with (\ c -> ('\x0020' <= c) && (c <= '\x10FFFF')))
+  (assert_noop "Unsupported character" (get_char_with (is_printable))
     `BNF.excl` (meta_char '"' :: BNF.Parser TextState ())) >>=
       return
 
@@ -161,3 +160,62 @@ ws =
     meta_char '\x0020' `BNF.or`
     meta_break         `BNF.or`
     meta_char '\x0009')
+
+deserialize s =
+  case BNF.eval_parser
+    (element >>= \ x -> assert_eof >> return x) $ text_state s of
+      BNF.Hit   j -> Right j
+      BNF.Error e -> Left e
+      BNF.Miss    -> Left "Unspecified error"
+  where
+    assert_eof =
+      assert_noop
+        "JSON object is terminated but stream is not empty"
+        (meta_eof :: BNF.Parser TextState ())
+
+jsstring' :: String -> Either String String
+jsstring' s = mapM (f) s
+  where
+    f c
+      | c <= '\x10FFFF' = Right c
+      | otherwise = Left $ "Unsupported character " ++ show c
+
+jsstring s = fmap (JSString) $ jsstring' s
+
+br :: (Bool, Int) -> String
+br (False, _) = ""
+br (True,  n) = "\n" ++ (take (n * padding) $ repeat '\x0020')
+
+serialize'' :: HasCallStack => String -> String
+serialize'' s =
+  "\"" ++ concatMap (f) s ++ "\""
+    where
+      f '"'  = "\\\""
+      f '\\' = "\\\\"
+      f '\b' = "\\b"
+      f '\f' = "\\f"
+      f '\n' = "\\n"
+      f '\r' = "\\r"
+      f '\t' = "\\t"
+      f c
+        | is_printable c = [c]
+        | c < '\x0020'   = "\\u" ++ (num2hex 4 . fromEnum $ c)
+        | otherwise      = error $ "Unsupported character " ++ show c
+
+serialize' :: HasCallStack => (Bool, Int) -> JSValue -> String
+serialize' _ JSNull       = "null"
+serialize' _ JSFalse      = "false"
+serialize' _ JSTrue       = "true"
+serialize' _ (JSNumber s) = s
+serialize' _ (JSString s) = serialize'' s
+
+serialize' (pretty, depth) (JSArray v) =
+  case v of
+    [] -> "[]"
+    u  -> "[" ++ br (pretty, depth') ++
+            (intercalate ("," ++ br (pretty, depth')) $ map (serialize' (pretty, depth')) u) ++ br (pretty, depth) ++
+            "]"
+  where
+    depth' = depth + 1
+
+serialize pretty js = serialize' (pretty, 0) js

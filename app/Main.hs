@@ -1,12 +1,14 @@
 module Main where
 
+import Control.Exception
+import Data.Either
+import System.CPUTime
+import Text.Printf
+
 import qualified JSON.BNF as BNF
 import JSON.BNF.Text
 import JSON
 import Misc.MemUtils
-import Text.Printf
-import Control.Exception
-import System.CPUTime
 
 time :: IO t -> IO t
 time a = do
@@ -19,74 +21,21 @@ time a = do
 
 main :: IO ()
 main = do
-  print $ json "[\"Comma after the close\"],"
-  print $ json "[{\"age\": 27]"
-  print $ json "[{\"age\x001\": 27]"
-  print $ json "\"test\""
-  print $ json "\"\\u0100\""
+  putStrLn $ num2hex1. fromEnum $ '\x01'
+  putStrLn $ serialize True $ JSArray [JSString "ab", JSString "cd", JSString "ef", JSArray [JSString "01", JSString "02", JSString "03", JSString "04"]]
+  putStrLn $ serialize False $ JSArray [JSString "ab", JSString "cd", JSString "ef", JSArray [JSString "01", JSString "02", JSString "03", JSString "04"]]
+  putStrLn $ serialize False $ JSString "\x01"
+  putStrLn $ serialize False $ JSString "\x001F"
+  print $ deserialize "[\"Comma after the close\"],"
+  print $ deserialize "[{\"age\": 27]"
+  putStrLn $ fromLeft "" $ deserialize "[{\"age\x001\": 27]"
+  print $ deserialize "\"test\""
+  print $ deserialize "\"\\u0100\""
 --  print $ BNF.run_parser string "\"test\""
 --  print $ BNF.run_parser (drop_char '"' :: TextParser) "\"test"
-  print $ json "[]"
-  print $ json "[\
+  print $ deserialize "[]"
+  print $ deserialize "[\
 \    \"JSON Test Pattern pass1\",\
 \    {\"object with 1 member\":[\"array with 1 element\"]},\
 \    {},\
 \    []]"
-  print $ json "[\
-\    \"JSON Test Pattern pass1\",\
-\    {\"object with 1 member\":[\"array with 1 element\"]},\
-\    {},\
-\    [],\
-\    -42,\
-\    true,\
-\    false,\
-\    null,\
-\    {\
-\        \"integer\": 1234567890,\
-\        \"real\": -9876.543210,\
-\        \"e\": 0.123456789e-12,\
-\        \"E\": 1.234567890E+34,\
-\        \"\":  23456789012E66,\
-\        \"zero\": 0,\
-\        \"one\": 1,\
-\        \"space\": \" \",\
-\        \"quote\": \"\\\"\",\
-\        \"backslash\": \"\\\\\",\
-\        \"controls\": \"\\b\\f\\n\\r\\t\",\
-\        \"slash\": \"/\",\
-\        \"alpha\": \"abcdefghijklmnopqrstuvwyz\",\
-\        \"ALPHA\": \"ABCDEFGHIJKLMNOPQRSTUVWYZ\",\
-\        \"digit\": \"0123456789\",\
-\        \"0123456789\": \"digit\",\
-\        \"special\": \"`1~!@#$%^&*()_+-={':[,]}|;.</>?\",\
-\        \"hex\": \"\\u0123\\u4567\\u89AB\\uCDEF\\uabcd\\uef4A\",\
-\        \"true\": true,\
-\        \"false\": false,\
-\        \"null\": null,\
-\        \"array\":[  ],\
-\        \"object\":{  },\
-\        \"address\": \"50 St. James Street\",\
-\        \"url\": \"http://www.JSON.org/\",\
-\        \"comment\": \"// /* <!-- --\",\
-\        \"# -- --> */\": \" \",\
-\        \" s p a c e d \" :[1,2 , 3\
-\\
-\,\
-\\
-\4 , 5        ,          6           ,7        ],\"compact\":[1,2,3,4,5,6,7],\
-\        \"jsontext\": \"{\\\"object with 1 member\\\":[\\\"array with 1 element\\\"]}\",\
-\        \"quotes\": \"&#34; \\u0022 %22 0x22 034 &#x22;\",\
-\        \"/\\\\\\\"\\uCAFE\\uBABE\\uAB98\\uFCDE\\ubcda\\uef4A\\b\\f\\n\\r\\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?\"\
-\: \"A key can be any string\"\
-\    },\
-\    0.5 ,98.6\
-\,\
-\99.44\
-\,\
-\\
-\1066,\
-\1e1,\
-\0.1e1,\
-\1e-1,\
-\1e00,2e+00,2e-00\
-\,\"rosebud\"]"
