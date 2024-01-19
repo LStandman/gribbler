@@ -26,6 +26,8 @@ main = do
   putStrLn $ serialize False $ JSArray [JSString "ab", JSString "cd", JSString "ef", JSArray [JSString "01", JSString "02", JSString "03", JSString "04"]]
   putStrLn $ serialize False $ JSString "\x01"
   putStrLn $ serialize False $ JSString "\x001F"
+  putStrLn $ serialize True $ JSObject [("alive", JSTrue), ("age", JSNumber "27")]
+  putStrLn $ serialize False $ JSObject [("alive", JSTrue), ("age", JSNumber "27")]
   print $ deserialize "[\"Comma after the close\"],"
   print $ deserialize "[{\"age\": 27]"
   putStrLn $ fromLeft "" $ deserialize "{\"alive\": true, \"\x001\": 27}"

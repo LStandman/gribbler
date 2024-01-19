@@ -73,6 +73,7 @@ stripPrefix' (x:xs) (y:ys)
  | x == y = stripPrefix' xs ys >>= return . (fmap (1 +))
 stripPrefix' _ _ = Nothing
 
+-- Optimal than the naive implementation `foldl1 (BNF.and) $ map (get_char) s`
 get_text [] = BNF.null
 get_text s  =
   BNF.Parser (
@@ -81,6 +82,7 @@ get_text s  =
         Nothing        -> BNF.Miss
         (Just (ys, n)) -> BNF.Hit (difflist s, (ys, (line, col + n), stack)))
 
+-- Optimal than the naive implementation `foldl1 (BNF.or) $ map (get_char) s`
 get_any_char s =
   get_symbol >>=
     \ y -> case elem y s of

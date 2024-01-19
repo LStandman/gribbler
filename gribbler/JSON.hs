@@ -186,8 +186,8 @@ br :: (Bool, Int) -> String
 br (False, _) = ""
 br (True,  n) = "\n" ++ (take (n * padding) $ repeat '\x0020')
 
-serialize'' :: HasCallStack => String -> String
-serialize'' s =
+serialize_string :: HasCallStack => String -> String
+serialize_string s =
   "\"" ++ concatMap (f) s ++ "\""
     where
       f '"'  = "\\\""
@@ -207,15 +207,31 @@ serialize' _ JSNull       = "null"
 serialize' _ JSFalse      = "false"
 serialize' _ JSTrue       = "true"
 serialize' _ (JSNumber s) = s
-serialize' _ (JSString s) = serialize'' s
+serialize' _ (JSString s) = serialize_string s
 
 serialize' (pretty, depth) (JSArray v) =
   case v of
     [] -> "[]"
-    u  -> "[" ++ br (pretty, depth') ++
-            (intercalate ("," ++ br (pretty, depth')) $ map (serialize' (pretty, depth')) u) ++ br (pretty, depth) ++
+    u  -> "[" ++ br (pretty, deeper) ++
+            ( intercalate ("," ++ br (pretty, deeper)) $
+              map (serialize' (pretty, deeper)) u) ++
+            br (pretty, depth) ++
             "]"
   where
-    depth' = depth + 1
+    deeper = depth + 1
+
+serialize' (pretty, depth) (JSObject v) =
+  case v of
+    [] -> "{}"
+    u  -> "{" ++ br (pretty, deeper) ++
+            ( intercalate ("," ++ br (pretty, deeper)) $
+              map (\ (name, value) -> serialize_string name ++ ":" ++ ws' ++ serialize' (pretty, deeper) value) u) ++
+            br (pretty, depth) ++
+            "}"
+  where
+    deeper = depth + 1
+    ws'
+      | pretty    = "\x0020"
+      | otherwise = ""
 
 serialize pretty js = serialize' (pretty, 0) js
