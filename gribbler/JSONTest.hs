@@ -245,13 +245,15 @@ test_json' =
     t31_string = "[0e+-1]"
     t32_string = "{\"Comma instead if closing brace\": true,"
     t33_string = "[\"mismatch\"}"
+    t34_json   = t02_json
+    t35_json   = t02_json
   in
     testsuite "JSON" [
-      test "Wikipedia" [
+      test "DeserializationWikipedia" [
         expect_memeq "t01_json" t01_json $ deserialize t01_string],
-      test "GaloisIncPass" [
+      test "DeserializationGaloisIncPass" [
         expect_memeq "t02_json" t02_json $ deserialize t02_string],
-      test "GaloisIncFail" [
+      test "DeserializationGaloisIncFail" [
         expect_false $ isRight $ deserialize t03_string,
         expect_false $ isRight $ deserialize t04_string,
         expect_false $ isRight $ deserialize t05_string,
@@ -282,4 +284,7 @@ test_json' =
         expect_false $ isRight $ deserialize t30_string,
         expect_false $ isRight $ deserialize t31_string,
         expect_false $ isRight $ deserialize t32_string,
-        expect_false $ isRight $ deserialize t33_string]]
+        expect_false $ isRight $ deserialize t33_string],
+      test "SerializationGaloisInc" [
+        expect_memeq "t34_json" t34_json $ deserialize . (serialize True)  . (fromRight JSNull) $ t34_json,
+        expect_memeq "t35_json" t35_json $ deserialize . (serialize False) . (fromRight JSNull) $ t35_json]]
