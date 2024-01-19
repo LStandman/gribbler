@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Misc/MemUtils.hs: String utilities
--- Copyright (C) 2021-2023 LStandman
+-- Copyright (C) 2021-2024 LStandman
 
 module Misc.MemUtils(
     hex2num,

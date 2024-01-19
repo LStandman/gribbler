@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- JSON/BNF.hs: Abstract Backus–Naur form implementation
--- Copyright (C) 2021-2023 LStandman
+-- Copyright (C) 2021-2024 LStandman
 
 module JSON.BNF(
     Parser(..),

@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- JSONTest.hs: Unit tests for JSON module.
--- Copyright (C) 2023 LStandman
+-- Copyright (C) 2023-2024 LStandman
 
 module JSONTest(test_json) where
 

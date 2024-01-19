@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- JSON.hs: JSON BNF.Parser
--- Copyright (C) 2023 LStandman
+-- Copyright (C) 2023-2024 LStandman
 
 module JSON(
     JSValue(..),

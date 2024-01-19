@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- JSON/BNF/Text.hs: Functions for BNF syntax analysis of text
--- Copyright (C) 2022-2023 LStandman
+-- Copyright (C) 2022-2024 LStandman
 
 module JSON.BNF.Text(
     module Misc.DiffList,
@@ -49,9 +49,10 @@ to_difflist = return . difflist . (:[])
 get_symbol :: BNF.Parser TextState Char
 get_symbol =
   BNF.Parser (
-    \ (xs, (line, col), stack) -> case xs of
-      []     -> BNF.Miss
-      (y:ys) -> BNF.Hit (y, (ys, (line, col + 1), stack)))
+    \ (xs, (line, col), stack) ->
+      case xs of
+        []     -> BNF.Miss
+        (y:ys) -> BNF.Hit (y, (ys, (line, col + 1), stack)))
 
 get_char c =
   get_symbol >>=
@@ -66,12 +67,25 @@ get_char_with f =
       True  -> return $ y
       False -> BNF.miss
 
+stripPrefix' :: Eq a => [a] -> [a] -> Maybe ([a], Int)
+stripPrefix' [] ys = Just (ys, 0)
+stripPrefix' (x:xs) (y:ys)
+ | x == y = stripPrefix' xs ys >>= return . (fmap (1 +))
+stripPrefix' _ _ = Nothing
+
 get_text [] = BNF.null
 get_text s  =
-  foldl1 (BNF.and) $
-  map (\ c -> get_char c >>= to_difflist) s
+  BNF.Parser (
+    \ (xs, (line, col), stack) ->
+      case stripPrefix' s xs of
+        Nothing        -> BNF.Miss
+        (Just (ys, n)) -> BNF.Hit (difflist s, (ys, (line, col + n), stack)))
 
-get_any_char s = foldl1 (BNF.or) $ map (get_char) s
+get_any_char s =
+  get_symbol >>=
+    \ y -> case elem y s of
+      True  -> return y
+      False -> BNF.miss
 
 get_char1 c = get_char c >>= to_difflist
 
