@@ -14,7 +14,6 @@ module JSON.BNF(
     eval_parser,
     excl,
     exec_parser,
-    from_hit,
     miss,
     oom,
     rep,
@@ -45,7 +44,6 @@ drop        :: Monoid b => Parser s a -> Parser s b
 eval_parser :: Parser s a -> s -> Result a
 excl        :: Parser s a -> Parser s b -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
-from_hit    :: HasCallStack => Result a -> a
 null        :: Monoid a => Parser s a
 oom         :: Semigroup a => Parser s a -> Parser s a
 or          :: Parser s a -> Parser s a -> Parser s a
@@ -86,10 +84,6 @@ instance Functor (Parser s)
     fmap = liftM
 
 run_parser (Parser f') = f'
-
-from_hit (Error e) = error ("JSON.BNF.from_hit: Error <" ++ e ++ ">")
-from_hit Miss      = error ("JSON.BNF.from_hit: Miss")
-from_hit (Hit   x) = x
 
 eval_parser f s = run_parser f s >>= return . fst
 
