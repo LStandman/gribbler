@@ -47,7 +47,7 @@ test_json' =
 \  ],\
 \  \"spouse\": null\
 \}"
-    t01_json = Right (JSObject [
+    t01_json = JSObject [
       ("first_name", JSString "John"),
       ("last_name",  JSString "Smith"),
       ("is_alive",   JSTrue),
@@ -75,7 +75,7 @@ test_json' =
           JSString "Thomas",
           JSString "Trevor"
         ]),
-      ("spouse", JSNull)])
+      ("spouse", JSNull)]
     t02_string = "[\
 \    \"JSON Test Pattern pass1\",\
 \    {\"object with 1 member\":[\"array with 1 element\"]},\
@@ -134,7 +134,7 @@ test_json' =
 \1e-1,\
 \1e00,2e+00,2e-00\
 \,\"rosebud\"]"
-    t02_json = Right (JSArray [
+    t02_json = JSArray [
       JSString "JSON Test Pattern pass1",
       JSObject [
         ( "object with 1 member",
@@ -213,7 +213,7 @@ test_json' =
       JSNumber "1e00",
       JSNumber "2e+00",
       JSNumber "2e-00",
-      JSString "rosebud"])
+      JSString "rosebud"]
     t03_string = "[\"Unclosed array\""
     t04_string = "{unquoted_key: \"keys must be quoted\"}"
     t05_string = "[\"extra comma\",]"
@@ -250,9 +250,9 @@ test_json' =
   in
     testsuite "JSON" [
       test "DeserializationWikipedia" [
-        expect_memeq "t01_json" t01_json $ deserialize t01_string],
+        expect_memeq "t01_json" (Right t01_json) $ deserialize t01_string],
       test "DeserializationGaloisIncPass" [
-        expect_memeq "t02_json" t02_json $ deserialize t02_string],
+        expect_memeq "t02_json" (Right t02_json) $ deserialize t02_string],
       test "DeserializationGaloisIncFail" [
         expect_false $ isRight $ deserialize t03_string,
         expect_false $ isRight $ deserialize t04_string,
@@ -286,5 +286,5 @@ test_json' =
         expect_false $ isRight $ deserialize t32_string,
         expect_false $ isRight $ deserialize t33_string],
       test "SerializationGaloisInc" [
-        expect_memeq "t34_json" t34_json $ deserialize . (serialize True)  . (fromRight JSNull) $ t34_json,
-        expect_memeq "t35_json" t35_json $ deserialize . (serialize False) . (fromRight JSNull) $ t35_json]]
+        expect_memeq "t34_json" (Right t34_json) $ deserialize . (serialize True)  $ t34_json,
+        expect_memeq "t35_json" (Right t35_json) $ deserialize . (serialize False) $ t35_json]]
