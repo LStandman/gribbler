@@ -225,11 +225,13 @@ serialize' (pretty, depth) (JSObject v) =
     [] -> "{}"
     u  -> "{" ++ br (pretty, deeper) ++
             ( intercalate ("," ++ br (pretty, deeper)) $
-              map (\ (name, value) -> serialize_string name ++ ":" ++ ws' ++ serialize' (pretty, deeper) value) u) ++
+              map (serialize_member) u) ++
             br (pretty, depth) ++
             "}"
   where
     deeper = depth + 1
+    serialize_member (name, value) =
+      serialize_string name ++ ":" ++ ws' ++ serialize' (pretty, deeper) value
     ws'
       | pretty    = "\x0020"
       | otherwise = ""
