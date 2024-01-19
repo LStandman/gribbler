@@ -28,6 +28,7 @@ main = do
   putStrLn $ serialize False $ JSString "\x001F"
   print $ deserialize "[\"Comma after the close\"],"
   print $ deserialize "[{\"age\": 27]"
+  putStrLn $ fromLeft "" $ deserialize "{\"alive\": true, \"\x001\": 27}"
   putStrLn $ fromLeft "" $ deserialize "[{\"age\x001\": 27]"
   print $ deserialize "\"test\""
   print $ deserialize "\"\\u0100\""

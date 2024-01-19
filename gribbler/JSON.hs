@@ -170,7 +170,7 @@ deserialize s =
   where
     assert_eof =
       assert_noop
-        "JSON object is terminated but stream is not empty"
+        "JSON is terminated but stream is not empty"
         (meta_eof :: BNF.Parser TextState ())
 
 jsstring' :: String -> Either String String

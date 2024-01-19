@@ -93,23 +93,24 @@ get_any_char1 s = get_any_char s >>= to_difflist
 
 meta_char c = BNF.drop $ get_char c
 
-assert_push f =
+assert_push' :: BNF.Parser TextState ()
+assert_push' =
   BNF.Parser (
     \ (s, ctx, stack) ->
-      BNF.run_parser f (s, ctx, (ctx, take size_trace s):stack))
+      BNF.Hit ((), (s, ctx, (ctx, take size_trace s):stack)))
+
+assert_push f = assert_push' >> f
 
 assert_pop e f =
   BNF.Parser (
     \ (s, ctx, ((line', col'), trace):stack) ->
       BNF.run_parser (
         BNF.assert
-          (e ++ " :: starting at line " ++ (show line') ++ ", col " ++
-          (show col') ++ ", " ++ "trace :: " ++ show trace) f)
+          ("*** " ++ e ++ "\n  caught at " ++ (show $ line' + 1) ++ ":" ++
+          (show $ col' + 1) ++ ", " ++ "trace: " ++ show trace) f)
         (s, ctx, stack))
 
-assert_noop e f =
-  assert_push (BNF.null :: BNF.Parser TextState ()) >>
-    assert_pop e f
+assert_noop e f = assert_push' >> assert_pop e f
 
 -- NOTE: Adapted from YAML to account for any non-content line break.
 meta_break =
