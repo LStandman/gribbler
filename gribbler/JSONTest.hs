@@ -286,5 +286,5 @@ test_json' =
         expect_false $ isRight $ deserialize t32_string,
         expect_false $ isRight $ deserialize t33_string],
       test "SerializationGaloisInc" [
-        expect_memeq "t34_json" (Right t34_json) $ deserialize . (serialize True)  $ t34_json,
-        expect_memeq "t35_json" (Right t35_json) $ deserialize . (serialize False) $ t35_json]]
+        expect_memeq "t34_json" (Right t34_json) $ deserialize $ serialize True  t34_json,
+        expect_memeq "t35_json" (Right t35_json) $ deserialize $ serialize False t35_json]]

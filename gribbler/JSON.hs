@@ -50,30 +50,36 @@ value =
 
 object :: BNF.Parser TextState JSValue
 object =
-  assert_push (meta_char '{') `BNF.and` (members `BNF.or` ws) `BNF.and`
-    assert_pop "Unterminated braces '{}'" (meta_char '}') >>=
-      return . JSObject . relist
+  assert_push (meta_char '{') >>
+    (members `BNF.or` ws) >>=
+      \ m -> assert_pop "Unterminated braces '{}'" (meta_char '}') >>
+        (return . JSObject $ relist m)
 
 members :: BNF.Parser TextState (DiffList (String, JSValue))
 members =
   (member >>= return . difflist . (:[])) `BNF.and`
-    BNF.zoo (meta_char ',' `BNF.and` members)
+    BNF.zoo (meta_char ',' >> members)
 
 member :: BNF.Parser TextState (String, JSValue)
 member =
-  ws `BNF.and` string `BNF.and` ws `BNF.and` meta_char ':' >>=
-    \ s -> element >>= \ e -> return (s, e)
+  (ws :: BNF.Parser TextState ()) >>
+    string >>=
+      \ s -> (ws :: BNF.Parser TextState ()) >>
+        meta_char ':' >>
+          element >>=
+            \ e -> return (s, e)
 
 array :: BNF.Parser TextState JSValue
 array =
-  assert_push (meta_char '[') `BNF.and` (elements `BNF.or` ws) `BNF.and`
-    assert_pop "Unterminated brackets '[]'" (meta_char ']') >>=
-      return . JSArray . relist
+  assert_push (meta_char '[') >>
+    (elements `BNF.or` ws) >>=
+      \ e -> assert_pop "Unterminated brackets '[]'" (meta_char ']') >>
+        (return . JSArray $ relist e)
 
 elements :: BNF.Parser TextState (DiffList JSValue)
 elements =
   (element >>= return . difflist. (:[])) `BNF.and`
-    BNF.zoo (meta_char ',' `BNF.and` elements)
+    BNF.zoo (meta_char ',' >> elements)
 
 element :: BNF.Parser TextState JSValue
 element =
@@ -84,31 +90,33 @@ element =
 
 string :: BNF.Parser TextState String
 string =
-  assert_push (meta_char '"') `BNF.and` characters `BNF.and`
-    assert_pop "Unterminated string" (meta_char '"') >>=
-      return . relist
+  assert_push (meta_char '"') >>
+    characters >>= \ s ->
+      assert_pop "Unterminated string" (meta_char '"') >>
+        (return $ relist s)
 
 characters :: BNF.Parser TextState DiffString
 characters = BNF.zom (character >>= return . difflist. (:[]))
 
 character :: BNF.Parser TextState Char
 character =
-  (meta_char '\\' :: BNF.Parser TextState ()) >> escape `BNF.or`
-  (assert_noop "Unsupported character" (get_char_with (is_printable))
-    `BNF.excl` (meta_char '"' :: BNF.Parser TextState ())) >>=
+  (meta_char '\\') >>
+    escape `BNF.or`
+    ( assert_noop "Unsupported character" (get_char_with (is_printable)) `BNF.excl`
+      meta_char '"') >>=
       return
 
 escape :: BNF.Parser TextState Char
 escape =
   assert_noop "Unsupported escape sequence" $
-    ((meta_char '"'  :: BNF.Parser TextState ()) >> (return '"'))  `BNF.or`
-    ((meta_char '\\' :: BNF.Parser TextState ()) >> (return '\\')) `BNF.or`
-    ((meta_char 'b'  :: BNF.Parser TextState ()) >> (return '\b')) `BNF.or`
-    ((meta_char 'f'  :: BNF.Parser TextState ()) >> (return '\f')) `BNF.or`
-    ((meta_char 'n'  :: BNF.Parser TextState ()) >> (return '\n')) `BNF.or`
-    ((meta_char 'r'  :: BNF.Parser TextState ()) >> (return '\r')) `BNF.or`
-    ((meta_char 't'  :: BNF.Parser TextState ()) >> (return '\t')) `BNF.or`
-    ((meta_char 'u'  :: BNF.Parser TextState ()) >> BNF.rep 4 hex >>=
+    (meta_char '"'  >> (return '"'))  `BNF.or`
+    (meta_char '\\' >> (return '\\')) `BNF.or`
+    (meta_char 'b'  >> (return '\b')) `BNF.or`
+    (meta_char 'f'  >> (return '\f')) `BNF.or`
+    (meta_char 'n'  >> (return '\n')) `BNF.or`
+    (meta_char 'r'  >> (return '\r')) `BNF.or`
+    (meta_char 't'  >> (return '\t')) `BNF.or`
+    (meta_char 'u'  >> BNF.rep 4 hex >>=
       return . toEnum . fromJust . hex2num . relist)
 
 hex :: BNF.Parser TextState DiffString
@@ -159,7 +167,7 @@ ws =
   BNF.zom (
     meta_char '\x0020' `BNF.or`
     meta_break         `BNF.or`
-    meta_char '\x0009')
+    meta_char '\x0009') >> BNF.null
 
 deserialize s =
   case BNF.eval_parser

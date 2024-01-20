@@ -6,7 +6,6 @@ module JSON.BNF(
     Parser(..),
     Result(..),
     JSON.BNF.and,
-    JSON.BNF.drop,
     JSON.BNF.null,
     JSON.BNF.or,
     assert,
@@ -40,7 +39,6 @@ newtype Parser s a = Parser (s -> Result (a, s))
 
 assert      :: String -> Parser s a -> Parser s a
 and         :: Semigroup a => Parser s a -> Parser s a -> Parser s a
-drop        :: Monoid b => Parser s a -> Parser s b
 eval_parser :: Parser s a -> s -> Result a
 excl        :: Parser s a -> Parser s b -> Parser s a
 exec_parser :: Parser s a -> s -> Result s
@@ -129,5 +127,3 @@ zoo f = f `JSON.BNF.or` JSON.BNF.null
 zom f = f `JSON.BNF.and` zom f `JSON.BNF.or` JSON.BNF.null
 
 oom f = f `JSON.BNF.and` oom f `JSON.BNF.or` f
-
-drop f = f >> JSON.BNF.null

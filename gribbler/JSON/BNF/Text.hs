@@ -34,9 +34,9 @@ get_char          :: Char -> BNF.Parser TextState Char
 get_char1         :: Char -> BNF.Parser TextState DiffString
 get_char_with     :: (Char -> Bool) -> BNF.Parser TextState Char
 get_text          :: [Char] -> BNF.Parser TextState DiffString
-meta_break        :: Monoid a => BNF.Parser TextState a
-meta_char         :: Monoid a => Char -> BNF.Parser TextState a
-meta_eof          :: Monoid a => BNF.Parser TextState a
+meta_break        :: BNF.Parser TextState ()
+meta_char         :: Char -> BNF.Parser TextState ()
+meta_eof          :: BNF.Parser TextState ()
 text_state        :: String -> TextState
 
 size_trace = 10
@@ -93,7 +93,7 @@ get_char1 c = get_char c >>= to_difflist
 
 get_any_char1 s = get_any_char s >>= to_difflist
 
-meta_char c = BNF.drop $ get_char c
+meta_char c = get_char c >> return ()
 
 assert_push' :: BNF.Parser TextState ()
 assert_push' =
@@ -123,10 +123,10 @@ meta_break =
         get_char '\x000A')
       (s, (line, col), stack) >>=
         \ (s', _, stack') ->
-          return (mempty, (s', (line + 1, 0), stack')))
+          return ((), (s', (line + 1, 0), stack')))
 
 meta_eof =
   BNF.Parser (
     \ (s, ctx, stack) -> case s of
-      [] -> BNF.Hit (mempty, (s, ctx, stack))
+      [] -> BNF.Hit ((), (s, ctx, stack))
       _  -> BNF.Miss)
