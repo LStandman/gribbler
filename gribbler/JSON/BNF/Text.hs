@@ -118,9 +118,9 @@ assert_noop e f = assert_push' >> assert_pop e f
 meta_break =
   BNF.Parser (
     \  (s, (line, col), stack) -> BNF.exec_parser (
-        get_char '\x000A' >> get_char '\x000D' `BNF.or`
-        get_char '\x000D' `BNF.or`
-        get_char '\x000A')
+        meta_char '\x000A' >> meta_char '\x000D' `BNF.or`
+        meta_char '\x000A' `BNF.or`
+        meta_char '\x000D')
       (s, (line, col), stack) >>=
         \ (s', _, stack') ->
           return ((), (s', (line + 1, 0), stack')))
