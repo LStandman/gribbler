@@ -111,8 +111,8 @@ assert_pop e f =
     \ (s, ctx, ((line', col'), trace):stack) ->
       (BNF.run_parser $
         BNF.assert
-          ("*** " ++ e ++ "\n  caught at " ++ (show $ line' + 1) ++ ":" ++
-          (show $ col' + 1) ++ ", " ++ "trace: " ++ show trace) f)
+          ( "*** " ++ e ++ "\n  caught at " ++ show (line' + 1) ++ ":" ++
+            show (col' + 1) ++ ", " ++ "trace: " ++ show trace) f)
         (s, ctx, stack)
 
 assert_noop e f = assert_push' >> assert_pop e f
@@ -121,9 +121,9 @@ assert_noop e f = assert_push' >> assert_pop e f
 meta_break =
   BNF.Parser $
     \ (s, (line, col), stack) ->
-      (BNF.exec_parser $
-        meta_char '\x000A' `BNF.or`
-        meta_char '\x000D' >> (BNF.zoo $ meta_char '\x000A'))
+      (BNF.exec_parser
+        ( meta_char '\x000A' `BNF.or`
+          meta_char '\x000D' >> (BNF.zoo $ meta_char '\x000A')))
       (s, (line, col), stack) >>=
         \ (s', _, stack') ->
           return ((), (s', (line + 1, 0), stack'))
