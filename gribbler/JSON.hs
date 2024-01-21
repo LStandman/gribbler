@@ -102,7 +102,7 @@ character :: BNF.Parser TextState Char
 character =
   ( (assert_push $ meta_char '\\') >>
     assert_pop "Unsupported escape sequence" escape) `BNF.or`
-  ( (assert_noop "Unsupported character" $ get_char_with (is_printable)) `BNF.excl`
+  ( (assert_noop "Unsupported character" $ get_char_with is_printable) `BNF.excl`
     meta_char '"')
 
 escape :: BNF.Parser TextState Char
@@ -188,12 +188,12 @@ jsstring' s = mapM (f) s
 
 jsstring s = fmap (JSString) $ jsstring' s
 
-br :: (Bool, Int) -> String
-br (False, _) = ""
-br (True,  n) = "\n" ++ (take (n * padding) $ repeat '\x0020')
+put_br :: (Bool, Int) -> String
+put_br (False, _) = ""
+put_br (True,  n) = "\n" ++ (take (n * padding) $ repeat '\x0020')
 
-serialize_string :: HasCallStack => String -> String
-serialize_string s =
+put_string :: HasCallStack => String -> String
+put_string s =
   "\"" ++ concatMap (f) s ++ "\""
     where
       f '"'  = "\\\""
@@ -208,38 +208,38 @@ serialize_string s =
         | c < '\x0020'   = "\\u" ++ (num2hex 4 . fromEnum $ c)
         | otherwise      = error $ "Unsupported character " ++ show c
 
-serialize' :: HasCallStack => (Bool, Int) -> JSValue -> String
-serialize' _ JSNull       = "null"
-serialize' _ JSFalse      = "false"
-serialize' _ JSTrue       = "true"
-serialize' _ (JSNumber s) = s
-serialize' _ (JSString s) = serialize_string s
+put_json :: HasCallStack => (Bool, Int) -> JSValue -> String
+put_json _ JSNull       = "null"
+put_json _ JSFalse      = "false"
+put_json _ JSTrue       = "true"
+put_json _ (JSNumber s) = s
+put_json _ (JSString s) = put_string s
 
-serialize' (pretty, depth) (JSArray v) =
+put_json (pretty, depth) (JSArray v) =
   case v of
     [] -> "[]"
-    u  -> "[" ++ br (pretty, deeper) ++
-            ( intercalate ("," ++ br (pretty, deeper)) $
-              map (serialize' (pretty, deeper)) u) ++
-            br (pretty, depth) ++
+    u  -> "[" ++ put_br (pretty, deeper) ++
+            ( intercalate ("," ++ put_br (pretty, deeper)) $
+              map (put_json (pretty, deeper)) u) ++
+            put_br (pretty, depth) ++
             "]"
   where
     deeper = depth + 1
 
-serialize' (pretty, depth) (JSObject v) =
+put_json (pretty, depth) (JSObject v) =
   case v of
     [] -> "{}"
-    u  -> "{" ++ br (pretty, deeper) ++
-            ( intercalate ("," ++ br (pretty, deeper)) $
+    u  -> "{" ++ put_br (pretty, deeper) ++
+            ( intercalate ("," ++ put_br (pretty, deeper)) $
               map (serialize_member) u) ++
-            br (pretty, depth) ++
+            put_br (pretty, depth) ++
             "}"
   where
     deeper = depth + 1
     serialize_member (name, value) =
-      serialize_string name ++ ":" ++ ws' ++ serialize' (pretty, deeper) value
-    ws'
+      put_string name ++ ":" ++ put_ws ++ put_json (pretty, deeper) value
+    put_ws
       | pretty    = "\x0020"
       | otherwise = ""
 
-serialize pretty js = serialize' (pretty, 0) js
+serialize pretty js = put_json (pretty, 0) js
