@@ -14,12 +14,14 @@ type TextParser = BNF.Parser String DiffString
 type TextResult = BNF.Result (DiffString, String)
 
 get_char :: Char -> BNF.Parser String DiffString
-get_char c = BNF.Parser (
-  \ xs -> case xs of
-    []     -> BNF.Miss
-    (y:ys) -> case c == y of
-      True  -> return (difflist [c], ys)
-      False -> BNF.Miss)
+get_char c =
+  BNF.Parser $
+    \ xs ->
+      case xs of
+        []     -> BNF.Miss
+        (y:ys) -> case c == y of
+          True  -> return (difflist [c], ys)
+          False -> BNF.Miss
 
 test_bnf =
   let

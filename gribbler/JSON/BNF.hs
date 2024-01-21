@@ -68,7 +68,7 @@ instance Functor Result
 
 instance Monad (Parser s)
   where
-    return x = Parser (\ s -> Hit (x, s))
+    return x = Parser $ \ s -> Hit (x, s)
     (Parser f') >>= g =
       Parser (\ s -> f' s >>= \ (x, s') -> run_parser (g x) s')
 
@@ -88,37 +88,41 @@ eval_parser f s = run_parser f s >>= return . fst
 exec_parser f s = run_parser f s >>= return . snd
 
 or (Parser f') g =
-  Parser (
-    \ s -> case f' s of
-      Miss -> run_parser g s
-      r    -> r)
+  Parser $
+    \ s ->
+      case f' s of
+        Miss -> run_parser g s
+        r    -> r
 
 and f g =
   f >>= \ x -> g >>= \ x' -> return (x <> x')
 
 err :: String -> Parser s a
-err e = Parser (return $ Error e)
+err e = Parser $ return $ Error e
 
 miss :: Parser s a
-miss = Parser (return $ Miss)
+miss = Parser $ return Miss
 
 rep 1 f = f
 rep n f = f `JSON.BNF.and` rep (n - 1) f
 
 excl f g =
-  Parser (
+  Parser $
     \ s -> run_parser (f >>=
-      \ x -> case run_parser g s of
-        Hit   _ -> miss
-        Miss    -> return x
-        Error e -> err e) s)
+      \ x ->
+        case run_parser g s of
+          Hit   _ -> miss
+          Miss    -> return x
+          Error e -> err e)
+      s
 
 assert e1 (Parser f') =
-  Parser (
-    \ s -> case f' s of
-      Hit   x  -> return x
-      Miss     -> Error e1
-      Error e2 -> Error e2)
+  Parser $
+    \ s ->
+      case f' s of
+        Hit   x  -> return x
+        Miss     -> Error e1
+        Error e2 -> Error e2
 
 null = return mempty
 
