@@ -9,6 +9,7 @@ import qualified JSON.BNF as BNF
 import JSON.BNF.Text
 import JSON
 import Misc.MemUtils
+import qualified Misc.Base64.RFC4648 as Base64
 
 time :: IO t -> IO t
 time a = do
@@ -21,6 +22,8 @@ time a = do
 
 main :: IO ()
 main = do
+  putStrLn $ Base64.encode False $ strBytes "t"
+  putStrLn $ Base64.encode False $ strBytes "Many hands make light work."
   putStrLn $ num2hex1. fromEnum $ '\x01'
   putStrLn $ serialize True $ JSArray [JSString "ab", JSString "cd", JSString "ef", JSArray [JSString "01", JSString "02", JSString "03", JSString "04"]]
   putStrLn $ serialize False $ JSArray [JSString "ab", JSString "cd", JSString "ef", JSArray [JSString "01", JSString "02", JSString "03", JSString "04"]]
