@@ -4,6 +4,8 @@
 
 module Misc.Base64Test(test_base64) where
 
+import Data.Either
+
 import qualified Misc.Base64.RFC4648 as Base64
 import Misc.MemUtils
 import Libtest
@@ -44,4 +46,16 @@ test_base64 =
         expect_memeq "t06_padded"   t06_padded   $ Base64.encode True  t06_plain,
         expect_memeq "t06_unpadded" t06_unpadded $ Base64.encode False t06_plain,
         expect_memeq "t07_encoded"  t07_encoded  $ Base64.encode True  t07_plain,
-        expect_memeq "t07_encoded"  t07_encoded  $ Base64.encode False t07_plain]]
+        expect_memeq "t07_encoded"  t07_encoded  $ Base64.encode False t07_plain],
+      test "DecodeRFC4648" [
+        expect_memeq "t01_plain" (Right t01_plain) $ Base64.decode t01_encoded,
+        expect_memeq "t02_plain" (Right t02_plain) $ Base64.decode t02_padded,
+        expect_memeq "t02_plain" (Right t02_plain) $ Base64.decode t02_unpadded,
+        expect_memeq "t03_plain" (Right t03_plain) $ Base64.decode t03_padded,
+        expect_memeq "t03_plain" (Right t03_plain) $ Base64.decode t03_unpadded,
+        expect_memeq "t04_plain" (Right t04_plain) $ Base64.decode t04_encoded,
+        expect_memeq "t05_plain" (Right t05_plain) $ Base64.decode t05_padded,
+        expect_memeq "t05_plain" (Right t05_plain) $ Base64.decode t05_unpadded,
+        expect_memeq "t06_plain" (Right t06_plain) $ Base64.decode t06_padded,
+        expect_memeq "t06_plain" (Right t06_plain) $ Base64.decode t06_unpadded,
+        expect_memeq "t07_plain" (Right t07_plain) $ Base64.decode t07_encoded]]
