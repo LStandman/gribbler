@@ -22,5 +22,10 @@ alphabet =
 
 pad_char = Just '='
 
-encode is_padded v = Base64.encode alphabet pad_char is_padded v
+encode is_padded v = Base64.encode alphabet p v
+  where
+    p
+      | is_padded = pad_char
+      | otherwise = Nothing
+
 decode v           = Base64.decode alphabet pad_char v
