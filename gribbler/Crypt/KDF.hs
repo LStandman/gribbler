@@ -10,6 +10,7 @@ module Crypt.KDF(
   where
 
 import Data.Bits
+import Data.List
 import Data.Word
 
 infixl 7 `div1`
@@ -47,7 +48,7 @@ pbkdf2 h h_len p p_size s s_size c dk_len =
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
     u1     i = h p p_size (s ++ (split i)) (s_size + 4)
     rehash u =
-      foldl1 (zipWith (xor)) $ take c $
+      foldl1' (zipWith (xor)) $ take c $
       iterate (\ v -> h p p_size v h_len) u
     l        = dk_len `div1` h_len
 

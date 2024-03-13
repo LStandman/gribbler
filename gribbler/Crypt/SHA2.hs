@@ -11,6 +11,7 @@ module Crypt.SHA2(
 
 import Data.Array.Unboxed
 import Data.Bits
+import Data.List
 import Data.Word
 
 type Hash = (Word32, Word32, Word32, Word32, Word32, Word32, Word32, Word32)
@@ -70,15 +71,15 @@ sha256round (h0, h1, h2, h3, h4, h5, h6, h7) (k, w) =
 sha256sched' :: UArray Int Word32 -> Int -> UArray Int Word32
 sha256sched' v n = v//[
     ( i,
-      (lil_sigma1 $ deref (i - 2)) + deref (i - 7) +
-      (lil_sigma0 $ deref (i - 15)) + deref (i - 16))
+      (lil_sigma1 (deref (i - 2)) + deref (i - 7)) +
+      (lil_sigma0 (deref (i - 15)) + deref i))
     | i <- [n, n + 1]]
   where
     deref j = v!(j `mod` size_block)
 
 sha256sched :: [Word32] -> [Word32]
 sha256sched v =
-  elems $ foldl (sha256sched') (listArray (0, size_block - 1) v) [0, 2..14]
+  elems $ foldl' (sha256sched') (listArray (0, size_block - 1) v) [0, 2..14]
 
 sha256block :: Hash -> [(Word32, Word32)] -> Hash
 sha256block h v = (
@@ -86,7 +87,7 @@ sha256block h v = (
     h4 + h4', h5 + h5', h6 + h6', h7 + h7')
   where
     (h0,  h1,  h2,  h3,  h4,  h5,  h6,  h7)  = h
-    (h0', h1', h2', h3', h4', h5', h6', h7') = foldl (sha256round) h v
+    (h0', h1', h2', h3', h4', h5', h6', h7') = foldl' (sha256round) h v
 
 sha256sum' :: Hash -> [Word32] -> Hash
 sha256sum' h [] = h
@@ -122,7 +123,7 @@ to_list (h0, h1, h2, h3, h4, h5, h6, h7) =
 
 from_list :: [Word8] -> [Word32]
 from_list [] = []
-from_list m = foldl (f) 0 m1 : from_list m2
+from_list m = foldl' (f) 0 m1 : from_list m2
   where
     f a b    = (a `shiftL` 8) .|. fromIntegral b
     (m1, m2) = splitAt 4 m

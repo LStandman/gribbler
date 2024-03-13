@@ -11,6 +11,7 @@ module Crypt.AES256(
 
 import Data.Array.Unboxed
 import Data.Bits
+import Data.List
 import Data.Word
 import GHC.Stack
 
@@ -230,7 +231,7 @@ cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
       add_round_key (mix_columns . shift_rows . sub_bytes $ p) k
     (key15, schedule) = schedule_helper (key1, key2)
     ptext'            = add_round_key ptext key1
-    ptext''           = foldl (f) ptext' schedule
+    ptext''           = foldl' (f) ptext' schedule
 
 inv_cipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
 inv_cipher ctext key1 key2 =

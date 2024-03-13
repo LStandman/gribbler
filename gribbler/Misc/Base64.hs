@@ -45,10 +45,10 @@ encode_last alphabet pad_char v =
 encode alphabet pad_char v =
   case splitAt 3 v of
     ([], []) -> ""
-    (u,  []) ->
-      encode_last alphabet pad_char u
-    (u,  v') ->
-      encode_chunk alphabet u ++ encode alphabet pad_char v'
+    (v1, []) ->
+      encode_last alphabet pad_char v1
+    (v1, v2) ->
+      encode_chunk alphabet v1 ++ encode alphabet pad_char v2
 
 alphaIndex :: [Char] -> Char -> Either String Word8
 alphaIndex alphabet' c =
@@ -84,10 +84,10 @@ decode' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
 decode' alphabet' zero_char pad_char v =
   case splitAt 4 v of
     ([], []) -> Right []
-    (u,  []) -> decode_last' alphabet' zero_char pad_char u
-    (u,  v') ->
-      decode_chunk alphabet' u >>= \ xs ->
-        decode' alphabet' zero_char pad_char v' >>= \ ys ->
+    (v1, []) -> decode_last' alphabet' zero_char pad_char v1
+    (v1, v2) ->
+      decode_chunk alphabet' v1 >>= \ xs ->
+        decode' alphabet' zero_char pad_char v2 >>= \ ys ->
           return (xs ++ ys)
 
 decode alphabet pad_char v = decode' (elems alphabet) (alphabet!0) pad_char v

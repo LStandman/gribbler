@@ -25,7 +25,7 @@ hexes = ['0'..'9'] ++ ['A'..'F']
 hexChar c = elemIndex (toUpper c) (hexes)
 
 hex2num [] = Nothing
-hex2num s  = mapM (hexChar) s >>= Just . foldl (\ a b -> a * 16 + b) 0
+hex2num s  = mapM (hexChar) s >>= Just . foldl' (\ a b -> a * 16 + b) 0
 
 num2hex 0 n =
   case n `quotRem` 16 of
