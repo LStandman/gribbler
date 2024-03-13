@@ -54,7 +54,7 @@ alphaIndex :: [Char] -> Char -> Either String Word8
 alphaIndex alphabet' c =
   case elemIndex c alphabet' of
     Just i  -> Right . fromIntegral $ i
-    Nothing -> Left $ "Character not in alphabet (or out of place padding)" ++ show c
+    Nothing -> Left ("Character not in alphabet (or out of place padding) " ++ show c)
 
 decode_chunk' :: [Char] -> (Char, Char, Char, Char) -> Either String (Word8, Word8, Word8)
 decode_chunk' alphabet' (x1, x2, x3, x4) =
@@ -72,8 +72,11 @@ decode_chunk alphabet' (x1:x2:x3:x4:_) =
   fmap (\ (a, b, c) -> [a, b, c]) $ decode_chunk' alphabet' (x1, x2, x3, x4)
 
 decode_last' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
-decode_last' alphabet' zero_char pad_char v =
-  decode_chunk alphabet' (v' ++ repeat zero_char) >>= return . (take (n - 1))
+decode_last' alphabet' zero_char pad_char v
+  | n>=2      =
+      decode_chunk alphabet' (v' ++ repeat zero_char) >>=
+        return . (take (n - 1))
+  | otherwise = Left ("Bad last chunk length after discarding pad. " ++ show n)
   where
     v' = case pad_char of
            Just p  -> dropWhileEnd (p ==) v
