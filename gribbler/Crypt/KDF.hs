@@ -19,16 +19,16 @@ type Prf   = [Word8] -> Int -> [Word8] -> Int -> [Word8]
 type Hashf = [Word8] -> Int -> [Word8]
 
 hmac    ::
-  [Word8] -> Int -> [Word8] -> Int -> Hashf -> Int -> Int -> [Word8]
+  Hashf -> Int -> Int -> [Word8] -> Int -> [Word8] -> Int -> [Word8]
 hmac1   ::
-  [Word8] -> [Word8] -> Hashf -> Int -> Int -> [Word8]
+  Hashf -> Int -> Int -> [Word8] -> [Word8] -> [Word8]
 pbkdf2  :: Prf -> Int -> [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
 pbkdf2' :: Prf -> Int -> [Word8] -> [Word8] -> Int -> Int -> [Word8]
 
 div1 :: Integral a => a -> a -> a
 a `div1` b = (a + b - 1) `div` b
 
-hmac k k_size text text_size h b l = ohash
+hmac h b l k k_size text text_size = ohash
   where
     (k', k_size')
       | k_size > b  = (h k k_size, l)
@@ -39,7 +39,7 @@ hmac k k_size text text_size h b l = ohash
     ihash = h (zipWith (xor) k'' ipad ++ text) (b + text_size)
     ohash = h (zipWith (xor) k'' opad ++ ihash) (b + l)
 
-hmac1 k text h b l = hmac k (length k) text (length text) (h) b l
+hmac1 h b l k text = hmac (h) b l k (length k) text (length text)
 
 pbkdf2 h h_len p p_size s s_size c dk_len =
   take dk_len $ concatMap (rehash . u1) [1..l]

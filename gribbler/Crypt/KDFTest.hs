@@ -15,8 +15,8 @@ import Misc.MemUtils
 test_hmac_sha256 =
   let
     hmac_sha256 key ksize ptext psize =
-      KDF.hmac key ksize ptext psize
-      SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
+      KDF.hmac SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
+        key ksize ptext psize
     --  From draft-ietf-ipsec-ciph-sha-256-01.txt
     t01_key    = [
       0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -216,8 +216,10 @@ test_pbkdf2_hmac_sha256 =
     pbkdf2_hmac_sha256 pass psize salt ssize c dk_len =
       KDF.pbkdf2 prf SHA2.sha256_size_digest pass psize salt ssize c dk_len
       where
-        prf k k_size text text_size = KDF.hmac k k_size text text_size
-          SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
+        prf k k_size text text_size =
+          KDF.hmac
+            SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
+            k k_size text text_size
     --  From RFC 7914.
     t1_pass    = strBytes "passwd"
     t1_psize   = 6
