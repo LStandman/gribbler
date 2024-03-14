@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Crypt/KDF.hs: KDF module
--- Copyright (C) 2021-2023 LStandman
+-- Copyright (C) 2021-2024 LStandman
 
 module Crypt.KDF(
     hmac,
@@ -36,8 +36,8 @@ hmac k k_size text text_size h b l = ohash
     k''   = k' ++ (take (b - k_size') $ repeat 0)
     ipad  = take b $ repeat 0x36
     opad  = take b $ repeat 0x5C
-    ihash = h ((zipWith (xor) k'' ipad) ++ text) (b + text_size)
-    ohash = h ((zipWith (xor) k'' opad) ++ ihash) (b + l)
+    ihash = h (zipWith (xor) k'' ipad ++ text) (b + text_size)
+    ohash = h (zipWith (xor) k'' opad ++ ihash) (b + l)
 
 hmac1 k text h b l = hmac k (length k) text (length text) (h) b l
 
@@ -46,7 +46,7 @@ pbkdf2 h h_len p p_size s s_size c dk_len =
   where
     split  n = map (fromIntegral) [
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
-    u1     i = h p p_size (s ++ (split i)) (s_size + 4)
+    u1     i = h p p_size (s ++ split i) (s_size + 4)
     rehash u =
       foldl1' (zipWith (xor)) $ take c $
       iterate (\ v -> h p p_size v h_len) u

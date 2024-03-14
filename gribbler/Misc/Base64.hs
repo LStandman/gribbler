@@ -34,13 +34,11 @@ encode_last :: Alphabet -> Maybe Char -> [Word8] -> String
 encode_last alphabet pad_char v =
   -- Only take the _N+1_ chars that encode _N_ bytes of data.
   -- And up to 4 chars total, including padding.
-  take 4 $ (take (n + 1) $ encode_chunk alphabet (v ++ repeat 0)) ++ padding
+  take 4
+    ((take (n + 1) $
+      encode_chunk alphabet (v ++ repeat 0)) ++ maybe "" (repeat) pad_char)
   where
-    n       = length v
-    padding =
-      case pad_char of
-        Just p  -> repeat p
-        Nothing -> ""
+    n = length v
 
 encode alphabet pad_char v =
   case splitAt 3 v of
@@ -54,7 +52,7 @@ alphaIndex :: [Char] -> Char -> Either String Word8
 alphaIndex alphabet' c =
   case elemIndex c alphabet' of
     Just i  -> Right . fromIntegral $ i
-    Nothing -> Left ("Character not in alphabet (or out of place padding) " ++ show c)
+    Nothing -> Left ("Encoding character is not in alphabet " ++ show c)
 
 decode_chunk' :: [Char] -> (Char, Char, Char, Char) -> Either String (Word8, Word8, Word8)
 decode_chunk' alphabet' (x1, x2, x3, x4) =
@@ -73,14 +71,12 @@ decode_chunk alphabet' (x1:x2:x3:x4:_) =
 
 decode_last' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
 decode_last' alphabet' zero_char pad_char v
-  | n>=2      =
+  | n >= 2    =
       decode_chunk alphabet' (v' ++ repeat zero_char) >>=
         return . (take (n - 1))
   | otherwise = Left ("Bad last chunk length after discarding pad. " ++ show n)
   where
-    v' = case pad_char of
-           Just p  -> dropWhileEnd (p ==) v
-           Nothing -> v
+    v' = maybe v (\ c -> dropWhileEnd (c ==) v) pad_char
     n  = length v'
 
 decode' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]

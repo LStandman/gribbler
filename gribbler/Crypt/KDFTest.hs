@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Crypt/KDFTest.hs: Unit tests for KDF
--- Copyright (C) 2021-2023 LStandman
+-- Copyright (C) 2021-2024 LStandman
 
 module Crypt.KDFTest(
     test_hmac_sha256,
@@ -51,9 +51,9 @@ test_hmac_sha256 =
       0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18,
       0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F, 0x20]
     t03_ksize  = 32
-    t03_ptext  = strBytes $
+    t03_ptext  = strBytes (
       "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq" ++
-      "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+      "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")
     t03_psize  = 112
     t03_digest = [
       0x47, 0x03, 0x05, 0xFC, 0x7E, 0x40, 0xFE, 0x34,
@@ -169,9 +169,9 @@ test_hmac_sha256 =
       0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
       0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA]
     t10_ksize  = 80
-    t10_ptext  = strBytes $
+    t10_ptext  = strBytes (
       "Test Using Larger Than Block-Size Key and Larger Than " ++
-      "One Block-Size Data"
+      "One Block-Size Data")
     t10_psize  = 73
     t10_digest = [
       0x63, 0x55, 0xAC, 0x22, 0xE8, 0x90, 0xD0, 0xA3,
@@ -250,8 +250,8 @@ test_pbkdf2_hmac_sha256 =
       0x6A, 0x27, 0x2B, 0xDE, 0xBB, 0xA1, 0xD0, 0x78,
       0x47, 0x8F, 0x62, 0xB3, 0x97, 0xF3, 0x3C, 0x8D]
     -- From cryptsetup.
-    t3_pass    = strBytes $ "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ++
-      "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    t3_pass    = strBytes ("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" ++
+      "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
     t3_psize   = 65
     t3_salt    = strBytes "pass phrase exceeds block size"
     t3_ssize   = 30

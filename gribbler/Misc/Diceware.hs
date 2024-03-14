@@ -47,14 +47,14 @@ encode dictionary digits number =
 is_sanitized' :: String -> Either String ()
 is_sanitized' s
     | isNothing $ (find (not . \ c -> isLower c || c == '-')) s = Right ()
-    | otherwise = Left $ "Word " ++ show s ++ " " ++
-        "is not exclusively lowercase alphabet and dashes!"
+    | otherwise = Left ("Word " ++ show s ++ " " ++
+        "is not exclusively lowercase alphabet and dashes!")
 
 is_sanitized [] = Right ()
 is_sanitized (x:xs) =
     is_sanitized' x >>= return e >> is_sanitized xs
   where
     e = case find (<= x) xs of
-      Just y  -> Left $ "Word " ++ show x ++ " " ++
-        "is either not sorted or not unique (compare to " ++ show y ++ ")!"
+      Just y  -> Left ("Word " ++ show x ++ " " ++
+        "is either not sorted or not unique (compare to " ++ show y ++ ")!")
       Nothing -> Right ()

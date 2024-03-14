@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Crypt/SHA2.hs: SHA2 module
--- Copyright (C) 2021-2023 LStandman
+-- Copyright (C) 2021-2024 LStandman
 
 module Crypt.SHA2(
     sha256_size_block,
@@ -69,17 +69,17 @@ sha256round (h0, h1, h2, h3, h4, h5, h6, h7) (k, w) =
     a' = t1 + t2
 
 sha256sched' :: UArray Int Word32 -> Int -> UArray Int Word32
-sha256sched' v n = v//[
-    ( i,
-      (lil_sigma1 (deref (i - 2)) + deref (i - 7)) +
-      (lil_sigma0 (deref (i - 15)) + deref i))
-    | i <- [n, n + 1]]
+sha256sched' v i = v//[
+    ( j,
+      (lil_sigma1 $ deref (j - 2)) + deref (j - 7) +
+      (lil_sigma0 $ deref (j - 15)) + deref j)
+    | j <- [i, i + 1]]
   where
-    deref j = v!(j `mod` size_block)
+    deref k = v!(k `mod` size_block)
 
-sha256sched :: [Word32] -> [Word32]
+sha256sched :: UArray Int Word32 -> UArray Int Word32
 sha256sched v =
-  elems $ foldl' (sha256sched') (listArray (0, size_block - 1) v) [0, 2..14]
+  foldl' (sha256sched') v [0, 2..14]
 
 sha256block :: Hash -> [(Word32, Word32)] -> Hash
 sha256block h v = (
@@ -91,7 +91,7 @@ sha256block h v = (
 
 sha256sum' :: Hash -> [Word32] -> Hash
 sha256sum' h [] = h
-sha256sum' h m = sha256sum' h' m2
+sha256sum' h m  = sha256sum' h' m2
   where
     k        = [
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -111,7 +111,7 @@ sha256sum' h m = sha256sum' h' m2
       0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
       0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2]
     (m1, m2) = splitAt size_block m
-    w        = concat $ take 4 $ iterate (sha256sched) m1
+    w        = concatMap (elems) $ take 4 $ iterate (sha256sched) $ listArray (0, size_block - 1) m1
     h'       = sha256block h $ zip k w
 
 to_list :: Hash -> [Word8]
@@ -123,7 +123,7 @@ to_list (h0, h1, h2, h3, h4, h5, h6, h7) =
 
 from_list :: [Word8] -> [Word32]
 from_list [] = []
-from_list m = foldl' (f) 0 m1 : from_list m2
+from_list m  = foldl' (f) 0 m1 : from_list m2
   where
     f a b    = (a `shiftL` 8) .|. fromIntegral b
     (m1, m2) = splitAt 4 m
@@ -137,6 +137,6 @@ sha256sum m l = to_list $ sha256sum' h $ from_list m'
       0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
       0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19)
     n       = (sha256_size_block - 8 - (l + 1)) `mod` sha256_size_block
-    m'      = m ++ [0x80] ++ (take n $ repeat 0) ++ (split $ l * 8)
+    m'      = m ++ [0x80] ++ (take n $ repeat 0) ++ split (l * 8)
 
 sha256sum1 m = sha256sum m (length m)

@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Crypt/SHA2Test.hs: Unit tests for SHA2
--- Copyright (C) 2021-2023 LStandman
+-- Copyright (C) 2021-2024 LStandman
 
 module Crypt.SHA2Test(test_sha256) where
 
@@ -33,8 +33,8 @@ test_sha256 =
       0xE5, 0xC0, 0x26, 0x93, 0x0C, 0x3E, 0x60, 0x39,
       0xA3, 0x3C, 0xE4, 0x59, 0x64, 0xFF, 0x21, 0x67,
       0xF6, 0xEC, 0xED, 0xD4, 0x19, 0xDB, 0x06, 0xC1]
-    t4_message = strBytes $ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" ++
-      "abcdefghijklmnopqrstuvwxyz0123456789+-"
+    t4_message = strBytes ("ABCDEFGHIJKLMNOPQRSTUVWXYZ" ++
+      "abcdefghijklmnopqrstuvwxyz0123456789+-")
     t4_size    = 64
     t4_digest  = [
       0xB5, 0xFE, 0xAD, 0x56, 0x7D, 0xFF, 0xCB, 0xA4,

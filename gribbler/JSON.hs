@@ -206,7 +206,7 @@ put_string s =
       f c
         | is_printable c = [c]
         | c < '\x0020'   = "\\u" ++ (num2hex 4 . fromEnum $ c)
-        | otherwise      = error $ "Unsupported character " ++ show c
+        | otherwise      = error ("Unsupported character " ++ show c)
 
 put_json :: HasCallStack => (Bool, Int) -> JSValue -> String
 put_json _ JSNull       = "null"
