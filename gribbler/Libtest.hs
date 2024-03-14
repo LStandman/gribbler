@@ -13,6 +13,8 @@ module Libtest(
   where
 
 import Data.Array
+import System.CPUTime
+import Text.Printf
 
 type Matcher a = a -> IO Bool
 
@@ -33,20 +35,22 @@ test' (e:es) =
   e >>= \ x -> if not x then return False else test' es
 
 test name es =
-  print ("[ RUN      ] " ++ name) >>
-    test' es >>=
-      \ x ->
-        print ((if not x then "[  FAILED  ] " else "[       OK ] ") ++ name) >>
-          return x
+  printf "[ RUN      ] %s\n" name >>
+    getCPUTime >>= \ start ->
+      test' es >>= \ x ->
+        getCPUTime >>= \ end ->
+          printf "%s %s\n" (if not x then "[  FAILED  ]" else "[       OK ]") name >>
+            printf "[       ** ] time: %0.1fms\n" ((fromIntegral (end - start)) / (10^9) :: Double) >>
+              return x
 
 testsuite' :: [IO Bool] -> IO Bool
 testsuite' [] = return True
 testsuite' (t:ts) = t >>= \ x -> testsuite' ts >>= \ y -> return (x && y)
 
 testsuite name tests =
-  print ("[----------] tests from " ++ name) >>
+  printf "[----------] tests from %s\n" name >>
     testsuite' tests >>=
-      \ x -> print "[----------]" >> return x
+      \ x -> printf "[----------]\n" >> return x
 
 expect_that matcher = matcher
 
