@@ -213,13 +213,6 @@ test_hmac_sha256 =
 
 test_pbkdf2_hmac_sha256 =
   let
-    pbkdf2_hmac_sha256 pass psize salt ssize c dk_len =
-      KDF.pbkdf2 prf SHA2.sha256_size_digest pass psize salt ssize c dk_len
-      where
-        prf k k_size text text_size =
-          KDF.hmac
-            SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
-            k k_size text text_size
     --  From RFC 7914.
     t1_pass    = strBytes "passwd"
     t1_psize   = 6
@@ -268,10 +261,10 @@ test_pbkdf2_hmac_sha256 =
     testsuite "PBKDF2xHMACxSHA256" [
       test "RFC7914x00001" [
         expect_memeq "t1_derived" t1_derived $
-          pbkdf2_hmac_sha256 t1_pass t1_psize t1_salt t1_ssize t1_c t1_dk_len],
+          KDF.pbkdf2_hmac_sha256 t1_pass t1_psize t1_salt t1_ssize t1_c t1_dk_len],
       test "RFC7914x80000" [
         expect_memeq "t2_derived" t2_derived $
-          pbkdf2_hmac_sha256 t2_pass t2_psize t2_salt t2_ssize t2_c t2_dk_len],
+          KDF.pbkdf2_hmac_sha256 t2_pass t2_psize t2_salt t2_ssize t2_c t2_dk_len],
       test "Cryptsetup01200" [
         expect_memeq "t3_derived" t3_derived $
-          pbkdf2_hmac_sha256 t3_pass t3_psize t3_salt t3_ssize t3_c t3_dk_len]]
+          KDF.pbkdf2_hmac_sha256 t3_pass t3_psize t3_salt t3_ssize t3_c t3_dk_len]]
