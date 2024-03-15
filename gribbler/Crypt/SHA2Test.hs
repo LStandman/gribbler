@@ -4,6 +4,9 @@
 
 module Crypt.SHA2Test(test_sha256) where
 
+import Data.List
+import Data.Word
+--
 import qualified Crypt.SHA2 as SHA2
 import Libtest
 import Misc.MemUtils
@@ -176,6 +179,13 @@ test_sha256 =
       0x32, 0x32, 0x17, 0xCC, 0xD4, 0x6A, 0x71, 0xA9,
       0xF3, 0xED, 0x50, 0x10, 0x64, 0x8E, 0x06, 0xBE,
       0x9B, 0x4A, 0xA6, 0xBB, 0x05, 0x89, 0x59, 0x51]
+    t6_message = t4_message
+    t6_size    = t4_size
+    t6_digest  = [
+      0x6F, 0x25, 0xFE, 0x68, 0x2F, 0xCC, 0x59, 0xE4,
+      0x67, 0x72, 0x22, 0x85, 0x14, 0xA1, 0xEA, 0xFC,
+      0x5A, 0xA7, 0xCC, 0xC1, 0x19, 0x44, 0x81, 0xB9,
+      0x33, 0x89, 0x99, 0xE3, 0xBB, 0x62, 0x99, 0x03]
   in
     testsuite "SHA256" [
       test "NIST0000" [
@@ -187,4 +197,6 @@ test_sha256 =
       test "NIST0064" [
         expect_memeq "t4_digest" t4_digest $ SHA2.sha256sum t4_message t4_size],
       test "NIST1023" [
-        expect_memeq "t5_digest" t5_digest $ SHA2.sha256sum t5_message t5_size]]
+        expect_memeq "t5_digest" t5_digest $ SHA2.sha256sum t5_message t5_size],
+      test "Rep160000" [
+        expect_memeq "t6_digest" t6_digest $ foldl' (\ m _ -> SHA2.sha256sum m SHA2.sha256_size_digest) (SHA2.sha256sum t6_message t6_size) [2..160000]]]

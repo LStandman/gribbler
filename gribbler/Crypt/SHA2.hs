@@ -44,8 +44,8 @@ lil_sigma0 x = (x `rotateR` 7) `xor` (x `rotateR` 18) `xor` (x `shiftR` 3)
 lil_sigma1 :: Word32 -> Word32
 lil_sigma1 x = (x `rotateR` 17) `xor` (x `rotateR` 19) `xor` (x `shiftR` 10)
 
-sha256round :: Hash -> (Word32, Word32) -> Hash
-sha256round (h0, h1, h2, h3, h4, h5, h6, h7) (k, w) =
+sha256round :: Hash -> Word32 -> Hash
+sha256round (h0, h1, h2, h3, h4, h5, h6, h7) x =
   (a', b', c', d', e', f', g', h')
   where
     a  = h0
@@ -57,7 +57,7 @@ sha256round (h0, h1, h2, h3, h4, h5, h6, h7) (k, w) =
     g  = h6
     h  = h7
     --
-    t1 = h + (big_sigma1 e) + (ch e f g) + k + w
+    t1 = h + (big_sigma1 e) + (ch e f g) + x
     t2 = (big_sigma0 a) + (maj a b c)
     h' = g
     g' = f
@@ -81,7 +81,7 @@ sha256sched :: UArray Int Word32 -> UArray Int Word32
 sha256sched v =
   foldl' (sha256sched') v [0, 2..14]
 
-sha256block :: Hash -> [(Word32, Word32)] -> Hash
+sha256block :: Hash -> [Word32] -> Hash
 sha256block h v = (
     h0 + h0', h1 + h1', h2 + h2', h3 + h3',
     h4 + h4', h5 + h5', h6 + h6', h7 + h7')
@@ -112,7 +112,7 @@ sha256sum' h m  = sha256sum' h' m2
       0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2]
     (m1, m2) = splitAt size_block m
     w        = concatMap (elems) $ take 4 $ iterate (sha256sched) $ listArray (0, size_block - 1) m1
-    h'       = sha256block h $ zip k w
+    h'       = sha256block h $! zipWith (+) k w
 
 to_list :: Hash -> [Word8]
 to_list (h0, h1, h2, h3, h4, h5, h6, h7) =

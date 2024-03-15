@@ -65,9 +65,9 @@ pbkdf2 h h_len p p_size s s_size c dk_len =
     split  n = map (fromIntegral) [
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
     u1     i = h p p_size (s ++ split i) (s_size + 4)
-    rehash u =
-      foldl1' (zipWith (xor)) $ take c $
-      iterate (\ v -> h p p_size v h_len) u
+    rehash' 1 u = u
+    rehash' n u = case h p p_size u h_len of u' -> (zipWith (xor)) u $ rehash' (n - 1) u'
+    rehash u = rehash' c u
     l        = dk_len `div1` h_len
 
 pbkdf2_hmac h b l p p_size s s_size c dk_len =

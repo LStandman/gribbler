@@ -33,6 +33,10 @@ executables:
     ghc-options:
     - -threaded
     - -rtsopts
+    - -O2
+    - -funfolding-use-threshold=16
+    - -optc-O3
+    - -optc-ffast-math
     - -with-rtsopts=-N
     dependencies:
     - gribbler
@@ -43,6 +47,10 @@ tests:
     ghc-options:
     - -threaded
     - -rtsopts
+    - -O2
+    - -funfolding-use-threshold=16
+    - -optc-O3
+    - -optc-ffast-math
     - -with-rtsopts=-N
     dependencies:
     - gribbler

@@ -74,7 +74,7 @@ executable gribbler-exe
       Paths_gribbler
   autogen-modules:
       Paths_gribbler
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -O2 -funfolding-use-threshold=16 -optc-O3 -optc-ffast-math -with-rtsopts=-N
   build-depends:
       array
     , base >=4.7 && <5
@@ -88,7 +88,7 @@ test-suite gribbler-test
       Paths_gribbler
   autogen-modules:
       Paths_gribbler
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -O2 -funfolding-use-threshold=16 -optc-O3 -optc-ffast-math -with-rtsopts=-N
   build-depends:
       array
     , base >=4.7 && <5
