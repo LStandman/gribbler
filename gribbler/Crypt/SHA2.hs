@@ -89,9 +89,16 @@ sha256block h v = (
     (h0,  h1,  h2,  h3,  h4,  h5,  h6,  h7)  = h
     (h0', h1', h2', h3', h4', h5', h6', h7') = foldl' (sha256round) h v
 
-sha256sum' :: Hash -> [Word32] -> Hash
-sha256sum' h [] = h
-sha256sum' h m  = sha256sum' h' m2
+from_list :: [Word8] -> [Word32]
+from_list [] = []
+from_list m  = foldl' (f) 0 m1 : from_list m2
+  where
+    f a b    = (a `shiftL` 8) .|. fromIntegral b
+    (m1, m2) = splitAt 4 m
+
+
+sha256sum'' :: Hash -> [Word8] -> Hash
+sha256sum'' h m = h'
   where
     k        = [
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -110,9 +117,24 @@ sha256sum' h m  = sha256sum' h' m2
       0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
       0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
       0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2]
-    (m1, m2) = splitAt size_block m
-    w        = concatMap (elems) $ take 4 $ iterate (sha256sched) $ listArray (0, size_block - 1) m1
+    w        = concatMap (elems) $ take 4 $ iterate (sha256sched) $ listArray (0, size_block - 1) $ from_list m
     h'       = sha256block h $! zipWith (+) k w
+
+
+sha256sum' :: Hash -> [Word8] -> Int -> Hash
+sha256sum' h m l =
+  case splitAt sha256_size_block m of
+    (m1, []) ->
+      case splitAt sha256_size_block
+        (m1 ++ [0x80] ++ (take n $ repeat 0) ++ split (l * 8)) of
+          (n1, []) -> sha256sum'' h n1
+          (n1, n2) -> sha256sum'' (sha256sum'' h n1) n2
+    (m1, m2) -> sha256sum' (sha256sum'' h m1) m2 l
+  where
+    split n = map (fromIntegral) [
+      n `shiftR` 56, n `shiftR` 48, n `shiftR` 40, n `shiftR` 32,
+      n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
+    n       = (sha256_size_block - 8 - (l + 1)) `mod` sha256_size_block
 
 to_list :: Hash -> [Word8]
 to_list (h0, h1, h2, h3, h4, h5, h6, h7) =
@@ -121,22 +143,10 @@ to_list (h0, h1, h2, h3, h4, h5, h6, h7) =
     split n = map (fromIntegral)
       [n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
 
-from_list :: [Word8] -> [Word32]
-from_list [] = []
-from_list m  = foldl' (f) 0 m1 : from_list m2
+sha256sum m l = to_list $ sha256sum' h m l
   where
-    f a b    = (a `shiftL` 8) .|. fromIntegral b
-    (m1, m2) = splitAt 4 m
-
-sha256sum m l = to_list $ sha256sum' h $ from_list m'
-  where
-    split n = map (fromIntegral) [
-      n `shiftR` 56, n `shiftR` 48, n `shiftR` 40, n `shiftR` 32,
-      n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
-    h       = (
+    h = (
       0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
       0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19)
-    n       = (sha256_size_block - 8 - (l + 1)) `mod` sha256_size_block
-    m'      = m ++ [0x80] ++ (take n $ repeat 0) ++ split (l * 8)
 
 sha256sum1 m = sha256sum m (length m)
