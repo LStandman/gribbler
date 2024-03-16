@@ -75,7 +75,7 @@ sha256round v x = w
 sha256sched' :: UArray Int Word32 -> Int -> UArray Int Word32
 sha256sched' v i = v//[
     ( j,
-      (lil_sigma1 $ deref (j - 2)) + deref (j - 7) +
+      (lil_sigma1 $ deref (j - 2))  + deref (j - 7) +
       (lil_sigma0 $ deref (j - 15)) + deref j)
     | j <- [i, i + 1]]
   where

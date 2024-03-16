@@ -44,10 +44,8 @@ hmac_sha256_prehash k k_size = (ihash, ohash)
       | k_size > sha256_size_block = sha256sum k k_size
       | otherwise                  = k
     k''   = take sha256_size_block $ k' ++ repeat 0
-    ipad  = take sha256_size_block $ repeat 0x36
-    opad  = take sha256_size_block $ repeat 0x5C
-    ikey = zipWith (xor) k'' ipad
-    okey = zipWith (xor) k'' opad
+    ikey = fmap (xor 0x36) k''
+    okey = fmap (xor 0x5C) k''
     ihash = int_sha256once int_sha256hash0 ikey
     ohash = int_sha256once int_sha256hash0 okey
 
@@ -63,7 +61,7 @@ pbkdf2 h h_len s s_size c dk_len =
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
     u1     i = h (s ++ split i) (s_size + 4)
     rehash' 1 u = u
-    rehash' n u = case h u h_len of u' -> (zipWith (xor)) u $ rehash' (n - 1) u'
+    rehash' n u = zipWith (xor) u $ rehash' (n - 1) $ h u h_len
     rehash u = rehash' c u
     l        = dk_len `div1` h_len
 
