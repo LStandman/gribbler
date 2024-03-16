@@ -14,9 +14,6 @@ import Misc.MemUtils
 
 test_hmac_sha256 =
   let
-    hmac_sha256 key ksize ptext psize =
-      KDF.hmac SHA2.sha256sum SHA2.sha256_size_block SHA2.sha256_size_digest
-        key ksize ptext psize
     --  From draft-ietf-ipsec-ciph-sha-256-01.txt
     t01_key    = [
       0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -182,34 +179,34 @@ test_hmac_sha256 =
     testsuite "HMACxSHA256" [
       test "IETFDraft003" [
         expect_memeq "t01_digest" t01_digest $
-          hmac_sha256 t01_key t01_ksize t01_ptext t01_psize],
+          KDF.hmac_sha256 t01_key t01_ksize t01_ptext t01_psize],
       test "IETFDraft056" [
         expect_memeq "t02_digest" t02_digest $
-          hmac_sha256 t02_key t02_ksize t02_ptext t02_psize],
+          KDF.hmac_sha256 t02_key t02_ksize t02_ptext t02_psize],
       test "IETFDraft112" [
         expect_memeq "t03_digest" t03_digest $
-          hmac_sha256 t03_key t03_ksize t03_ptext t03_psize],
+          KDF.hmac_sha256 t03_key t03_ksize t03_ptext t03_psize],
       test "IETFDraft008" [
         expect_memeq "t04_digest" t04_digest $
-          hmac_sha256 t04_key t04_ksize t04_ptext t04_psize],
+          KDF.hmac_sha256 t04_key t04_ksize t04_ptext t04_psize],
       test "IETFDraft028" [
         expect_memeq "t05_digest" t05_digest $
-          hmac_sha256 t05_key t05_ksize t05_ptext t05_psize],
+          KDF.hmac_sha256 t05_key t05_ksize t05_ptext t05_psize],
       test "IETFDraft050x32" [
         expect_memeq "t06_digest" t06_digest $
-          hmac_sha256 t06_key t06_ksize t06_ptext t06_psize],
+          KDF.hmac_sha256 t06_key t06_ksize t06_ptext t06_psize],
       test "IETFDraft050x37" [
         expect_memeq "t07_digest" t07_digest $
-          hmac_sha256 t07_key t07_ksize t07_ptext t07_psize],
+          KDF.hmac_sha256 t07_key t07_ksize t07_ptext t07_psize],
       test "IETFDraft020" [
         expect_memeq "t08_digest" t08_digest $
-          hmac_sha256 t08_key t08_ksize t08_ptext t08_psize],
+          KDF.hmac_sha256 t08_key t08_ksize t08_ptext t08_psize],
       test "IETFDraft054" [
         expect_memeq "t09_digest" t09_digest $
-          hmac_sha256 t09_key t09_ksize t09_ptext t09_psize],
+          KDF.hmac_sha256 t09_key t09_ksize t09_ptext t09_psize],
       test "IETFDraft073" [
         expect_memeq "t10_digest" t10_digest $
-          hmac_sha256 t10_key t10_ksize t10_ptext t10_psize]]
+          KDF.hmac_sha256 t10_key t10_ksize t10_ptext t10_psize]]
 
 test_pbkdf2_hmac_sha256 =
   let
