@@ -10,6 +10,7 @@ module Crypt.KDF(
     pbkdf2_hmac_sha256')
   where
 
+import Data.Array.Unboxed
 import Data.Bits
 import Data.List
 import Data.Word
@@ -18,7 +19,7 @@ import Crypt.SHA2
 
 infixl 7 `div1`
 
-type Prf = [Word8] -> Int -> [Word8]
+type Prf = [Word8] -> Int -> Hash
 
 hmac_sha256         :: [Word8] -> Int -> [Word8] -> Int -> [Word8]
 hmac_sha256'        :: [Word8] -> [Word8] -> [Word8]
@@ -31,11 +32,15 @@ pbkdf2_hmac_sha256' ::
 div1 :: Integral a => a -> a -> a
 a `div1` b = (a + b - 1) `div` b
 
-int_hmac_sha256 :: (Hash, Hash) -> [Word8] -> Int -> [Word8]
+int_hmac_sha256 :: (Hash, Hash) -> [Word8] -> Int -> Hash
 int_hmac_sha256 (ihash, ohash) text text_size = ohash'
   where
-    ihash' = int_sha256sum ihash (text)   (sha256_size_block + text_size)
-    ohash' = int_sha256sum ohash (ihash') (sha256_size_block + sha256_size_digest)
+    ihash' = int_sha256sum ihash text (sha256_size_block + text_size)
+    ohash' =
+      int_sha256sum
+        ohash
+        (int_sha256toList ihash')
+        (sha256_size_block + sha256_size_digest)
 
 hmac_sha256_prehash :: [Word8] -> Int -> (Hash, Hash)
 hmac_sha256_prehash k k_size = (ihash, ohash)
@@ -50,18 +55,22 @@ hmac_sha256_prehash k k_size = (ihash, ohash)
     ohash = int_sha256once int_sha256hash0 okey
 
 hmac_sha256 k k_size text text_size =
+  int_sha256toList $
   int_hmac_sha256 (hmac_sha256_prehash k k_size) text text_size
 
 hmac_sha256' k text = hmac_sha256 k (length k) text (length text)
 
 pbkdf2 h h_len s s_size c dk_len =
-  take dk_len $ concatMap (rehash . u1) [1..l]
+  take dk_len $ concatMap (int_sha256toList . rehash . u1) [1..l]
   where
     split  n = map (fromIntegral) [
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
     u1     i = h (s ++ split i) (s_size + 4)
     rehash' 1 u = u
-    rehash' n u = zipWith (xor) u $ rehash' (n - 1) $ h u h_len
+    rehash' n u =
+      case rehash' (n - 1) $ h (int_sha256toList u) h_len of
+        u' ->
+          (array sha256_bounds_hash [(i, u!i `xor` u'!i) | i <- range sha256_bounds_hash] :: Hash)
     rehash u = rehash' c u
     l        = dk_len `div1` h_len
 
