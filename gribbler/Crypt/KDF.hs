@@ -10,10 +10,13 @@ module Crypt.KDF(
     pbkdf2_hmac_sha256')
   where
 
+import Control.Monad
+import Data.Array.IO
 import Data.Array.Unboxed
 import Data.Bits
 import Data.List
 import Data.Word
+import GHC.IO
 --
 import Crypt.SHA2
 
@@ -37,11 +40,14 @@ int_hmac_sha256 (ihash, ohash) text text_size = ohash'
   where
     ihash' = int_sha256sum ihash text (sha256_size_block + text_size)
     ohash' =
-      int_sha256sum
-        ohash
-        (int_sha256toList ihash')
-        (sha256_size_block + sha256_size_digest)
+      int_sha256sum ohash (int_sha256toList ihash') (sha256_size_block + sha256_size_digest)
 
+-- INFO: First block of the message is always the key _k_ reduced and/or padded
+--   to block size. This is true for both the ihash and the ohash.
+--   Therefore, we can prehash the first blocks and pick up from that point
+--   forward for the text.
+-- INFO: Since the key is constant in PBKDF2, this saves us
+--   an amount of `2 * pbkdf2_rounds` hash rounds.
 hmac_sha256_prehash :: [Word8] -> Int -> (Hash, Hash)
 hmac_sha256_prehash k k_size = (ihash, ohash)
   where
@@ -66,12 +72,15 @@ pbkdf2 h h_len s s_size c dk_len =
     split  n = map (fromIntegral) [
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
     u1     i = h (s ++ split i) (s_size + 4)
-    rehash' 1 u = u
-    rehash' n u =
-      case rehash' (n - 1) $ h (int_sha256toList u) h_len of
+    rehash' :: Int -> Hash -> IOUArray Int Word32 -> IO ()
+    rehash' 1 u w = return ()
+    rehash' n u w =
+      case h (int_sha256toList u) h_len of
         u' ->
-          (array sha256_bounds_hash [(i, u!i `xor` u'!i) | i <- range sha256_bounds_hash] :: Hash)
-    rehash u = rehash' c u
+          ( mapM_ (\ i -> readArray w i >>= \ a -> writeArray w i (a `xor` u'!i)) $
+            range sha256_bounds_hash) >>
+          rehash' (n - 1) u' w
+    rehash u = unsafePerformIO (thaw u >>= \ u' -> rehash' c u u' >> freeze u') :: Hash
     l        = dk_len `div1` h_len
 
 pbkdf2_hmac_sha256 p p_size s s_size c dk_len =
