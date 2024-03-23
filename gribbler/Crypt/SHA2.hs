@@ -71,7 +71,7 @@ sha256round v x =
     array
       sha256_bounds_hash
       [ (0, t1 + t2), (1, a), (2, b), (3, c),
-        (4, d + t1), (5, e), (6, f), (7, g)]
+        (4, d + t1),  (5, e), (6, f), (7, g)]
   where
     a  = v!0
     b  = v!1
@@ -131,10 +131,10 @@ from_list m  = foldl' (f) 0 m1 : from_list m2
 
 int_sha256once h m  = h'
   where
-    -- WARN: Unsafe routine used for speedy deindexing AND to reduce the number
-    --   of intermediate result buffers from 24 (48 cells computed 2 at a time)
-    --   down to 1.
-    -- INFO: `k + w` is unthunked in advance herein to reduce memory consumption
+    -- WARN: Unsafe routine used to expand the schedule in place.
+    --   Besides the speedy indexing/deindexing, this saves us 24 intermediate
+    --   result buffers (48 cells, computed up to 2 at a time).
+    -- INFO: `k + w` is also unthunked herein to reduce memory consumption.
     w  = unsafePerformIO $
          newListArray (0, 63) (from_list m) >>=
          \ v -> sha256sched v >>

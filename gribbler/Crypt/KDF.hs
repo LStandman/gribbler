@@ -66,8 +66,8 @@ hmac_sha256 k k_size text text_size =
 
 hmac_sha256' k text = hmac_sha256 k (length k) text (length text)
 
-pbkdf2_hmac_sha256'' :: Prf -> [Word8] -> Int -> Int -> Int -> [Word8]
-pbkdf2_hmac_sha256'' h s s_size c dk_len =
+int_pbkdf2_hmac_sha256 :: Prf -> [Word8] -> Int -> Int -> Int -> [Word8]
+int_pbkdf2_hmac_sha256 h s s_size c dk_len =
   take dk_len $ concatMap (int_sha256toList . us . u1) [1..l]
   where
     split n = map (fromIntegral) [
@@ -83,7 +83,7 @@ pbkdf2_hmac_sha256'' h s s_size c dk_len =
           round (n - 1) u' w
     -- WARN: Unsafe routine used to reduce the number of intermediate result
     --   buffers for the calculation `x1 xor x2 ... xor xN`. This achieves a
-    --   reduction from `N - 1` buffers down to 1 buffer.
+    --   reduction from `N - 1` buffers down to a single buffer.
     us :: Hash -> Hash
     us u =
       unsafePerformIO $
@@ -91,7 +91,7 @@ pbkdf2_hmac_sha256'' h s s_size c dk_len =
     l = dk_len `div1` sha256_size_digest
 
 pbkdf2_hmac_sha256 p p_size s s_size c dk_len =
-  pbkdf2_hmac_sha256''
+  int_pbkdf2_hmac_sha256
     (int_hmac_sha256 $! hmac_sha256_prehash p p_size)
     s
     s_size
