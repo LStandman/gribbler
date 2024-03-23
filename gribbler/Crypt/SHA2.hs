@@ -109,10 +109,11 @@ k  = listArray (0, 63) [
 
 sha256sched' :: IOUArray Int Word32 -> Int -> IO ()
 sha256sched' v i = 
-  readArray v (i - 2) >>= \ a ->
-    readArray v (i - 7) >>= \ b ->
-      readArray v (i - 15) >>= \ c ->
-        readArray v (i - 16) >>= \ d ->
+  readArray v (i - 2) >>=
+  \ a -> readArray v (i - 7) >>=
+    \ b -> readArray v (i - 15) >>=
+      \ c -> readArray v (i - 16) >>=
+        \ d ->
           writeArray v i (lil_sigma1 a  + b + lil_sigma0 c + d)
 
 sha256sched :: IOUArray Int Word32 -> IO ()
@@ -127,10 +128,13 @@ from_list m  = foldl' (f) 0 m1 : from_list m2
     f a b    = (a `shiftL` 8) .|. fromIntegral b
     (m1, m2) = splitAt 4 m
 
-int_sha256once h m = h'
+int_sha256once h [] = h
+int_sha256once h m  = h'
   where
     w  = unsafePerformIO $
-         newListArray (0, 63) (from_list m) >>= \ v -> sha256sched v >> getElems v
+         newListArray (0, 63) (from_list m) >>=
+         \ v -> sha256sched v >>
+         getElems v
     h' = sha256block h w
 
 sha256sum' :: Hash -> [Word8] -> Int -> Hash
@@ -139,7 +143,6 @@ sha256sum' h m l =
     (m1, []) ->
       case splitAt sha256_size_block
         (m1 ++ [0x80] ++ (take n $ repeat 0) ++ split (l * 8)) of
-          (m1', [])  -> int_sha256once h m1'
           (m1', m2') -> int_sha256once (int_sha256once h m1') m2'
     (m1, m2) -> sha256sum' (int_sha256once h m1) m2 l
   where

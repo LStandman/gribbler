@@ -89,10 +89,10 @@ exec_parser f s = run_parser f s >>= return . snd
 
 or (Parser f') g =
   Parser $
-    \ s ->
-      case f' s of
-        Miss -> run_parser g s
-        r    -> r
+  \ s ->
+    case f' s of
+      Miss -> run_parser g s
+      r    -> r
 
 and f g =
   f >>= \ x -> g >>= \ x' -> return (x <> x')
@@ -108,21 +108,23 @@ rep n f = f `JSON.BNF.and` rep (n - 1) f
 
 excl f g =
   Parser $
-    \ s -> run_parser (f >>=
-      \ x ->
-        case run_parser g s of
-          Hit   _ -> miss
-          Miss    -> return x
-          Error e -> err e)
+  \ s ->
+    run_parser
+      ( f >>=
+        \ x ->
+          case run_parser g s of
+            Hit   _ -> miss
+            Miss    -> return x
+            Error e -> err e)
       s
 
 assert e1 (Parser f') =
   Parser $
-    \ s ->
-      case f' s of
-        Hit   x  -> return x
-        Miss     -> Error e1
-        Error e2 -> Error e2
+  \ s ->
+    case f' s of
+      Hit   x  -> return x
+      Miss     -> Error e1
+      Error e2 -> Error e2
 
 null = return mempty
 

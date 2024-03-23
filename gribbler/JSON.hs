@@ -51,49 +51,54 @@ value =
 object :: BNF.Parser TextState JSValue
 object =
   (assert_push $ meta_char '{') >>
-    (members `BNF.or` ws) >>=
-      \ m -> (assert_pop "Unterminated braces '{}'" $ meta_char '}') >>
-        (return . JSObject $ relist m)
+  (members `BNF.or` ws) >>=
+  \ m ->
+    (assert_pop "Unterminated braces '{}'" $ meta_char '}') >>
+    (return . JSObject $ relist m)
 
 members :: BNF.Parser TextState (DiffList (String, JSValue))
 members =
   (member >>= return . difflist . (:[])) `BNF.and`
-    BNF.zoo (meta_char ',' >> members)
+  BNF.zoo (meta_char ',' >> members)
 
 member :: BNF.Parser TextState (String, JSValue)
 member =
   (ws :: BNF.Parser TextState ()) >>
-    string >>=
-      \ s -> (ws :: BNF.Parser TextState ()) >>
-        meta_char ':' >>
-          element >>=
-            \ e -> return (s, e)
+  string >>=
+  \ s ->
+    (ws :: BNF.Parser TextState ()) >>
+    meta_char ':' >>
+    element >>=
+    \ e -> return (s, e)
 
 array :: BNF.Parser TextState JSValue
 array =
   (assert_push $ meta_char '[') >>
-    (elements `BNF.or` ws) >>=
-      \ e -> (assert_pop "Unterminated brackets '[]'" $ meta_char ']') >>
-        (return . JSArray $ relist e)
+  (elements `BNF.or` ws) >>=
+  \ e ->
+    (assert_pop "Unterminated brackets '[]'" $ meta_char ']') >>
+    (return . JSArray $ relist e)
 
 elements :: BNF.Parser TextState (DiffList JSValue)
 elements =
   (element >>= return . difflist. (:[])) `BNF.and`
-    BNF.zoo (meta_char ',' >> elements)
+  BNF.zoo (meta_char ',' >> elements)
 
 element :: BNF.Parser TextState JSValue
 element =
   (ws :: BNF.Parser TextState ()) >>
-    value >>= \ v ->
-      (ws :: BNF.Parser TextState ()) >>
-        return v
+  value >>=
+  \ v ->
+    (ws :: BNF.Parser TextState ()) >>
+    return v
 
 string :: BNF.Parser TextState String
 string =
   (assert_push $ meta_char '"') >>
-    characters >>= \ s ->
-      (assert_pop "Unterminated string" $ meta_char '"') >>
-        (return $ relist s)
+  characters >>=
+  \ s ->
+    (assert_pop "Unterminated string" $ meta_char '"') >>
+    (return $ relist s)
 
 characters :: BNF.Parser TextState DiffString
 characters = BNF.zom (character >>= return . difflist . (:[]))
@@ -114,7 +119,7 @@ escape =
   (meta_char 'n'  >> (return '\n')) `BNF.or`
   (meta_char 'r'  >> (return '\r')) `BNF.or`
   (meta_char 't'  >> (return '\t')) `BNF.or`
-  (meta_char 'u'  >> BNF.rep 4 hex >>=
+  ( meta_char 'u'  >> BNF.rep 4 hex >>=
     return . toEnum . fromJust . hex2num . relist)
 
 hex :: BNF.Parser TextState DiffString
@@ -126,7 +131,7 @@ hex =
 number :: BNF.Parser TextState JSValue
 number =
   integer `BNF.and` fraction `BNF.and` JSON.exponent >>=
-    return . JSNumber . relist
+  return . JSNumber . relist
 
 -- NOTE: Variable length matcher _digits_ MUST come before fixed length
 --   matcher _digit_. Otherwise, the composed matcher _integer_ will ALWAYS
@@ -152,9 +157,9 @@ fraction = BNF.zoo (get_char1 '.' `BNF.and` digits)
 
 exponent :: BNF.Parser TextState DiffString
 exponent =
-  BNF.zoo (
-     get_char1 'E' `BNF.and` sign `BNF.and` digits `BNF.or`
-    (get_char1 'e' `BNF.and` sign `BNF.and` digits))
+  BNF.zoo
+    ( get_char1 'E' `BNF.and` sign `BNF.and` digits `BNF.or`
+      (get_char1 'e' `BNF.and` sign `BNF.and` digits))
 
 sign :: BNF.Parser TextState DiffString
 sign = BNF.zoo (get_char1 '+' `BNF.or` get_char1 '-')
@@ -162,10 +167,11 @@ sign = BNF.zoo (get_char1 '+' `BNF.or` get_char1 '-')
 -- NOTE: Line breaks are normalized within BNF.Text.
 ws :: Monoid a => BNF.Parser TextState a
 ws =
-  BNF.zom (
-    meta_char '\x0020' `BNF.or`
-    meta_break         `BNF.or`
-    meta_char '\x0009') >> BNF.null
+  BNF.zom 
+    ( meta_char '\x0020' `BNF.or`
+      meta_break         `BNF.or`
+      meta_char '\x0009') >>
+  BNF.null
 
 deserialize s =
   case BNF.eval_parser
@@ -219,10 +225,9 @@ put_json (pretty, depth) (JSArray v) =
   case v of
     [] -> "[]"
     u  -> "[" ++ put_br (pretty, deeper) ++
-            ( intercalate ("," ++ put_br (pretty, deeper)) $
-              map (put_json (pretty, deeper)) u) ++
-            put_br (pretty, depth) ++
-            "]"
+          ( intercalate ("," ++ put_br (pretty, deeper)) $
+            map (put_json (pretty, deeper)) u) ++
+          put_br (pretty, depth) ++ "]"
   where
     deeper = depth + 1
 
@@ -230,10 +235,9 @@ put_json (pretty, depth) (JSObject v) =
   case v of
     [] -> "{}"
     u  -> "{" ++ put_br (pretty, deeper) ++
-            ( intercalate ("," ++ put_br (pretty, deeper)) $
-              map (serialize_member) u) ++
-            put_br (pretty, depth) ++
-            "}"
+          ( intercalate ("," ++ put_br (pretty, deeper)) $
+            map (serialize_member) u) ++
+          put_br (pretty, depth) ++ "}"
   where
     deeper = depth + 1
     serialize_member (name, value) =

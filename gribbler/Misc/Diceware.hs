@@ -31,7 +31,7 @@ is_sanitized :: [String] -> Either String ()
 
 decode dictionary hits =
   mapM (flip elemIndex dictionary) hits >>=
-    Just . (foldl' (\ a b -> a * (length dictionary) + b) 0)
+  Just . (foldl' (\ a b -> a * (length dictionary) + b) 0)
 
 encode' :: [String] -> Int -> Int -> Int -> DiffList String
 encode' _ _ 0 _ = difflist []

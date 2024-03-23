@@ -67,21 +67,23 @@ hmac_sha256 k k_size text text_size =
 hmac_sha256' k text = hmac_sha256 k (length k) text (length text)
 
 pbkdf2 h h_len s s_size c dk_len =
-  take dk_len $ concatMap (int_sha256toList . rehash . u1) [1..l]
+  take dk_len $ concatMap (int_sha256toList . us . u1) [1..l]
   where
-    split  n = map (fromIntegral) [
+    split n = map (fromIntegral) [
       n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
-    u1     i = h (s ++ split i) (s_size + 4)
-    rehash' :: Int -> Hash -> IOUArray Int Word32 -> IO ()
-    rehash' 1 u w = return ()
-    rehash' n u w =
+    u1 i = h (s ++ split i) (s_size + 4)
+    round :: Int -> Hash -> IOUArray Int Word32 -> IO ()
+    round 1 u w = return ()
+    round n u w =
       case h (int_sha256toList u) h_len of
         u' ->
-          ( mapM_ (\ i -> readArray w i >>= \ a -> writeArray w i (a `xor` u'!i)) $
+          ( mapM_ (\ i -> readArray w i >>= (writeArray w i) . (xor (u'!i))) $
             range sha256_bounds_hash) >>
-          rehash' (n - 1) u' w
-    rehash u = unsafePerformIO (thaw u >>= \ u' -> rehash' c u u' >> freeze u') :: Hash
-    l        = dk_len `div1` h_len
+          round (n - 1) u' w
+    us u =
+      unsafePerformIO
+        (thaw u >>= \ u' -> round c u u' >> freeze u') :: Hash
+    l = dk_len `div1` h_len
 
 pbkdf2_hmac_sha256 p p_size s s_size c dk_len =
   pbkdf2

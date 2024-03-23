@@ -3,7 +3,7 @@
 -- Copyright (C) 2021-2023 LStandman
 
 module Libtest(
-    expect_buffeq,
+    expect_dbgeq,
     expect_false,
     expect_memeq,
     expect_that,
@@ -39,12 +39,20 @@ test' (e:es) =
 
 test name es =
   printf "[ RUN      ] %s\n" name >>
-    getCPUTime >>= \ start ->
-      test' es >>= \ x ->
-        getCPUTime >>= \ end ->
-          printf "%s %s\n" (if not x then "[  FAILED  ]" else "[       OK ]") name >>
-            printf "[       ** ] time: %0.1fms\n" ((fromIntegral (end - start)) / (10^9) :: Double) >>
-              return x
+    getCPUTime >>=
+    \ start ->
+      test' es >>=
+      \ x ->
+        getCPUTime >>=
+        \ end ->
+          printf
+            "%s %s\n"
+            (if not x then "[  FAILED  ]" else "[       OK ]")
+            name >>
+          printf
+            "[       ** ] time: %0.1fms\n"
+            ((fromIntegral (end - start)) / (10^9) :: Double) >>
+          return x
 
 testsuite' :: [IO Bool] -> IO Bool
 testsuite' [] = return True
@@ -52,22 +60,25 @@ testsuite' (t:ts) = t >>= \ x -> testsuite' ts >>= \ y -> return (x && y)
 
 testsuite name tests =
   printf "[----------] tests from %s\n" name >>
-    testsuite' tests >>=
-      \ x -> printf "[----------]\n" >> return x
+  testsuite' tests >>= \ x -> printf "[----------]\n" >> return x
 
 expect_that matcher = matcher
 
-buffeq :: Integral a => String -> [a] -> [a] -> IO Bool
-buffeq varname expected actual =
+dbgeq :: Integral a => String -> [a] -> [a] -> IO Bool
+dbgeq varname expected actual =
   if actual == expected
     then
       return True
     else
       print ("Value of: " ++ varname) >>
-        print ("  Actual: " ++ (show $ map (\ x -> "0x" ++ num2hex 2 (fromIntegral x)) actual)) >>
-          print ("Expected: " ++ (show $ map (\ x -> "0x" ++ num2hex 2 (fromIntegral x)) expected)) >>
-            return False
-expect_buffeq varname expected = expect_that (buffeq varname expected)
+      print ( "  Actual: " ++
+              ( show $
+                map (\ x -> "0x" ++ num2hex 2 (fromIntegral x)) actual)) >>
+      print ( "Expected: " ++
+              ( show $
+                map (\ x -> "0x" ++ num2hex 2 (fromIntegral x)) expected)) >>
+      return False
+expect_dbgeq varname expected = expect_that (dbgeq varname expected)
 
 memeq :: (Eq a, Show a) => String -> a -> a -> IO Bool
 memeq varname expected actual =
@@ -76,9 +87,9 @@ memeq varname expected actual =
       return True
     else
       print ("Value of: " ++ varname) >>
-        print ("  Actual: " ++ (show actual)) >>
-          print ("Expected: " ++ (show expected)) >>
-            return False
+      print ("  Actual: " ++ (show actual)) >>
+      print ("Expected: " ++ (show expected)) >>
+      return False
 
 expect_memeq varname expected = expect_that (memeq varname expected)
 

@@ -56,10 +56,11 @@ alphaIndex alphabet' c =
 
 decode_chunk' :: [Char] -> (Char, Char, Char, Char) -> Either String (Word8, Word8, Word8)
 decode_chunk' alphabet' (x1, x2, x3, x4) =
-  alphaIndex alphabet' x1 >>= \ i1 ->
-    alphaIndex alphabet' x2 >>= \ i2 ->
-      alphaIndex alphabet' x3 >>= \ i3 ->
-        alphaIndex alphabet' x4 >>= \ i4 ->
+  alphaIndex alphabet' x1 >>=
+  \ i1 -> alphaIndex alphabet' x2 >>=
+    \ i2 -> alphaIndex alphabet' x3 >>=
+      \ i3 -> alphaIndex alphabet' x4 >>=
+        \ i4 ->
           return
             ( i1 `shiftL` 2 .|. i2 `shiftR` 4,
               i2 `shiftL` 4 .|. i3 `shiftR` 2,
@@ -85,8 +86,8 @@ decode' alphabet' zero_char pad_char v =
     ([], []) -> Right []
     (v1, []) -> decode_last' alphabet' zero_char pad_char v1
     (v1, v2) ->
-      decode_chunk alphabet' v1 >>= \ xs ->
-        decode' alphabet' zero_char pad_char v2 >>= \ ys ->
-          return (xs ++ ys)
+      decode_chunk alphabet' v1 >>=
+      \ xs -> decode' alphabet' zero_char pad_char v2 >>=
+        \ ys -> return (xs ++ ys)
 
 decode alphabet pad_char v = decode' (elems alphabet) (alphabet!0) pad_char v
