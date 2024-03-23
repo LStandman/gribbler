@@ -67,7 +67,11 @@ lil_sigma1 :: Word32 -> Word32
 lil_sigma1 x = (x `rotateR` 17) `xor` (x `rotateR` 19) `xor` (x `shiftR` 10)
 
 sha256round :: Hash -> Word32 -> Hash
-sha256round v x = w
+sha256round v x =
+    array
+      sha256_bounds_hash
+      [ (0, t1 + t2), (1, a), (2, b), (3, c),
+        (4, d + t1), (5, e), (6, f), (7, g)]
   where
     a  = v!0
     b  = v!1
@@ -79,9 +83,6 @@ sha256round v x = w
     h  = v!7
     t1 = h + (big_sigma1 e) + (ch e f g) + x
     t2 = (big_sigma0 a) + (maj a b c)
-    u  = ixmap sha256_bounds_hash (\ i -> (i - 1) `mod` sha256_size_hash) v
-    w  = u//[(0, t1 + t2), (4, d + t1)]
-
 
 sha256block :: Hash -> [Word32] -> Hash
 sha256block h v =
@@ -119,7 +120,7 @@ sha256sched' v i =
 sha256sched :: IOUArray Int Word32 -> IO ()
 sha256sched v =
   mapM_ (sha256sched' v) [16..63] >>
-  mapM_ (\ i -> readArray v i >>= \ a -> writeArray v i (a + k!i)) [0..63]
+  mapM_ (\ i -> readArray v i >>= (writeArray v i) . (+ k!i)) [0..63]
 
 from_list :: [Word8] -> [Word32]
 from_list [] = []
@@ -128,9 +129,12 @@ from_list m  = foldl' (f) 0 m1 : from_list m2
     f a b    = (a `shiftL` 8) .|. fromIntegral b
     (m1, m2) = splitAt 4 m
 
-int_sha256once h [] = h
 int_sha256once h m  = h'
   where
+    -- WARN: Unsafe routine used for speedy deindexing AND to reduce the number
+    --   of intermediate result buffers from 24 (48 cells computed 2 at a time)
+    --   down to 1.
+    -- INFO: `k + w` is unthunked in advance herein to reduce memory consumption
     w  = unsafePerformIO $
          newListArray (0, 63) (from_list m) >>=
          \ v -> sha256sched v >>
@@ -143,19 +147,20 @@ sha256sum' h m l =
     (m1, []) ->
       case splitAt sha256_size_block
         (m1 ++ [0x80] ++ (take n $ repeat 0) ++ split (l * 8)) of
+          (m1', [])  -> int_sha256once h m1'
           (m1', m2') -> int_sha256once (int_sha256once h m1') m2'
     (m1, m2) -> sha256sum' (int_sha256once h m1) m2 l
   where
-    split n = map (fromIntegral) [
-      n `shiftR` 56, n `shiftR` 48, n `shiftR` 40, n `shiftR` 32,
-      n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
+    split x = map (fromIntegral) [
+      x `shiftR` 56, x `shiftR` 48, x `shiftR` 40, x `shiftR` 32,
+      x `shiftR` 24, x `shiftR` 16, x `shiftR` 8, x] :: [Word8]
     n       = (sha256_size_block - 8 - (l + 1)) `mod` sha256_size_block
 
 int_sha256toList h =
   concatMap (split) $ elems h
   where
-    split n = map (fromIntegral)
-      [n `shiftR` 24, n `shiftR` 16, n `shiftR` 8, n] :: [Word8]
+    split x = map (fromIntegral)
+      [x `shiftR` 24, x `shiftR` 16, x `shiftR` 8, x] :: [Word8]
 
 int_sha256sum h m l = sha256sum' h m l
 

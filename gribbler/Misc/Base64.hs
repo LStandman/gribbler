@@ -31,7 +31,8 @@ encode_chunk alphabet (a:b:c:_) =
   case encode_chunk' alphabet (a, b, c) of (x1, x2, x3, x4) -> [x1, x2, x3, x4]
 
 encode_last :: Alphabet -> Maybe Char -> [Word8] -> String
-encode_last alphabet pad_char v =
+encode_last _        _        [] = ""
+encode_last alphabet pad_char v  =
   -- Only take the _N+1_ chars that encode _N_ bytes of data.
   -- And up to 4 chars total, including padding.
   take 4
@@ -42,9 +43,7 @@ encode_last alphabet pad_char v =
 
 encode alphabet pad_char v =
   case splitAt 3 v of
-    ([], []) -> ""
-    (v1, []) ->
-      encode_last alphabet pad_char v1
+    (v1, []) -> encode_last alphabet pad_char v1
     (v1, v2) ->
       encode_chunk alphabet v1 ++ encode alphabet pad_char v2
 
@@ -71,6 +70,7 @@ decode_chunk alphabet' (x1:x2:x3:x4:_) =
   fmap (\ (a, b, c) -> [a, b, c]) $ decode_chunk' alphabet' (x1, x2, x3, x4)
 
 decode_last' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
+decode_last' _         _         _        [] = Right []
 decode_last' alphabet' zero_char pad_char v
   | n >= 2    =
       decode_chunk alphabet' (v' ++ repeat zero_char) >>=
@@ -83,7 +83,6 @@ decode_last' alphabet' zero_char pad_char v
 decode' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
 decode' alphabet' zero_char pad_char v =
   case splitAt 4 v of
-    ([], []) -> Right []
     (v1, []) -> decode_last' alphabet' zero_char pad_char v1
     (v1, v2) ->
       decode_chunk alphabet' v1 >>=

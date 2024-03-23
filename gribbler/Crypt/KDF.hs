@@ -5,7 +5,6 @@
 module Crypt.KDF(
     hmac_sha256,
     hmac_sha256',
-    pbkdf2,
     pbkdf2_hmac_sha256,
     pbkdf2_hmac_sha256')
   where
@@ -26,11 +25,8 @@ type Prf = [Word8] -> Int -> Hash
 
 hmac_sha256         :: [Word8] -> Int -> [Word8] -> Int -> [Word8]
 hmac_sha256'        :: [Word8] -> [Word8] -> [Word8]
-pbkdf2              :: Prf -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
-pbkdf2_hmac_sha256  ::
-  [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
-pbkdf2_hmac_sha256' ::
-  [Word8] -> [Word8] -> Int -> Int -> [Word8]
+pbkdf2_hmac_sha256  :: [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
+pbkdf2_hmac_sha256' :: [Word8] -> [Word8] -> Int -> Int -> [Word8]
 
 div1 :: Integral a => a -> a -> a
 a `div1` b = (a + b - 1) `div` b
@@ -40,14 +36,18 @@ int_hmac_sha256 (ihash, ohash) text text_size = ohash'
   where
     ihash' = int_sha256sum ihash text (sha256_size_block + text_size)
     ohash' =
-      int_sha256sum ohash (int_sha256toList ihash') (sha256_size_block + sha256_size_digest)
+      int_sha256sum
+        ohash
+        (int_sha256toList ihash')
+        (sha256_size_block + sha256_size_digest)
 
--- INFO: First block of the message is always the key _k_ reduced and/or padded
---   to block size. This is true for both the ihash and the ohash.
---   Therefore, we can prehash the first blocks and pick up from that point
---   forward for the text.
--- INFO: Since the key is constant in PBKDF2, this saves us
---   an amount of `2 * pbkdf2_rounds` hash rounds.
+-- INFO: First block of any message is always the key _k_ after reducing and/or
+--   padding it to block size. This is true for both the ihash and the ohash.
+--   Therefore, we may prehash this first block and pick up from that point
+--   forward for the rest of the message (the text).
+-- INFO: In the case of PBKDF2, the key is constant for all rounds. 
+--   Prehashing once for all rounds saves us an amount of `2 * pbkdf2_rounds`
+--   redundant hash calculations.
 hmac_sha256_prehash :: [Word8] -> Int -> (Hash, Hash)
 hmac_sha256_prehash k k_size = (ihash, ohash)
   where
@@ -66,7 +66,8 @@ hmac_sha256 k k_size text text_size =
 
 hmac_sha256' k text = hmac_sha256 k (length k) text (length text)
 
-pbkdf2 h h_len s s_size c dk_len =
+pbkdf2_hmac_sha256'' :: Prf -> [Word8] -> Int -> Int -> Int -> [Word8]
+pbkdf2_hmac_sha256'' h s s_size c dk_len =
   take dk_len $ concatMap (int_sha256toList . us . u1) [1..l]
   where
     split n = map (fromIntegral) [
@@ -75,20 +76,27 @@ pbkdf2 h h_len s s_size c dk_len =
     round :: Int -> Hash -> IOUArray Int Word32 -> IO ()
     round 1 u w = return ()
     round n u w =
-      case h (int_sha256toList u) h_len of
+      case h (int_sha256toList u) sha256_size_digest of
         u' ->
           ( mapM_ (\ i -> readArray w i >>= (writeArray w i) . (xor (u'!i))) $
             range sha256_bounds_hash) >>
           round (n - 1) u' w
+    -- WARN: Unsafe routine used to reduce the number of intermediate result
+    --   buffers for the calculation `x1 xor x2 ... xor xN`. This achieves a
+    --   reduction from `N - 1` buffers down to 1 buffer.
+    us :: Hash -> Hash
     us u =
-      unsafePerformIO
-        (thaw u >>= \ u' -> round c u u' >> freeze u') :: Hash
-    l = dk_len `div1` h_len
+      unsafePerformIO $
+      thaw u >>= \ u' -> round c u u' >> freeze u'
+    l = dk_len `div1` sha256_size_digest
 
 pbkdf2_hmac_sha256 p p_size s s_size c dk_len =
-  pbkdf2
+  pbkdf2_hmac_sha256''
     (int_hmac_sha256 $! hmac_sha256_prehash p p_size)
-    sha256_size_digest s s_size c dk_len
+    s
+    s_size
+    c
+    dk_len
 
 pbkdf2_hmac_sha256' p s c dk_len =
   pbkdf2_hmac_sha256 p (length p) s (length s) c dk_len
