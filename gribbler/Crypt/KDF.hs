@@ -3,6 +3,10 @@
 -- Copyright (C) 2021-2024 LStandman
 
 module Crypt.KDF(
+    hkdf_sha256_expand,
+    hkdf_sha256_expand',
+    hkdf_sha256_extract,
+    hkdf_sha256_extract',
     hmac_sha256,
     hmac_sha256',
     pbkdf2_hmac_sha256,
@@ -23,10 +27,14 @@ infixl 7 `div1`
 
 type Prf = [Word8] -> Int -> Hash
 
-hmac_sha256         :: [Word8] -> Int -> [Word8] -> Int -> [Word8]
-hmac_sha256'        :: [Word8] -> [Word8] -> [Word8]
-pbkdf2_hmac_sha256  :: [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
-pbkdf2_hmac_sha256' :: [Word8] -> [Word8] -> Int -> Int -> [Word8]
+hkdf_sha256_expand   :: [Word8] -> Int -> [Word8] -> Int -> Int -> [Word8]
+hkdf_sha256_expand'  :: [Word8] -> [Word8] -> Int -> [Word8]
+hkdf_sha256_extract  :: [Word8] -> Int -> [Word8] -> Int -> [Word8]
+hkdf_sha256_extract' :: [Word8] -> [Word8] -> [Word8]
+hmac_sha256          :: [Word8] -> Int -> [Word8] -> Int -> [Word8]
+hmac_sha256'         :: [Word8] -> [Word8] -> [Word8]
+pbkdf2_hmac_sha256   :: [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
+pbkdf2_hmac_sha256'  :: [Word8] -> [Word8] -> Int -> Int -> [Word8]
 
 div1 :: Integral a => a -> a -> a
 a `div1` b = (a + b - 1) `div` b
@@ -100,3 +108,30 @@ pbkdf2_hmac_sha256 p p_size s s_size c dk_len =
 
 pbkdf2_hmac_sha256' p s c dk_len =
   pbkdf2_hmac_sha256 p (length p) s (length s) c dk_len
+
+hkdf_sha256_extract salt salt_size ikm ikm_size =
+  int_sha256toList $
+  (int_hmac_sha256 $! hmac_sha256_prehash salt salt_size) ikm ikm_size
+
+hkdf_sha256_extract' salt ikm =
+  hkdf_sha256_extract salt (length salt) ikm (length ikm)
+
+int_hkdf_sha256_expand :: Prf -> [Word8] -> Int -> Int -> [Word8]
+int_hkdf_sha256_expand h info info_size l =
+  take l $ concat $ scanl' (ts) t1 [2..n]
+  where
+    n = l `div1` sha256_size_digest
+    t1 = int_sha256toList $ h (info ++ [fromIntegral 1]) (info_size + 1)
+    ts :: [Word8] -> Int -> [Word8]
+    ts t i = int_sha256toList $
+      h (t ++ info ++ [fromIntegral i]) (sha256_size_digest + info_size + 1)
+
+hkdf_sha256_expand prk prk_size info info_size l =
+  int_hkdf_sha256_expand
+    (int_hmac_sha256 $! hmac_sha256_prehash prk prk_size)
+    info
+    info_size
+    l
+
+hkdf_sha256_expand' prk info l =
+  hkdf_sha256_expand prk (length prk) info (length info) l

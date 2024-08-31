@@ -14,6 +14,7 @@ test_crypt =
   runtests [
     test_aes256,
     test_aes256_cbc,
+    test_hkdf_sha256,
     test_hmac_sha256,
     test_pbkdf2_hmac_sha256,
     test_sha256]
