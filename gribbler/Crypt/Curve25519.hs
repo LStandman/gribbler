@@ -62,8 +62,6 @@ a `pow` 0 = 1
 a `pow` 1 = a
 a `pow` b = (sqr a `pow` (b `shiftR` 1)) `dot` (a `pow` (b .&. 1))
 
-type Mont = (Int, Integer, Integer, Integer, Integer, Bool)
-
 cswap :: Bool -> (Integer, Integer) -> (Integer, Integer)
 cswap swap (x_2, x_3) = (x_2', x_3')
   where
@@ -73,6 +71,8 @@ cswap swap (x_2, x_3) = (x_2', x_3')
     dummy = mask .&. (x_2 `xor` x_3)
     x_2' = (x_2 `xor` dummy)
     x_3' = (x_3 `xor` dummy)
+
+type Mont = (Int, Integer, Integer, Integer, Integer, Bool)
 
 montgomery :: Integer -> Integer -> Mont -> Mont
 montgomery _ _ (0, x_2, z_2, x_3, z_3, swap) =
