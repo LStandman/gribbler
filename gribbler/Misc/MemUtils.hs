@@ -6,16 +6,19 @@ module Misc.MemUtils(
     hex2num,
     num2hex,
     num2hex1,
+    runcons,
     strBytes)
   where
 
 import Data.Char
 import Data.List
 import Data.Word
+import GHC.Stack
 
 hex2num  :: String -> Maybe Int
 num2hex  :: Int -> Int -> String
 num2hex1 :: Int -> String
+runcons  :: HasCallStack => [a] -> (a, [a])
 strBytes :: String -> [Word8]
 
 strBytes = map (fromIntegral . fromEnum)
@@ -39,3 +42,9 @@ num2hex p n =
     (q, r) -> num2hex (p - 1) q ++ [hexes!!r]
 
 num2hex1 = num2hex 0
+
+runcons [] = error "Misc.MemUtils.runcons: empty list"
+runcons [y] = (y, [])
+runcons (x:xs) = (y, x:ys)
+  where
+    (y, ys) = runcons xs

@@ -8,6 +8,7 @@ import Crypt.AES256Test
 import Crypt.KDFTest
 import Crypt.MooMooTest
 import Crypt.SHA2Test
+import Crypt.Curve25519Test
 import Libtest
 
 test_crypt =
@@ -17,4 +18,5 @@ test_crypt =
     test_hkdf_sha256,
     test_hmac_sha256,
     test_pbkdf2_hmac_sha256,
-    test_sha256]
+    test_sha256,
+    test_x25519]

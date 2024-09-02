@@ -14,6 +14,8 @@ import Data.Bits
 import Data.List
 import Data.Word
 import GHC.Stack
+--
+import qualified Misc.MemUtils as MemUtils (runcons)
 
 infixl 7 `dot`
 
@@ -213,16 +215,9 @@ key_expansion key = init $ concatMap (\ (a, b) -> [a, b]) schedule
 
 -- CIPHER ALGORITHM
 
-runcons :: HasCallStack => [a] -> (a, [a])
-runcons [] = error "Crypt.AES256.runcons: empty list"
-runcons [y] = (y, [])
-runcons (x:xs) = (y, x:ys)
-  where
-    (y, ys) = runcons xs
-
 -- `tail` drops a duplicate of key1 from schedule.y
 schedule_helper :: HasCallStack => (Mat, Mat) -> (Mat, [Mat])
-schedule_helper = runcons . tail . key_expansion
+schedule_helper = MemUtils.runcons . tail . key_expansion
 
 cipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
 cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
