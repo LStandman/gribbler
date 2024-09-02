@@ -1,5 +1,5 @@
 # Gribbler
-Someday this will be an ncurses-based password manager.
+Someday this will be a web-based password manager.
 
 Already includes in-house implementations of some popular cryptographic functions (AES256, SHA256, PBKDF2-HMAC)
 and a testing suite that uses some common test-vectors.
