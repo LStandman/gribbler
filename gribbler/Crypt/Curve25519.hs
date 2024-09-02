@@ -48,18 +48,11 @@ decode_scalar (k_lsb:ks)  =
 add :: Integer -> Integer -> Integer
 a `add` b = (a + b) `mod` const_p
 
-xtime :: Integer -> Integer
-xtime a = (a `shiftL` 1) `mod` const_p
+sub :: Integer -> Integer -> Integer
+a `sub` b = (a - b) `mod` const_p
 
 dot :: Integer -> Integer -> Integer
-a `dot` b
-    | b > a     = b `dot'` a
-    | otherwise = a `dot'` b
-  where
-    infixl 7 `dot'`
-    _ `dot'` 0  = 0
-    a `dot'` 1  = a
-    a `dot'` b  = (a `dot'` (b .&. 1)) `add` (xtime a `dot'` (b `shiftR` 1))
+a `dot` b = (a * b) `mod` const_p
 
 sqr :: Integer -> Integer
 sqr a = a `dot` a
@@ -68,9 +61,6 @@ pow :: Integer -> Integer -> Integer
 a `pow` 0 = 1
 a `pow` 1 = a
 a `pow` b = (sqr a `pow` (b `shiftR` 1)) `dot` (a `pow` (b .&. 1))
-
-sub :: Integer -> Integer -> Integer
-a `sub` b = (a - b) `mod` const_p
 
 type Mont = (Int, Integer, Integer, Integer, Integer, Bool)
 
