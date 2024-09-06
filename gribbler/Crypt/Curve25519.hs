@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Crypt/Curve25519.hs: ECDH with X25519.
--- Copyright (C) 2021-2023 LStandman
+-- Copyright (C) 2024 LStandman
 
 module Crypt.Curve25519(
     decode_scalar,
