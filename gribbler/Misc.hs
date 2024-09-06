@@ -2,4 +2,4 @@
 -- Misc.hs: Misc module
 -- Copyright (C) 2023 LStandman
 
-module Misc() where
+module Misc () where

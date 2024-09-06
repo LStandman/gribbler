@@ -11,6 +11,7 @@ module Libtest
     runtests,
     test,
     testsuite,
+    t_test,
   )
 where
 
@@ -30,60 +31,62 @@ expect_true :: Bool -> Assertion s
 runtests :: [Assertion ()] -> Assertion ()
 test :: String -> [Assertion (Maybe Int)] -> Assertion ()
 testsuite :: String -> [Assertion ()] -> Assertion ()
-
+t_test :: String -> [Assertion (Maybe Int)] -> Assertion ()
 assert_all :: [Assertion ()] -> Assertion ()
-assert_all [] = \ _ -> return True
+assert_all [] = \_ -> return True
 assert_all (t : ts) =
-  \ _ -> t () >>= \x -> assert_all ts () >>= \y -> return (x && y)
+  \_ -> t () >>= \x -> assert_all ts () >>= \y -> return (x && y)
 
 runtests ts = assert_all ts
 
 run :: (Maybe Int) -> [Assertion (Maybe Int)] -> IO Bool
 run _ [] = return True
 run ctr (e : es) =
-  e ctr >>= \x -> 
+  e ctr >>= \x ->
     case x of
       False -> return False
-      True  -> run (fmap (1+) ctr) es
+      True -> run (fmap (1 +) ctr) es
 
 show_run :: Bool -> String -> [Assertion (Maybe Int)] -> Assertion ()
 show_run use_ctr name es =
   \_ ->
-  printf "[ RUN      ] %s\n" name
-    >> getCPUTime
-    >>= \start ->
-      run ctr es
-        >>= \x ->
-          getCPUTime
-            >>= \end ->
-              printf
-                "%s %s\n"
-                (if not x then "[  FAILED  ]" else "[       OK ]")
-                name
-                >> printf
-                  "[       ** ] time: %0.1fms\n"
-                  ((fromIntegral (end - start)) / (10 ^ 9) :: Double)
-                >> return x
+    printf "[ RUN      ] %s\n" name
+      >> getCPUTime
+      >>= \start ->
+        run ctr es
+          >>= \x ->
+            getCPUTime
+              >>= \end ->
+                printf
+                  "%s %s\n"
+                  (if not x then "[  FAILED  ]" else "[       OK ]")
+                  name
+                  >> printf
+                    "[       ** ] time: %0.1fms\n"
+                    ((fromIntegral (end - start)) / (10 ^ 9) :: Double)
+                  >> return x
   where
     ctr = case use_ctr of
-            False -> Nothing
-            True -> Just 1
+      False -> Nothing
+      True -> Just 1
 
 test = show_run False
 
+t_test = show_run True
+
 testsuite name tests =
   \_ ->
-  printf "[----------] tests from %s\n" name
-    >> assert_all tests () >>= \x -> printf "[----------]\n" >> return x
+    printf "[----------] tests from %s\n" name
+      >> assert_all tests () >>= \x -> printf "[----------]\n" >> return x
 
 expect_that matcher = matcher
 
 dbgeq :: Integral a => String -> [a] -> [a] -> Assertion (Maybe Int)
 dbgeq varname expected actual =
   \ctr -> case actual == expected of
-    True  -> return True
+    True -> return True
     False ->
-      print ("Value of: " ++ varname ++ (maybe "" (\ i -> "@" ++ show i) ctr))
+      print ("Value of: " ++ varname ++ (maybe "" (\i -> "@" ++ show i) ctr))
         >> print
           ( "  Actual: "
               ++ ( show $
@@ -103,9 +106,9 @@ expect_dbgeq varname expected = expect_that (dbgeq varname expected)
 memeq :: (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
 memeq varname expected actual =
   \ctr -> case actual == expected of
-    True  -> return True
+    True -> return True
     False ->
-      print ("Value of: " ++ varname ++ (maybe "" (\ i -> "@" ++ show i) ctr))
+      print ("Value of: " ++ varname ++ (maybe "" (\i -> "@" ++ show i) ctr))
         >> print ("  Actual: " ++ (show actual))
         >> print ("Expected: " ++ (show expected))
         >> return False

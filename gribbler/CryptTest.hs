@@ -2,21 +2,22 @@
 -- CryptTest.hs: Unit tests for cryptographic module.
 -- Copyright (C) 2023 LStandman
 
-module CryptTest(test_crypt) where
+module CryptTest (test_crypt) where
 
 import Crypt.AES256Test
+import Crypt.Curve25519Test
 import Crypt.KDFTest
 import Crypt.MooMooTest
 import Crypt.SHA2Test
-import Crypt.Curve25519Test
 import Libtest
 
 test_crypt =
-  runtests [
-    test_aes256,
-    test_aes256_cbc,
-    test_hkdf_sha256,
-    test_hmac_sha256,
-    test_pbkdf2_hmac_sha256,
-    test_sha256,
-    test_x25519]
+  runtests
+    [ test_aes256,
+      test_aes256_cbc,
+      test_hkdf_sha256,
+      test_hmac_sha256,
+      test_pbkdf2_hmac_sha256,
+      test_sha256,
+      test_x25519
+    ]

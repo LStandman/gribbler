@@ -2,4 +2,4 @@
 -- Crypt.hs: Cryptographic module
 -- Copyright (C) 2023 LStandman
 
-module Crypt() where
+module Crypt () where

@@ -17,5 +17,6 @@ main =
     [ test_crypt,
       test_misc,
       test_json
-    ] ()
+    ]
+    ()
     >>= \x -> if x then exitSuccess else exitFailure
