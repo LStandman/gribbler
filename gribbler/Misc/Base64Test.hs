@@ -32,33 +32,33 @@ test_base64 =
         "Base64"
         [ test
             "EncodeRFC4648"
-            [ expect_memeq "t01_encoded" t01_encoded $ Base64.encode True t01_plain,
-              expect_memeq "t01_encoded" t01_encoded $ Base64.encode False t01_plain,
-              expect_memeq "t02_padded" t02_padded $ Base64.encode True t02_plain,
-              expect_memeq "t02_unpadded" t02_unpadded $ Base64.encode False t02_plain,
-              expect_memeq "t03_padded" t03_padded $ Base64.encode True t03_plain,
-              expect_memeq "t03_unpadded" t03_unpadded $ Base64.encode False t03_plain,
-              expect_memeq "t04_encoded" t04_encoded $ Base64.encode True t04_plain,
-              expect_memeq "t04_encoded" t04_encoded $ Base64.encode False t04_plain,
-              expect_memeq "t05_padded" t05_padded $ Base64.encode True t05_plain,
-              expect_memeq "t05_unpadded" t05_unpadded $ Base64.encode False t05_plain,
-              expect_memeq "t06_padded" t06_padded $ Base64.encode True t06_plain,
-              expect_memeq "t06_unpadded" t06_unpadded $ Base64.encode False t06_plain,
-              expect_memeq "t07_encoded" t07_encoded $ Base64.encode True t07_plain,
-              expect_memeq "t07_encoded" t07_encoded $ Base64.encode False t07_plain
+            [ expectMemEq "t01_encoded" t01_encoded $ Base64.encode True t01_plain,
+              expectMemEq "t01_encoded" t01_encoded $ Base64.encode False t01_plain,
+              expectMemEq "t02_padded" t02_padded $ Base64.encode True t02_plain,
+              expectMemEq "t02_unpadded" t02_unpadded $ Base64.encode False t02_plain,
+              expectMemEq "t03_padded" t03_padded $ Base64.encode True t03_plain,
+              expectMemEq "t03_unpadded" t03_unpadded $ Base64.encode False t03_plain,
+              expectMemEq "t04_encoded" t04_encoded $ Base64.encode True t04_plain,
+              expectMemEq "t04_encoded" t04_encoded $ Base64.encode False t04_plain,
+              expectMemEq "t05_padded" t05_padded $ Base64.encode True t05_plain,
+              expectMemEq "t05_unpadded" t05_unpadded $ Base64.encode False t05_plain,
+              expectMemEq "t06_padded" t06_padded $ Base64.encode True t06_plain,
+              expectMemEq "t06_unpadded" t06_unpadded $ Base64.encode False t06_plain,
+              expectMemEq "t07_encoded" t07_encoded $ Base64.encode True t07_plain,
+              expectMemEq "t07_encoded" t07_encoded $ Base64.encode False t07_plain
             ],
           test
             "DecodeRFC4648"
-            [ expect_memeq "t01_plain" (Right t01_plain) $ Base64.decode t01_encoded,
-              expect_memeq "t02_plain" (Right t02_plain) $ Base64.decode t02_padded,
-              expect_memeq "t02_plain" (Right t02_plain) $ Base64.decode t02_unpadded,
-              expect_memeq "t03_plain" (Right t03_plain) $ Base64.decode t03_padded,
-              expect_memeq "t03_plain" (Right t03_plain) $ Base64.decode t03_unpadded,
-              expect_memeq "t04_plain" (Right t04_plain) $ Base64.decode t04_encoded,
-              expect_memeq "t05_plain" (Right t05_plain) $ Base64.decode t05_padded,
-              expect_memeq "t05_plain" (Right t05_plain) $ Base64.decode t05_unpadded,
-              expect_memeq "t06_plain" (Right t06_plain) $ Base64.decode t06_padded,
-              expect_memeq "t06_plain" (Right t06_plain) $ Base64.decode t06_unpadded,
-              expect_memeq "t07_plain" (Right t07_plain) $ Base64.decode t07_encoded
+            [ expectMemEq "t01_plain" (Right t01_plain) $ Base64.decode t01_encoded,
+              expectMemEq "t02_plain" (Right t02_plain) $ Base64.decode t02_padded,
+              expectMemEq "t02_plain" (Right t02_plain) $ Base64.decode t02_unpadded,
+              expectMemEq "t03_plain" (Right t03_plain) $ Base64.decode t03_padded,
+              expectMemEq "t03_plain" (Right t03_plain) $ Base64.decode t03_unpadded,
+              expectMemEq "t04_plain" (Right t04_plain) $ Base64.decode t04_encoded,
+              expectMemEq "t05_plain" (Right t05_plain) $ Base64.decode t05_padded,
+              expectMemEq "t05_plain" (Right t05_plain) $ Base64.decode t05_unpadded,
+              expectMemEq "t06_plain" (Right t06_plain) $ Base64.decode t06_padded,
+              expectMemEq "t06_plain" (Right t06_plain) $ Base64.decode t06_unpadded,
+              expectMemEq "t07_plain" (Right t07_plain) $ Base64.decode t07_encoded
             ]
         ]

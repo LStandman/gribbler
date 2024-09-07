@@ -5,7 +5,7 @@
 module Misc.Diceware
   ( decode,
     encode,
-    is_sanitized,
+    isSanitized,
   )
 where
 
@@ -32,16 +32,16 @@ encode :: [String] -> Int -> Int -> [String]
 
 -- * Lower case only.
 
-is_sanitized :: [String] -> Either String ()
+isSanitized :: [String] -> Either String ()
 
 decode dictionary hits =
-  mapM (flip elemIndex dictionary) hits
-    >>= Just . (foldl' (\a b -> a * (length dictionary) + b) 0)
+  mapM (`elemIndex` dictionary) hits
+    >>= Just . foldl' (\a b -> a * length dictionary + b) 0
 
 encode' :: [String] -> Int -> Int -> Int -> DiffList String
 encode' _ _ 0 _ = difflist []
 encode' dictionary radix digits number =
-  (encode' dictionary radix (digits - 1) q) <> difflist [dictionary !! r]
+  encode' dictionary radix (digits - 1) q <> difflist [dictionary !! r]
   where
     (q, r) = number `divMod` radix
 
@@ -49,18 +49,18 @@ encode dictionary digits number =
   relist $
     encode' dictionary (length dictionary) digits number
 
-is_sanitized' :: String -> Either String ()
-is_sanitized' s
-  | isNothing $ (find (not . \c -> isLower c || c == '-')) s = Right ()
+isSanitized' :: String -> Either String ()
+isSanitized' s
+  | isNothing $ find (not . \c -> isLower c || c == '-') s = Right ()
   | otherwise =
     Left
       ( "Word " ++ show s ++ " "
           ++ "is not exclusively lowercase alphabet and dashes!"
       )
 
-is_sanitized [] = Right ()
-is_sanitized (x : xs) =
-  is_sanitized' x >>= return e >> is_sanitized xs
+isSanitized [] = Right ()
+isSanitized (x : xs) =
+  isSanitized' x >>= return e >> isSanitized xs
   where
     e = case find (<= x) xs of
       Just y ->

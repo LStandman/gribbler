@@ -2,13 +2,13 @@
 -- Crypt/Curve25519Test.hs: Unit tests for Curve25519
 -- Copyright (C) 2024 LStandman
 
-module Crypt.Curve25519Test (test_x25519) where
+module Crypt.Curve25519Test (testX25519) where
 
 import qualified Crypt.Curve25519 as Curve25519
 import Libtest
 
 {- ORMOLU_DISABLE -}
-test_x25519 =
+testX25519 =
   let --  From RFC-7748.
       rfc7748_tests =
         [ ( [ 0xA5, 0x46, 0xE3, 0x6B, 0xF0, 0x52, 0x7C, 0x9D,
@@ -1153,20 +1153,20 @@ test_x25519 =
         "X25519"
         ( fmap
             ( \((scalar, scalar_num, u_in, u_in_num, u_out), i) ->
-                test ("RFC7748@" ++ (show i)) $
-                  [ expect_memeq "scalar_num" scalar_num $
-                      Curve25519.decode_scalar scalar,
-                    expect_memeq "u_in_num" u_in_num $
-                      Curve25519.decode_u_coord u_in,
-                    expect_memeq "u_out" u_out $
+                test ("RFC7748@" ++ show i)
+                  [ expectMemEq "scalar_num" scalar_num $
+                      Curve25519.decodeScalar scalar,
+                    expectMemEq "u_in_num" u_in_num $
+                      Curve25519.decodeUcoord u_in,
+                    expectMemEq "u_out" u_out $
                       Curve25519.x25519 scalar u_in
                   ]
             )
             (zip rfc7748_tests [1, 2..])
-            ++ [ t_test
+            ++ [ indexedTest
                    "Testmgr"
                    $ fmap
-                     (\(secret, public, ss) -> expect_memeq "ss" ss $ Curve25519.x25519 secret public)
+                     (\(secret, public, ss) -> expectMemEq "ss" ss $ Curve25519.x25519 secret public)
                      wycheproof_tests
                ]
         )

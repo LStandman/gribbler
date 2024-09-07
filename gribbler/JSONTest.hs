@@ -266,49 +266,49 @@ test_json' =
         "JSON"
         [ test
             "DeserializationWikipedia"
-            [ expect_memeq "t01_json" (Right t01_json) $ deserialize t01_string
+            [ expectMemEq "t01_json" (Right t01_json) $ deserialize t01_string
             ],
           test
             "DeserializationGaloisIncPass"
-            [ expect_memeq "t02_json" (Right t02_json) $ deserialize t02_string
+            [ expectMemEq "t02_json" (Right t02_json) $ deserialize t02_string
             ],
           test
             "DeserializationGaloisIncFail"
-            [ expect_false $ isRight $ deserialize t03_string,
-              expect_false $ isRight $ deserialize t04_string,
-              expect_false $ isRight $ deserialize t05_string,
-              expect_false $ isRight $ deserialize t06_string,
-              expect_false $ isRight $ deserialize t07_string,
-              expect_false $ isRight $ deserialize t08_string,
-              expect_false $ isRight $ deserialize t09_string,
-              expect_false $ isRight $ deserialize t10_string,
-              expect_false $ isRight $ deserialize t11_string,
-              expect_false $ isRight $ deserialize t12_string,
-              expect_false $ isRight $ deserialize t13_string,
-              expect_false $ isRight $ deserialize t14_string,
-              expect_false $ isRight $ deserialize t15_string,
-              expect_false $ isRight $ deserialize t16_string,
-              expect_false $ isRight $ deserialize t17_string,
-              expect_false $ isRight $ deserialize t18_string,
-              expect_false $ isRight $ deserialize t19_string,
-              expect_false $ isRight $ deserialize t20_string,
-              expect_false $ isRight $ deserialize t21_string,
-              expect_false $ isRight $ deserialize t22_string,
-              expect_false $ isRight $ deserialize t23_string,
-              expect_false $ isRight $ deserialize t24_string,
-              expect_false $ isRight $ deserialize t25_string,
-              expect_false $ isRight $ deserialize t26_string,
-              expect_false $ isRight $ deserialize t27_string,
-              expect_false $ isRight $ deserialize t28_string,
-              expect_false $ isRight $ deserialize t29_string,
-              expect_false $ isRight $ deserialize t30_string,
-              expect_false $ isRight $ deserialize t31_string,
-              expect_false $ isRight $ deserialize t32_string,
-              expect_false $ isRight $ deserialize t33_string
+            [ expectFalse $ isRight $ deserialize t03_string,
+              expectFalse $ isRight $ deserialize t04_string,
+              expectFalse $ isRight $ deserialize t05_string,
+              expectFalse $ isRight $ deserialize t06_string,
+              expectFalse $ isRight $ deserialize t07_string,
+              expectFalse $ isRight $ deserialize t08_string,
+              expectFalse $ isRight $ deserialize t09_string,
+              expectFalse $ isRight $ deserialize t10_string,
+              expectFalse $ isRight $ deserialize t11_string,
+              expectFalse $ isRight $ deserialize t12_string,
+              expectFalse $ isRight $ deserialize t13_string,
+              expectFalse $ isRight $ deserialize t14_string,
+              expectFalse $ isRight $ deserialize t15_string,
+              expectFalse $ isRight $ deserialize t16_string,
+              expectFalse $ isRight $ deserialize t17_string,
+              expectFalse $ isRight $ deserialize t18_string,
+              expectFalse $ isRight $ deserialize t19_string,
+              expectFalse $ isRight $ deserialize t20_string,
+              expectFalse $ isRight $ deserialize t21_string,
+              expectFalse $ isRight $ deserialize t22_string,
+              expectFalse $ isRight $ deserialize t23_string,
+              expectFalse $ isRight $ deserialize t24_string,
+              expectFalse $ isRight $ deserialize t25_string,
+              expectFalse $ isRight $ deserialize t26_string,
+              expectFalse $ isRight $ deserialize t27_string,
+              expectFalse $ isRight $ deserialize t28_string,
+              expectFalse $ isRight $ deserialize t29_string,
+              expectFalse $ isRight $ deserialize t30_string,
+              expectFalse $ isRight $ deserialize t31_string,
+              expectFalse $ isRight $ deserialize t32_string,
+              expectFalse $ isRight $ deserialize t33_string
             ],
           test
             "SerializationGaloisInc"
-            [ expect_memeq "t34_json" (Right t34_json) $ deserialize $ serialize True t34_json,
-              expect_memeq "t35_json" (Right t35_json) $ deserialize $ serialize False t35_json
+            [ expectMemEq "t34_json" (Right t34_json) $ deserialize $ serialize True t34_json,
+              expectMemEq "t35_json" (Right t35_json) $ deserialize $ serialize False t35_json
             ]
         ]

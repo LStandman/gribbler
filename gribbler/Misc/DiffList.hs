@@ -12,7 +12,7 @@ where
 
 import Data.Monoid
 
-newtype DiffList a = DiffList (Endo ([a]))
+newtype DiffList a = DiffList (Endo [a])
 
 type DiffString = DiffList Char
 

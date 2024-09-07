@@ -22,12 +22,12 @@ alphabet =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" ::
     Base64.Alphabet
 
-pad_char = Just '='
+padChar = Just '='
 
-encode is_padded v = Base64.encode alphabet p v
+encode is_padded = Base64.encode alphabet p
   where
     p
-      | is_padded = pad_char
+      | is_padded = padChar
       | otherwise = Nothing
 
-decode v = Base64.decode alphabet pad_char v
+decode = Base64.decode alphabet padChar

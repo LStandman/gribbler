@@ -10,19 +10,20 @@ module JSON.BNF
     JSON.BNF.or,
     assert,
     err,
-    eval_parser,
+    evalParser,
     excl,
-    exec_parser,
+    execParser,
     miss,
     oom,
     rep,
-    run_parser,
+    runParser,
     zom,
     zoo,
   )
 where
 
 import Control.Monad
+import Data.Functor ((<&>))
 import GHC.Stack
 
 infixl 1 `err`
@@ -43,53 +44,51 @@ newtype Parser s a = Parser (s -> Result (a, s))
 
 assert :: String -> Parser s a -> Parser s a
 and :: Semigroup a => Parser s a -> Parser s a -> Parser s a
-eval_parser :: Parser s a -> s -> Result a
+evalParser :: Parser s a -> s -> Result a
 excl :: Parser s a -> Parser s b -> Parser s a
-exec_parser :: Parser s a -> s -> Result s
+execParser :: Parser s a -> s -> Result s
 null :: Monoid a => Parser s a
 oom :: Semigroup a => Parser s a -> Parser s a
 or :: Parser s a -> Parser s a -> Parser s a
 rep :: Semigroup a => Int -> Parser s a -> Parser s a
-run_parser :: Parser s a -> (s -> Result (a, s))
+runParser :: Parser s a -> (s -> Result (a, s))
 zom :: Monoid a => Parser s a -> Parser s a
 zoo :: Monoid a => Parser s a -> Parser s a
 
 instance Monad Result where
-  return = Hit
   (Hit h) >>= f = f h
   Miss >>= _ = Miss
   (Error e) >>= _ = Error e
 
 instance Applicative Result where
-  pure = return
+  pure = Hit
   (<*>) = ap
 
 instance Functor Result where
   fmap = liftM
 
 instance Monad (Parser s) where
-  return x = Parser $ \s -> Hit (x, s)
   (Parser f') >>= g =
-    Parser (\s -> f' s >>= \(x, s') -> run_parser (g x) s')
+    Parser (f' >=> (\(x, s') -> runParser (g x) s'))
 
 instance Applicative (Parser s) where
-  pure = return
+  pure x = Parser $ \s -> Hit (x, s)
   (<*>) = ap
 
 instance Functor (Parser s) where
   fmap = liftM
 
-run_parser (Parser f') = f'
+runParser (Parser f') = f'
 
-eval_parser f s = run_parser f s >>= return . fst
+evalParser f s = runParser f s <&> fst
 
-exec_parser f s = run_parser f s >>= return . snd
+execParser f s = runParser f s <&> snd
 
 or (Parser f') g =
   Parser $
     \s ->
       case f' s of
-        Miss -> run_parser g s
+        Miss -> runParser g s
         r -> r
 
 and f g =
@@ -107,10 +106,10 @@ rep n f = f `JSON.BNF.and` rep (n - 1) f
 excl f g =
   Parser $
     \s ->
-      run_parser
+      runParser
         ( f
             >>= \x ->
-              case run_parser g s of
+              case runParser g s of
                 Hit _ -> miss
                 Miss -> return x
                 Error e -> err e

@@ -3,15 +3,15 @@
 -- Copyright (C) 2021-2023 LStandman
 
 module Libtest
-  ( expect_dbgeq,
-    expect_false,
-    expect_memeq,
-    expect_that,
-    expect_true,
+  ( expectDbgEq,
+    expectFalse,
+    expectMemEq,
+    expectThat,
+    expectTrue,
     runtests,
     test,
     testsuite,
-    t_test,
+    indexedTest,
   )
 where
 
@@ -23,32 +23,30 @@ import Text.Printf
 
 type Assertion s = s -> IO Bool
 
-expect_false :: Bool -> Assertion s
-expect_memeq ::
+expectFalse :: Bool -> Assertion s
+expectMemEq ::
   (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
-expect_that :: (a -> Assertion s) -> a -> Assertion s
-expect_true :: Bool -> Assertion s
+expectThat :: (a -> Assertion s) -> a -> Assertion s
+expectTrue :: Bool -> Assertion s
 runtests :: [Assertion ()] -> Assertion ()
 test :: String -> [Assertion (Maybe Int)] -> Assertion ()
 testsuite :: String -> [Assertion ()] -> Assertion ()
-t_test :: String -> [Assertion (Maybe Int)] -> Assertion ()
-assert_all :: [Assertion ()] -> Assertion ()
-assert_all [] = \_ -> return True
-assert_all (t : ts) =
-  \_ -> t () >>= \x -> assert_all ts () >>= \y -> return (x && y)
+indexedTest :: String -> [Assertion (Maybe Int)] -> Assertion ()
+assertAll :: [Assertion ()] -> Assertion ()
+assertAll [] = \_ -> return True
+assertAll (t : ts) =
+  \_ -> t () >>= \x -> assertAll ts () >>= \y -> return (x && y)
 
-runtests ts = assert_all ts
+runtests = assertAll
 
-run :: (Maybe Int) -> [Assertion (Maybe Int)] -> IO Bool
+run :: Maybe Int -> [Assertion (Maybe Int)] -> IO Bool
 run _ [] = return True
 run ctr (e : es) =
   e ctr >>= \x ->
-    case x of
-      False -> return False
-      True -> run (fmap (1 +) ctr) es
+    (if x then run (fmap (+ 1) ctr) es else return False)
 
-show_run :: Bool -> String -> [Assertion (Maybe Int)] -> Assertion ()
-show_run use_ctr name es =
+showRun :: Bool -> String -> [Assertion (Maybe Int)] -> Assertion ()
+showRun useCtr name es =
   \_ ->
     printf "[ RUN      ] %s\n" name
       >> getCPUTime
@@ -63,58 +61,54 @@ show_run use_ctr name es =
                   name
                   >> printf
                     "[       ** ] time: %0.1fms\n"
-                    ((fromIntegral (end - start)) / (10 ^ 9) :: Double)
+                    (fromIntegral (end - start) / (10 ^ 9) :: Double)
                   >> return x
   where
-    ctr = case use_ctr of
-      False -> Nothing
-      True -> Just 1
+    ctr
+      | useCtr = Just 1
+      | otherwise = Nothing
 
-test = show_run False
+test = showRun False
 
-t_test = show_run True
+indexedTest = showRun True
 
-testsuite name tests =
-  \_ ->
-    printf "[----------] tests from %s\n" name
-      >> assert_all tests () >>= \x -> printf "[----------]\n" >> return x
+testsuite name tests _ =
+  printf "[----------] tests from %s\n" name
+    >> assertAll tests () >>= \x -> printf "[----------]\n" >> return x
 
-expect_that matcher = matcher
+expectThat matcher = matcher
 
 dbgeq :: Integral a => String -> [a] -> [a] -> Assertion (Maybe Int)
-dbgeq varname expected actual =
-  \ctr -> case actual == expected of
-    True -> return True
-    False ->
-      print ("Value of: " ++ varname ++ (maybe "" (\i -> "@" ++ show i) ctr))
+dbgeq varname expected actual ctr =
+  if actual == expected
+    then return True
+    else
+      print ("Value of: " ++ varname ++ maybe "" (\i -> "@" ++ show i) ctr)
         >> print
           ( "  Actual: "
-              ++ ( show $
-                     map (\x -> "0x" ++ num2hex 2 (fromIntegral x)) actual
-                 )
+              ++ show (map (\x -> "0x" ++ num2hex 2 (fromIntegral x)) actual)
           )
         >> print
           ( "Expected: "
-              ++ ( show $
-                     map (\x -> "0x" ++ num2hex 2 (fromIntegral x)) expected
-                 )
+              ++ show (map (\x -> "0x" ++ num2hex 2 (fromIntegral x)) expected)
           )
         >> return False
 
-expect_dbgeq varname expected = expect_that (dbgeq varname expected)
+expectDbgEq varname expected = expectThat (dbgeq varname expected)
 
 memeq :: (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
-memeq varname expected actual =
-  \ctr -> case actual == expected of
-    True -> return True
-    False ->
-      print ("Value of: " ++ varname ++ (maybe "" (\i -> "@" ++ show i) ctr))
-        >> print ("  Actual: " ++ (show actual))
-        >> print ("Expected: " ++ (show expected))
+memeq varname expected actual ctr =
+  if actual == expected
+    then return True
+    else
+      print
+        ("Value of: " ++ varname ++ maybe "" (\i -> "@" ++ show i) ctr)
+        >> print ("  Actual: " ++ show actual)
+        >> print ("Expected: " ++ show expected)
         >> return False
 
-expect_memeq varname expected = expect_that (memeq varname expected)
+expectMemEq varname expected = expectThat (memeq varname expected)
 
-expect_true = return . return
+expectTrue = return . return
 
-expect_false = return . return . not
+expectFalse = return . return . not

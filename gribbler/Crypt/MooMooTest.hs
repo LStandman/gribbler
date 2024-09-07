@@ -2,14 +2,14 @@
 -- Crypt/MooMooTest.hs: Unit tests for MooMoo
 -- Copyright (C) 2021-2023 LStandman
 
-module Crypt.MooMooTest (test_aes256_cbc) where
+module Crypt.MooMooTest (testAes256Cbc) where
 
 import qualified Crypt.AES256 as AES256
 import qualified Crypt.MooMoo as MooMoo
 import Libtest
 
 {- ORMOLU_DISABLE -}
-test_aes256_cbc =
+testAes256Cbc =
   let --  From NIST SP800-38A.
       t1_key =
         [ 0x60, 0x3D, 0xEB, 0x10, 0x15, 0xCA, 0x71, 0xBE,
@@ -192,42 +192,42 @@ test_aes256_cbc =
         "AES256CBC"
         [ test
             "EncryptNISTSP80038A"
-            [ expect_memeq "t1_ctext" (t1_ctext, t1_iv_out) $
-                MooMoo.cbc_encrypt1
+            [ expectMemEq "t1_ctext" (t1_ctext, t1_iv_out) $
+                MooMoo.cbcEncrypt1
                   AES256.encrypt
                     t1_iv
                   t1_ptext
                   t1_key
-                  AES256.size_block
+                  AES256.sizeBlock
             ],
           test
             "EncryptTestmgr"
-            [ expect_memeq "t2_ctext" (t2_ctext, t2_iv_out) $
-                MooMoo.cbc_encrypt1
+            [ expectMemEq "t2_ctext" (t2_ctext, t2_iv_out) $
+                MooMoo.cbcEncrypt1
                   AES256.encrypt
                   t2_iv
                   t2_ptext
                   t2_key
-                  AES256.size_block
+                  AES256.sizeBlock
             ],
           test
             "DecryptNISTSP80038A"
-            [ expect_memeq "t1_ptext" t1_ptext $
-                MooMoo.cbc_decrypt
+            [ expectMemEq "t1_ptext" t1_ptext $
+                MooMoo.cbcDecrypt
                   AES256.decrypt
                   t1_iv
                   t1_ctext
                   t1_key
-                  AES256.size_block
+                  AES256.sizeBlock
             ],
           test
             "DecryptTestmgr"
-            [ expect_memeq "t2_ptext" t2_ptext $
-                MooMoo.cbc_decrypt
+            [ expectMemEq "t2_ptext" t2_ptext $
+                MooMoo.cbcDecrypt
                   AES256.decrypt
                   t2_iv
                   t2_ctext
                   t2_key
-                  AES256.size_block
+                  AES256.sizeBlock
             ]
         ]

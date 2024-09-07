@@ -13,11 +13,11 @@ import Libtest
 
 test_crypt =
   runtests
-    [ test_aes256,
-      test_aes256_cbc,
-      test_hkdf_sha256,
-      test_hmac_sha256,
-      test_pbkdf2_hmac_sha256,
-      test_sha256,
-      test_x25519
+    [ testAes256,
+      testAes256Cbc,
+      testHkdfSha256,
+      testHmacSha256,
+      testPbkdf2HmacSha256,
+      testSha256,
+      testX25519
     ]

@@ -2,7 +2,7 @@
 -- Crypt/SHA2Test.hs: Unit tests for SHA2
 -- Copyright (C) 2021-2024 LStandman
 
-module Crypt.SHA2Test (test_sha256) where
+module Crypt.SHA2Test (testSha256) where
 
 --
 import qualified Crypt.SHA2 as SHA2
@@ -12,7 +12,7 @@ import Libtest
 import Misc.MemUtils
 
 {- ORMOLU_DISABLE -}
-test_sha256 =
+testSha256 =
   let --  SHA256 test vectors from NIST.
       t1_message = strBytes ""
       t1_size = 0
@@ -200,26 +200,26 @@ test_sha256 =
         "SHA256"
         [ test
             "NIST0000"
-            [ expect_memeq "t1_digest" t1_digest $ SHA2.sha256sum t1_message t1_size
+            [ expectMemEq "t1_digest" t1_digest $ SHA2.sha256sum t1_message t1_size
             ],
           test
             "NIST0003"
-            [ expect_memeq "t2_digest" t2_digest $ SHA2.sha256sum t2_message t2_size
+            [ expectMemEq "t2_digest" t2_digest $ SHA2.sha256sum t2_message t2_size
             ],
           test
             "NIST0056"
-            [ expect_memeq "t3_digest" t3_digest $ SHA2.sha256sum t3_message t3_size
+            [ expectMemEq "t3_digest" t3_digest $ SHA2.sha256sum t3_message t3_size
             ],
           test
             "NIST0064"
-            [ expect_memeq "t4_digest" t4_digest $ SHA2.sha256sum t4_message t4_size
+            [ expectMemEq "t4_digest" t4_digest $ SHA2.sha256sum t4_message t4_size
             ],
           test
             "NIST1023"
-            [ expect_memeq "t5_digest" t5_digest $ SHA2.sha256sum t5_message t5_size
+            [ expectMemEq "t5_digest" t5_digest $ SHA2.sha256sum t5_message t5_size
             ],
           test
             "Rep160000"
-            [ expect_memeq "t6_digest" t6_digest $ foldl' (\m _ -> SHA2.sha256sum m SHA2.sha256_size_digest) (SHA2.sha256sum t6_message t6_size) [2 .. 160000]
+            [ expectMemEq "t6_digest" t6_digest $ foldl' (\m _ -> SHA2.sha256sum m SHA2.sha256SizeDigest) (SHA2.sha256sum t6_message t6_size) [2 .. 160000]
             ]
         ]

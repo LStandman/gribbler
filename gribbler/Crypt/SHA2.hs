@@ -8,10 +8,10 @@ module Crypt.SHA2
     int_sha256once,
     int_sha256sum,
     int_sha256toList,
-    sha256_bounds_hash,
-    sha256_size_block,
-    sha256_size_digest,
-    sha256_size_hash,
+    sha256BoundsHash,
+    sha256SizeBlock,
+    sha256SizeDigest,
+    sha256SizeHash,
     sha256sum,
     sha256sum1,
   )
@@ -31,27 +31,27 @@ int_sha256hash0 :: Hash
 int_sha256once :: Hash -> [Word8] -> Hash
 int_sha256sum :: Hash -> [Word8] -> Int -> Hash
 int_sha256toList :: Hash -> [Word8]
-sha256_bounds_hash :: (Int, Int)
-sha256_size_block :: Int
-sha256_size_digest :: Int
-sha256_size_hash :: Int
+sha256BoundsHash :: (Int, Int)
+sha256SizeBlock :: Int
+sha256SizeDigest :: Int
+sha256SizeHash :: Int
 sha256sum :: [Word8] -> Int -> [Word8]
 sha256sum1 :: [Word8] -> [Word8]
 
-sha256_size_block = 64
+sha256SizeBlock = 64
 
-sha256_size_digest = 32
+sha256SizeDigest = 32
 
-sha256_size_hash = 8
+sha256SizeHash = 8
 
-size_block = 16
+sizeBlock = 16
 
-sha256_bounds_hash = (0, sha256_size_hash - 1)
+sha256BoundsHash = (0, sha256SizeHash - 1)
 
 {- ORMOLU_DISABLE -}
 int_sha256hash0 =
   listArray
-    sha256_bounds_hash
+    sha256BoundsHash
     [ 0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
       0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
     ] ::
@@ -59,7 +59,7 @@ int_sha256hash0 =
 {- ORMOLU_ENABLE -}
 
 ch :: Word32 -> Word32 -> Word32 -> Word32
-ch x y z = (x .&. y) `xor` ((complement x) .&. z)
+ch x y z = (x .&. y) `xor` (complement x .&. z)
 
 maj :: Word32 -> Word32 -> Word32 -> Word32
 maj x y z = (x .&. y) `xor` (x .&. z) `xor` (y .&. z)
@@ -79,7 +79,7 @@ lil_sigma1 x = (x `rotateR` 17) `xor` (x `rotateR` 19) `xor` (x `shiftR` 10)
 sha256round :: Hash -> Word32 -> Hash
 sha256round v x =
   array
-    sha256_bounds_hash
+    sha256BoundsHash
     [ (0, t1 + t2),
       (1, a),
       (2, b),
@@ -98,14 +98,14 @@ sha256round v x =
     f = v ! 5
     g = v ! 6
     h = v ! 7
-    t1 = h + (big_sigma1 e) + (ch e f g) + x
-    t2 = (big_sigma0 a) + (maj a b c)
+    t1 = h + big_sigma1 e + ch e f g + x
+    t2 = big_sigma0 a + maj a b c
 
 sha256block :: Hash -> [Word32] -> Hash
 sha256block h v =
-  array sha256_bounds_hash [(i, h ! i + h' ! i) | i <- range sha256_bounds_hash]
+  array sha256BoundsHash [(i, h ! i + h' ! i) | i <- range sha256BoundsHash]
   where
-    h' = foldl' (sha256round) h v
+    h' = foldl' sha256round h v
 
 {- ORMOLU_DISABLE -}
 k =
@@ -146,11 +146,11 @@ sha256sched' v i =
 sha256sched :: IOUArray Int Word32 -> IO ()
 sha256sched v =
   mapM_ (sha256sched' v) [16 .. 63]
-    >> mapM_ (\i -> readArray v i >>= (writeArray v i) . (+ k ! i)) [0 .. 63]
+    >> mapM_ (\i -> readArray v i >>= writeArray v i . (+ k ! i)) [0 .. 63]
 
-from_list :: [Word8] -> [Word32]
-from_list [] = []
-from_list m = foldl' (f) 0 m1 : from_list m2
+fromList :: [Word8] -> [Word32]
+fromList [] = []
+fromList m = foldl' f 0 m1 : fromList m2
   where
     f a b = (a `shiftL` 8) .|. fromIntegral b
     (m1, m2) = splitAt 4 m
@@ -163,7 +163,7 @@ int_sha256once h m = h'
     -- INFO: `k + w` is also unthunked herein to reduce memory consumption.
     w =
       unsafePerformIO $
-        newListArray (0, 63) (from_list m)
+        newListArray (0, 63) (fromList m)
           >>= \v ->
             sha256sched v
               >> getElems v
@@ -171,18 +171,18 @@ int_sha256once h m = h'
 
 sha256sum' :: Hash -> [Word8] -> Int -> Hash
 sha256sum' h m l =
-  case splitAt sha256_size_block m of
+  case splitAt sha256SizeBlock m of
     (m1, []) ->
       case splitAt
-        sha256_size_block
-        (m1 ++ [0x80] ++ (take n $ repeat 0) ++ split (l * 8)) of
+        sha256SizeBlock
+        (m1 ++ [0x80] ++ replicate n 0 ++ split (l * 8)) of
         (m1', []) -> int_sha256once h m1'
         (m1', m2') -> int_sha256once (int_sha256once h m1') m2'
     (m1, m2) -> sha256sum' (int_sha256once h m1) m2 l
   where
     split x =
       map
-        (fromIntegral)
+        fromIntegral
         [ x `shiftR` 56,
           x `shiftR` 48,
           x `shiftR` 40,
@@ -193,18 +193,18 @@ sha256sum' h m l =
           x
         ] ::
         [Word8]
-    n = (sha256_size_block - 8 - (l + 1)) `mod` sha256_size_block
+    n = (sha256SizeBlock - 8 - (l + 1)) `mod` sha256SizeBlock
 
 int_sha256toList h =
-  concatMap (split) $ elems h
+  concatMap split $ elems h
   where
     split x =
       map
-        (fromIntegral)
+        fromIntegral
         [x `shiftR` 24, x `shiftR` 16, x `shiftR` 8, x] ::
         [Word8]
 
-int_sha256sum h m l = sha256sum' h m l
+int_sha256sum = sha256sum'
 
 sha256sum m l = int_sha256toList $ int_sha256sum int_sha256hash0 m l
 

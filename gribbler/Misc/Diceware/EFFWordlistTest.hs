@@ -24,12 +24,12 @@ test_effwordlist =
         "EFFWordlist"
         [ test
             "IsSanitized"
-            [ expect_memeq "t1_result" t1_result $
-                Diceware.is_sanitized EFFWordlist.eff_large_wordlist
+            [ expectMemEq "t1_result" t1_result $
+                Diceware.isSanitized EFFWordlist.effLargeWordlist
             ],
           test
             "SHA256"
-            [ expect_memeq "t2_result" t2_result $
-                sha256sum1 $ strBytes $ unlines EFFWordlist.eff_large_wordlist
+            [ expectMemEq "t2_result" t2_result $
+                sha256sum1 $ strBytes $ unlines EFFWordlist.effLargeWordlist
             ]
         ]

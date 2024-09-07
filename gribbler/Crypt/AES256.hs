@@ -3,8 +3,8 @@
 -- Copyright (C) 2021-2024 LStandman
 
 module Crypt.AES256
-  ( size_block,
-    size_key,
+  ( sizeBlock,
+    sizeKey,
     encrypt,
     decrypt,
   )
@@ -22,24 +22,24 @@ infixl 7 `dot`
 
 type Mat = UArray (Word8, Word8) Word8
 
-size_block :: Int
-size_key :: Int
+sizeBlock :: Int
+sizeKey :: Int
 encrypt :: HasCallStack => [Word8] -> [Word8] -> [Word8]
 decrypt :: HasCallStack => [Word8] -> [Word8] -> [Word8]
 
-bounds_sbox = ((0, 0), (15, 15))
+boundsSbox = ((0, 0), (15, 15))
 
-bounds_side = (0, 3)
+boundsSide = (0, 3)
 
-bounds_state = ((0, 0), (3, 3))
+boundsState = ((0, 0), (3, 3))
 
-size_block = 16
+sizeBlock = 16
 
-size_key = 32
+sizeKey = 32
 
-size_side = 4
+sizeSide = 4
 
-size_state = 16
+sizeState = 16
 
 -- PRELIMINARY FUNCTIONS
 
@@ -63,18 +63,18 @@ a `dot` b
 sub' :: Mat -> Word8 -> Word8
 sub' vv a = vv ! (a `shiftR` 4, a .&. 0x0F)
 
-from_list :: [Word8] -> Mat
-from_list v =
-  array bounds_state (zip [(j, i) | (i, j) <- range bounds_state] v)
+fromList :: [Word8] -> Mat
+fromList v =
+  array boundsState (zip [(j, i) | (i, j) <- range boundsState] v)
 
-from_cols :: [[Word8]] -> Mat
-from_cols = from_list . concat
+fromCols :: [[Word8]] -> Mat
+fromCols = fromList . concat
 
-to_list :: Mat -> [Word8]
-to_list = concat . to_cols
+toList :: Mat -> [Word8]
+toList = concat . toCols
 
-to_cols :: Mat -> [[Word8]]
-to_cols mat = [[mat ! (i, j) | i <- range bounds_side] | j <- range bounds_side]
+toCols :: Mat -> [[Word8]]
+toCols mat = [[mat ! (i, j) | i <- range boundsSide] | j <- range boundsSide]
 
 -- CIPHER OPERATIONS
 
@@ -85,7 +85,7 @@ sub = sub' sbox
     -- Fig. 7.
     sbox =
       listArray
-        bounds_sbox
+        boundsSbox
         [ 0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5,
           0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
           0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0,
@@ -122,43 +122,43 @@ sub = sub' sbox
         Mat
 {- ORMOLU_ENABLE -}
 
-sub_bytes :: Mat -> Mat
-sub_bytes = amap sub
+subBytes :: Mat -> Mat
+subBytes = amap sub
 
-shift_rows :: Mat -> Mat
-shift_rows = ixmap bounds_state f
+shiftRows :: Mat -> Mat
+shiftRows = ixmap boundsState f
   where
-    f (i, j) = (i, (j + i) `mod` size_side)
+    f (i, j) = (i, (j + i) `mod` sizeSide)
 
-mix_columns' :: (Word8 -> Word8 -> Word8 -> Word8 -> Word8) -> Mat -> Mat
-mix_columns' f vv =
+mixColumns' :: (Word8 -> Word8 -> Word8 -> Word8 -> Word8) -> Mat -> Mat
+mixColumns' f vv =
   array
-    bounds_state
+    boundsState
     [ ( (i, j),
         f
           (vv ! (i, j))
-          (vv ! ((i + 1) `mod` size_side, j))
-          (vv ! ((i + 2) `mod` size_side, j))
-          (vv ! ((i + 3) `mod` size_side, j))
+          (vv ! ((i + 1) `mod` sizeSide, j))
+          (vv ! ((i + 2) `mod` sizeSide, j))
+          (vv ! ((i + 3) `mod` sizeSide, j))
       )
-      | (i, j) <- range bounds_state
+      | (i, j) <- range boundsState
     ]
 
-mix_columns :: Mat -> Mat
-mix_columns = mix_columns' mix_byte
+mixColumns :: Mat -> Mat
+mixColumns = mixColumns' mix_byte
   where
     mix_byte a b c d = (0x02 `dot` a) `xor` (0x03 `dot` b) `xor` c `xor` d
 
 -- INVERSE CIPHER OPERATIONS
 
 {- ORMOLU_DISABLE -}
-inv_sub_bytes :: Mat -> Mat
-inv_sub_bytes = amap (sub' inv_sbox)
+invSubBytes :: Mat -> Mat
+invSubBytes = amap (sub' inv_sbox)
   where
     -- Fig. 14.
     inv_sbox =
       listArray
-        bounds_sbox
+        boundsSbox
         [ 0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38,
           0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB,
           0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87,
@@ -195,13 +195,13 @@ inv_sub_bytes = amap (sub' inv_sbox)
         Mat
 {- ORMOLU_ENABLE -}
 
-inv_shift_rows :: Mat -> Mat
-inv_shift_rows = ixmap bounds_state f
+invShiftRows :: Mat -> Mat
+invShiftRows = ixmap boundsState f
   where
-    f (i, j) = (i, (j + size_side - i) `mod` size_side)
+    f (i, j) = (i, (j + sizeSide - i) `mod` sizeSide)
 
-inv_mix_columns :: Mat -> Mat
-inv_mix_columns = mix_columns' mix_byte
+invMixColumns :: Mat -> Mat
+invMixColumns = mixColumns' mix_byte
   where
     mix_byte a b c d =
       (0x0E `dot` a) `xor` (0x0B `dot` b)
@@ -210,72 +210,70 @@ inv_mix_columns = mix_columns' mix_byte
 
 -- KEY SCHEDULE ALGORITHM
 
-add_round_key :: Mat -> Mat -> Mat
-add_round_key vv uu =
-  listArray bounds_state $ zipWith (xor) (elems vv) (elems uu)
+addRoundKey :: Mat -> Mat -> Mat
+addRoundKey vv uu =
+  listArray boundsState $ zipWith xor (elems vv) (elems uu)
 
-key_expansion'' :: Mat -> [Word8] -> Mat
-key_expansion'' key1 col2 =
-  from_cols . tail $ scanl (zipWith (xor)) col2 $ to_cols key1
+keyExpansion'' :: Mat -> [Word8] -> Mat
+keyExpansion'' key1 col2 =
+  fromCols . tail $ scanl (zipWith xor) col2 $ toCols key1
 
-key_expansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
-key_expansion' (key1, key2) rcon = (key3, key4)
+keyExpansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
+keyExpansion' (key1, key2) rcon = (key3, key4)
   where
     -- Even rounds.
     rot_word : rot_words =
-      [ sub $ key2 ! ((i + 1) `mod` size_side, size_side - 1)
-        | i <- range bounds_side
+      [ sub $ key2 ! ((i + 1) `mod` sizeSide, sizeSide - 1)
+        | i <- range boundsSide
       ]
     col2 = rot_word `xor` rcon : rot_words
-    key3 = key_expansion'' key1 col2
+    key3 = keyExpansion'' key1 col2
     -- Odd rounds.
     col3 =
-      [ sub $ key3 ! (i, size_side - 1)
-        | i <- range bounds_side
+      [ sub $ key3 ! (i, sizeSide - 1)
+        | i <- range boundsSide
       ]
-    key4 = key_expansion'' key2 col3
+    key4 = keyExpansion'' key2 col3
 
 -- this recursion on key pairs inevitably produces one key too many,
 -- so we drop it.
-key_expansion :: (Mat, Mat) -> [Mat]
-key_expansion key = init $ concatMap (\(a, b) -> [a, b]) schedule
+keyExpansion :: (Mat, Mat) -> [Mat]
+keyExpansion key = init $ concatMap (\(a, b) -> [a, b]) schedule
   where
     schedule =
-      scanl (key_expansion') key [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40]
+      scanl keyExpansion' key [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40]
 
 -- CIPHER ALGORITHM
 
 -- `tail` drops a duplicate of key1 from schedule.y
-schedule_helper :: HasCallStack => (Mat, Mat) -> (Mat, [Mat])
-schedule_helper = MemUtils.runcons . tail . key_expansion
+scheduleHelper :: HasCallStack => (Mat, Mat) -> (Mat, [Mat])
+scheduleHelper = MemUtils.runcons . tail . keyExpansion
 
 cipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
-cipher ptext key1 key2 = add_round_key (shift_rows . sub_bytes $ ptext'') key15
+cipher ptext key1 key2 = addRoundKey (shiftRows . subBytes $ ptext'') key15
   where
-    f p k =
-      add_round_key (mix_columns . shift_rows . sub_bytes $ p) k
-    (key15, schedule) = schedule_helper (key1, key2)
-    ptext' = add_round_key ptext key1
-    ptext'' = foldl' (f) ptext' schedule
+    f p = addRoundKey (mixColumns . shiftRows . subBytes $ p)
+    (key15, schedule) = scheduleHelper (key1, key2)
+    ptext' = addRoundKey ptext key1
+    ptext'' = foldl' f ptext' schedule
 
-inv_cipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
-inv_cipher ctext key1 key2 =
-  add_round_key (inv_sub_bytes . inv_shift_rows $ ctext'') key1
+invCipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
+invCipher ctext key1 key2 =
+  addRoundKey (invSubBytes . invShiftRows $ ctext'') key1
   where
-    f k c =
-      inv_mix_columns $ add_round_key (inv_sub_bytes . inv_shift_rows $ c) k
-    (key15, schedule) = schedule_helper (key1, key2)
-    ctext' = add_round_key ctext key15
-    ctext'' = foldr (f) ctext' schedule
+    f k c = invMixColumns $ addRoundKey (invSubBytes . invShiftRows $ c) k
+    (key15, schedule) = scheduleHelper (key1, key2)
+    ctext' = addRoundKey ctext key15
+    ctext'' = foldr f ctext' schedule
 
 -- PUBLIC WRAPPERS
 
 encrypt ptext key =
-  to_list $ cipher (from_list ptext) (from_list key1) (from_list key2)
+  toList $ cipher (fromList ptext) (fromList key1) (fromList key2)
   where
-    (key1, key2) = splitAt size_state key
+    (key1, key2) = splitAt sizeState key
 
 decrypt ctext key =
-  to_list $ inv_cipher (from_list ctext) (from_list key1) (from_list key2)
+  toList $ invCipher (fromList ctext) (fromList key1) (fromList key2)
   where
-    (key1, key2) = splitAt size_state key
+    (key1, key2) = splitAt sizeState key

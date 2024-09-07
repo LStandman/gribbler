@@ -3,9 +3,9 @@
 -- Copyright (C) 2021-2024 LStandman
 
 module Crypt.KDFTest
-  ( test_hkdf_sha256,
-    test_hmac_sha256,
-    test_pbkdf2_hmac_sha256,
+  ( testHkdfSha256,
+    testHmacSha256,
+    testPbkdf2HmacSha256,
   )
 where
 
@@ -15,7 +15,7 @@ import Libtest
 import Misc.MemUtils
 
 {- ORMOLU_DISABLE -}
-test_hmac_sha256 =
+testHmacSha256 =
   let --  From draft-ietf-ipsec-ciph-sha-256-01.txt
       t01_key =
         [ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
@@ -205,57 +205,57 @@ test_hmac_sha256 =
         "HMACxSHA256"
         [ test
             "IETFDraft003"
-            [ expect_memeq "t01_digest" t01_digest $
-                KDF.hmac_sha256 t01_key t01_ksize t01_ptext t01_psize
+            [ expectMemEq "t01_digest" t01_digest $
+                KDF.hmacSha256 t01_key t01_ksize t01_ptext t01_psize
             ],
           test
             "IETFDraft056"
-            [ expect_memeq "t02_digest" t02_digest $
-                KDF.hmac_sha256 t02_key t02_ksize t02_ptext t02_psize
+            [ expectMemEq "t02_digest" t02_digest $
+                KDF.hmacSha256 t02_key t02_ksize t02_ptext t02_psize
             ],
           test
             "IETFDraft112"
-            [ expect_memeq "t03_digest" t03_digest $
-                KDF.hmac_sha256 t03_key t03_ksize t03_ptext t03_psize
+            [ expectMemEq "t03_digest" t03_digest $
+                KDF.hmacSha256 t03_key t03_ksize t03_ptext t03_psize
             ],
           test
             "IETFDraft008"
-            [ expect_memeq "t04_digest" t04_digest $
-                KDF.hmac_sha256 t04_key t04_ksize t04_ptext t04_psize
+            [ expectMemEq "t04_digest" t04_digest $
+                KDF.hmacSha256 t04_key t04_ksize t04_ptext t04_psize
             ],
           test
             "IETFDraft028"
-            [ expect_memeq "t05_digest" t05_digest $
-                KDF.hmac_sha256 t05_key t05_ksize t05_ptext t05_psize
+            [ expectMemEq "t05_digest" t05_digest $
+                KDF.hmacSha256 t05_key t05_ksize t05_ptext t05_psize
             ],
           test
             "IETFDraft050x32"
-            [ expect_memeq "t06_digest" t06_digest $
-                KDF.hmac_sha256 t06_key t06_ksize t06_ptext t06_psize
+            [ expectMemEq "t06_digest" t06_digest $
+                KDF.hmacSha256 t06_key t06_ksize t06_ptext t06_psize
             ],
           test
             "IETFDraft050x37"
-            [ expect_memeq "t07_digest" t07_digest $
-                KDF.hmac_sha256 t07_key t07_ksize t07_ptext t07_psize
+            [ expectMemEq "t07_digest" t07_digest $
+                KDF.hmacSha256 t07_key t07_ksize t07_ptext t07_psize
             ],
           test
             "IETFDraft020"
-            [ expect_memeq "t08_digest" t08_digest $
-                KDF.hmac_sha256 t08_key t08_ksize t08_ptext t08_psize
+            [ expectMemEq "t08_digest" t08_digest $
+                KDF.hmacSha256 t08_key t08_ksize t08_ptext t08_psize
             ],
           test
             "IETFDraft054"
-            [ expect_memeq "t09_digest" t09_digest $
-                KDF.hmac_sha256 t09_key t09_ksize t09_ptext t09_psize
+            [ expectMemEq "t09_digest" t09_digest $
+                KDF.hmacSha256 t09_key t09_ksize t09_ptext t09_psize
             ],
           test
             "IETFDraft073"
-            [ expect_memeq "t10_digest" t10_digest $
-                KDF.hmac_sha256 t10_key t10_ksize t10_ptext t10_psize
+            [ expectMemEq "t10_digest" t10_digest $
+                KDF.hmacSha256 t10_key t10_ksize t10_ptext t10_psize
             ]
         ]
 
-test_pbkdf2_hmac_sha256 =
+testPbkdf2HmacSha256 =
   let --  From RFC 7914.
       t1_pass = strBytes "passwd"
       t1_psize = 6
@@ -310,24 +310,24 @@ test_pbkdf2_hmac_sha256 =
         "PBKDF2xHMACxSHA256"
         [ test
             "RFC7914x00001"
-            [ expect_memeq "t1_derived" t1_derived $
-                KDF.pbkdf2_hmac_sha256 t1_pass t1_psize t1_salt t1_ssize t1_c t1_dk_len
+            [ expectMemEq "t1_derived" t1_derived $
+                KDF.pbkdf2HmacSha256 t1_pass t1_psize t1_salt t1_ssize t1_c t1_dk_len
             ],
           test
             "RFC7914x80000"
-            [ expect_memeq "t2_derived" t2_derived $
-                KDF.pbkdf2_hmac_sha256 t2_pass t2_psize t2_salt t2_ssize t2_c t2_dk_len
+            [ expectMemEq "t2_derived" t2_derived $
+                KDF.pbkdf2HmacSha256 t2_pass t2_psize t2_salt t2_ssize t2_c t2_dk_len
             ],
           test
             "Cryptsetup01200"
-            [ expect_memeq "t3_derived" t3_derived $
-                KDF.pbkdf2_hmac_sha256 t3_pass t3_psize t3_salt t3_ssize t3_c t3_dk_len
+            [ expectMemEq "t3_derived" t3_derived $
+                KDF.pbkdf2HmacSha256 t3_pass t3_psize t3_salt t3_ssize t3_c t3_dk_len
             ]
         ]
 
-test_hkdf_sha256 =
+testHkdfSha256 =
   let --  From RFC 5869.
-      t1_ikm = take 22 $ repeat 0x0b
+      t1_ikm = replicate 22 0x0b
       t1_salt =
         [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
           0x08, 0x09, 0x0A, 0x0B, 0x0C
@@ -407,7 +407,7 @@ test_hkdf_sha256 =
           0xC1, 0x4C, 0x01, 0xD5, 0xC1, 0xF3, 0x43, 0x4F,
           0x1D, 0x87
         ]
-      t3_ikm = take 22 $ repeat 0x0b
+      t3_ikm = replicate 22 0x0b
       t3_salt = []
       t3_info = []
       t3_l = 42
@@ -429,23 +429,23 @@ test_hkdf_sha256 =
         "HKDFxSHA256"
         [ test
             "RFC7914xA1"
-            [ expect_memeq "t1_prk" t1_prk $
-                KDF.hkdf_sha256_extract' t1_salt t1_ikm,
-              expect_memeq "t1_okm" t1_okm $
-                KDF.hkdf_sha256_expand' t1_prk t1_info t1_l
+            [ expectMemEq "t1_prk" t1_prk $
+                KDF.hkdfSha256Extract' t1_salt t1_ikm,
+              expectMemEq "t1_okm" t1_okm $
+                KDF.hkdfSha256Expand' t1_prk t1_info t1_l
             ],
           test
             "RFC7914xA2"
-            [ expect_memeq "t2_prk" t2_prk $
-                KDF.hkdf_sha256_extract' t2_salt t2_ikm,
-              expect_memeq "t2_okm" t2_okm $
-                KDF.hkdf_sha256_expand' t2_prk t2_info t2_l
+            [ expectMemEq "t2_prk" t2_prk $
+                KDF.hkdfSha256Extract' t2_salt t2_ikm,
+              expectMemEq "t2_okm" t2_okm $
+                KDF.hkdfSha256Expand' t2_prk t2_info t2_l
             ],
           test
             "RFC7914xA3"
-            [ expect_memeq "t3_prk" t3_prk $
-                KDF.hkdf_sha256_extract' t3_salt t3_ikm,
-              expect_memeq "t3_okm" t3_okm $
-                KDF.hkdf_sha256_expand' t3_prk t3_info t3_l
+            [ expectMemEq "t3_prk" t3_prk $
+                KDF.hkdfSha256Extract' t3_salt t3_ikm,
+              expectMemEq "t3_okm" t3_okm $
+                KDF.hkdfSha256Expand' t3_prk t3_info t3_l
             ]
         ]

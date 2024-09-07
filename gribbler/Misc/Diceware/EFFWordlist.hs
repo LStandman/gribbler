@@ -5,7 +5,7 @@
 
 module Misc.Diceware.EFFWordlist
   ( decode,
-    eff_large_wordlist,
+    effLargeWordlist,
     encode,
   )
 where
@@ -13,13 +13,13 @@ where
 import qualified Misc.Diceware as Diceware
 
 decode :: [String] -> Maybe Int
-eff_large_wordlist :: [String]
+effLargeWordlist :: [String]
 encode :: Int -> Int -> [String]
-encode = Diceware.encode eff_large_wordlist
-decode = Diceware.decode eff_large_wordlist
+encode = Diceware.encode effLargeWordlist
+decode = Diceware.decode effLargeWordlist
 
 {- ORMOLU_DISABLE -}
-eff_large_wordlist =
+effLargeWordlist =
   [ "abacus", "abdomen", "abdominal", "abide", "abiding", "ability", "ablaze",
     "able", "abnormal", "abrasion", "abrasive", "abreast", "abridge", "abroad",
     "abruptly", "absence", "absentee", "absently", "absinthe", "absolute",

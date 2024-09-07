@@ -2,25 +2,25 @@
 -- Crypt/AES256Test.hs: Unit tests for AES256
 -- Copyright (C) 2021-2023 LStandman
 
-module Crypt.AES256Test (test_aes256) where
+module Crypt.AES256Test (testAes256) where
 
 --
 import qualified Crypt.AES256 as AES256
 import Data.Word
 import Libtest
 
-nomod_aes256 :: Bool -> [Word8] -> [Word8] -> [Word8]
-nomod_aes256 _ [] _ = []
-nomod_aes256 is_enc text key =
-  out ++ (nomod_aes256 is_enc text'' key)
+nomodAes256 :: Bool -> [Word8] -> [Word8] -> [Word8]
+nomodAes256 _ [] _ = []
+nomodAes256 isEnc text key =
+  out ++ nomodAes256 isEnc text'' key
   where
-    (text', text'') = splitAt AES256.size_block text
+    (text', text'') = splitAt AES256.sizeBlock text
     out
-      | is_enc = AES256.encrypt text' key
+      | isEnc = AES256.encrypt text' key
       | otherwise = AES256.decrypt text' key
 
 {- ORMOLU_DISABLE -}
-test_aes256 =
+testAes256 =
   let --  From FIPS-197
       t1_key   =
         [ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -175,22 +175,22 @@ test_aes256 =
         "AES256NoMod"
         [ test
             "EncryptFIPS197"
-            [ expect_memeq "t1_ctext" t1_ctext $
-                nomod_aes256 True t1_ptext t1_key
+            [ expectMemEq "t1_ctext" t1_ctext $
+                nomodAes256 True t1_ptext t1_key
             ],
           test
             "EncryptTestmgr"
-            [ expect_memeq "t2_ctext" t2_ctext $
-                nomod_aes256 True t2_ptext t2_key
+            [ expectMemEq "t2_ctext" t2_ctext $
+                nomodAes256 True t2_ptext t2_key
             ],
           test
             "DecryptFIPS197"
-            [ expect_memeq "t1_ptext" t1_ptext $
-                nomod_aes256 False t1_ctext t1_key
+            [ expectMemEq "t1_ptext" t1_ptext $
+                nomodAes256 False t1_ctext t1_key
             ],
           test
             "DecryptTestmgr"
-            [ expect_memeq "t2_ptext" t2_ptext $
-                nomod_aes256 False t2_ctext t2_key
+            [ expectMemEq "t2_ptext" t2_ptext $
+                nomodAes256 False t2_ctext t2_key
             ]
         ]

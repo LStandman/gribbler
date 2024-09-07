@@ -5,111 +5,105 @@
 module JSON.BNF.Text
   ( module Misc.DiffList,
     TextState,
-    assert_noop,
-    assert_pop,
-    assert_push,
-    get_any_char,
-    get_any_char1,
-    get_char,
-    get_char1,
-    get_char_with,
-    get_text,
-    meta_break,
-    meta_char,
-    meta_eof,
-    text_state,
+    assertNoop,
+    assertPop,
+    assertPush,
+    getAnyChar,
+    getAnyChar1,
+    JSON.BNF.Text.getChar,
+    getChar1,
+    getCharWith,
+    getText,
+    metaBreak,
+    metaChar,
+    metaEof,
+    textState,
   )
 where
 
+import Control.Monad (void)
+import Data.Functor ((<&>))
+--
 import qualified JSON.BNF as BNF
 import Misc.DiffList
 
 type TextState = (String, (Int, Int), [((Int, Int), String)])
 
-assert_noop :: String -> BNF.Parser TextState a -> BNF.Parser TextState a
-assert_pop :: String -> BNF.Parser TextState a -> BNF.Parser TextState a
-assert_push :: BNF.Parser TextState a -> BNF.Parser TextState a
-get_any_char :: [Char] -> BNF.Parser TextState Char
-get_any_char1 :: [Char] -> BNF.Parser TextState DiffString
-get_char :: Char -> BNF.Parser TextState Char
-get_char1 :: Char -> BNF.Parser TextState DiffString
-get_char_with :: (Char -> Bool) -> BNF.Parser TextState Char
-get_text :: [Char] -> BNF.Parser TextState DiffString
-meta_break :: BNF.Parser TextState ()
-meta_char :: Char -> BNF.Parser TextState ()
-meta_eof :: BNF.Parser TextState ()
-text_state :: String -> TextState
+assertNoop :: String -> BNF.Parser TextState a -> BNF.Parser TextState a
+assertPop :: String -> BNF.Parser TextState a -> BNF.Parser TextState a
+assertPush :: BNF.Parser TextState a -> BNF.Parser TextState a
+getAnyChar :: [Char] -> BNF.Parser TextState Char
+getAnyChar1 :: [Char] -> BNF.Parser TextState DiffString
+getChar :: Char -> BNF.Parser TextState Char
+getChar1 :: Char -> BNF.Parser TextState DiffString
+getCharWith :: (Char -> Bool) -> BNF.Parser TextState Char
+getText :: [Char] -> BNF.Parser TextState DiffString
+metaBreak :: BNF.Parser TextState ()
+metaChar :: Char -> BNF.Parser TextState ()
+metaEof :: BNF.Parser TextState ()
+textState :: String -> TextState
 
-size_trace = 10
+sizeTrace = 10
 
-text_state s = (s, (0, 0), [])
+textState s = (s, (0, 0), [])
 
-to_difflist :: Char -> BNF.Parser TextState DiffString
-to_difflist = return . difflist . (: [])
+toDifflist :: Char -> BNF.Parser TextState DiffString
+toDifflist = return . difflist . (: [])
 
-get_symbol :: BNF.Parser TextState Char
-get_symbol =
+getSymbol :: BNF.Parser TextState Char
+getSymbol =
   BNF.Parser $
     \(xs, (line, col), stack) ->
       case xs of
         [] -> BNF.Miss
         (y : ys) -> BNF.Hit (y, (ys, (line, col + 1), stack))
 
-get_char c =
-  get_symbol
-    >>= \y ->
-      case c == y of
-        True -> return c
-        False -> BNF.miss
+getChar c =
+  getSymbol
+    >>= \y -> (if c == y then return c else BNF.miss)
 
-get_char_with f =
-  get_symbol
-    >>= \y ->
-      case f y of
-        True -> return y
-        False -> BNF.miss
+getCharWith f =
+  getSymbol
+    >>= \y -> (if f y then return y else BNF.miss)
 
 stripPrefix' :: Eq a => [a] -> [a] -> Maybe ([a], Int)
 stripPrefix' [] ys = Just (ys, 0)
 stripPrefix' (x : xs) (y : ys)
-  | x == y = stripPrefix' xs ys >>= return . fmap (1 +)
+  | x == y = stripPrefix' xs ys <&> fmap (1 +)
 stripPrefix' _ _ = Nothing
 
--- Optimal than the naive implementation `foldl1 (BNF.and) $ map (get_char) s`
-get_text [] = BNF.null
-get_text s =
+-- Optimal than the naive implementation `foldl1 (BNF.and) $ map (getChar) s`
+getText [] = BNF.null
+getText s =
   BNF.Parser $
     \(xs, (line, col), stack) ->
       case stripPrefix' s xs of
         Nothing -> BNF.Miss
         Just (ys, n) -> BNF.Hit (difflist s, (ys, (line, col + n), stack))
 
--- Optimal than the naive implementation `foldl1 (BNF.or) $ map (get_char) s`
-get_any_char s =
-  get_symbol
-    >>= \y ->
-      case elem y s of
-        True -> return y
-        False -> BNF.miss
+-- Optimal than the naive implementation `foldl1 (BNF.or) $ map (getChar) s`
+getAnyChar s =
+  getSymbol
+    >>= \y -> (if y `elem` s then return y else BNF.miss)
 
-get_char1 c = get_char c >>= to_difflist
+getChar1 c = JSON.BNF.Text.getChar c >>= toDifflist
 
-get_any_char1 s = get_any_char s >>= to_difflist
+getAnyChar1 s = getAnyChar s >>= toDifflist
 
-meta_char c = get_char c >> return ()
+metaChar c = void (JSON.BNF.Text.getChar c)
 
-assert_push' :: BNF.Parser TextState ()
-assert_push' =
+assertPush' :: BNF.Parser TextState ()
+assertPush' =
   BNF.Parser $
     \(s, ctx, stack) ->
-      BNF.Hit ((), (s, ctx, (ctx, take size_trace s) : stack))
+      BNF.Hit ((), (s, ctx, (ctx, take sizeTrace s) : stack))
 
-assert_push f = assert_push' >> f
+assertPush f = assertPush' >> f
 
-assert_pop e f =
+assertPop e f =
   BNF.Parser $
     \(s, ctx, ((line', col'), trace) : stack) ->
-      ( BNF.run_parser $
+      ( BNF.runParser $
           BNF.assert
             ( "*** " ++ e ++ "\n  caught at " ++ show (line' + 1) ++ ":"
                 ++ show (col' + 1)
@@ -121,22 +115,21 @@ assert_pop e f =
       )
         (s, ctx, stack)
 
-assert_noop e f = assert_push' >> assert_pop e f
+assertNoop e f = assertPush' >> assertPop e f
 
 -- NOTE: Adapted from YAML to account for any non-content line break.
-meta_break =
+metaBreak =
   BNF.Parser $
     \(s, (line, col), stack) ->
-      ( BNF.exec_parser
-          ( meta_char '\x000A'
-              `BNF.or` meta_char '\x000D' >> (BNF.zoo $ meta_char '\x000A')
-          )
-      )
+      BNF.execParser
+        ( metaChar '\x000A'
+            `BNF.or` metaChar '\x000D' >> BNF.zoo (metaChar '\x000A')
+        )
         (s, (line, col), stack)
         >>= \(s', _, stack') ->
           return ((), (s', (line + 1, 0), stack'))
 
-meta_eof =
+metaEof =
   BNF.Parser $
     \(s, ctx, stack) ->
       case s of

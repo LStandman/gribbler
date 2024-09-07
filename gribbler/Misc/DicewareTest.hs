@@ -88,45 +88,45 @@ test_diceware =
         "Diceware"
         [ test
             "DecodePass"
-            [ expect_memeq "t1_number" (Just t1_number) $
+            [ expectMemEq "t1_number" (Just t1_number) $
                 Diceware.decode t1_dictionary t1_hits
             ],
           test
             "DecodeFailNotInDictionary"
-            [ expect_memeq "t1_number" Nothing $
+            [ expectMemEq "t1_number" Nothing $
                 Diceware.decode t1_dictionary t1_misses
             ],
           test
             "EncodePass"
-            [ expect_memeq "t1_hits" t1_hits $
+            [ expectMemEq "t1_hits" t1_hits $
                 Diceware.encode t1_dictionary (length t1_hits) t1_number
             ],
           test
             "IsSanitizedPass"
-            [ expect_true $ isRight $ Diceware.is_sanitized t1_dictionary
+            [ expectTrue $ isRight $ Diceware.isSanitized t1_dictionary
             ],
           test
             "IsSanitizedFailUnsorted"
-            [ expect_false $ isRight $ Diceware.is_sanitized t1_unsorted
+            [ expectFalse $ isRight $ Diceware.isSanitized t1_unsorted
             ],
           test
             "IsSanitizedFailRepeating"
-            [ expect_false $ isRight $ Diceware.is_sanitized t1_repeating
+            [ expectFalse $ isRight $ Diceware.isSanitized t1_repeating
             ],
           test
             "IsSanitizedFailUppercase"
-            [ expect_false $ isRight $ Diceware.is_sanitized t1_uppercase
+            [ expectFalse $ isRight $ Diceware.isSanitized t1_uppercase
             ],
           test
             "IsSanitizedFailNumeric"
-            [ expect_false $ isRight $ Diceware.is_sanitized t1_numeric
+            [ expectFalse $ isRight $ Diceware.isSanitized t1_numeric
             ],
           test
             "IsSanitizedFailSpace"
-            [ expect_false $ isRight $ Diceware.is_sanitized t1_space
+            [ expectFalse $ isRight $ Diceware.isSanitized t1_space
             ],
           test
             "IsSanitizedFailSymbol"
-            [ expect_false $ isRight $ Diceware.is_sanitized t1_symbol
+            [ expectFalse $ isRight $ Diceware.isSanitized t1_symbol
             ]
         ]

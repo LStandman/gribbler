@@ -11,46 +11,45 @@ where
 
 import Data.Array.Unboxed
 import Data.Bits
+import Data.Functor ((<&>))
 import Data.List
 import Data.Maybe
 import Data.Word
 
-type Alphabet = UArray (Word8) Char
+type Alphabet = UArray Word8 Char
 
 encode :: Alphabet -> Maybe Char -> [Word8] -> String
 decode :: Alphabet -> Maybe Char -> String -> Either String [Word8]
-encode_chunk' :: Alphabet -> (Word8, Word8, Word8) -> (Char, Char, Char, Char)
-encode_chunk' alphabet (a, b, c) =
+encodeChunk' :: Alphabet -> (Word8, Word8, Word8) -> (Char, Char, Char, Char)
+encodeChunk' alphabet (a, b, c) =
   ( alphabet ! (a `shiftR` 2),
     alphabet ! ((a `shiftL` 4 .|. b `shiftR` 4) .&. 0x3F),
     alphabet ! ((b `shiftL` 2 .|. c `shiftR` 6) .&. 0x3F),
     alphabet ! (c .&. 0x3F)
   )
 
-encode_chunk :: Alphabet -> [Word8] -> [Char]
-encode_chunk alphabet (a : b : c : _) =
-  case encode_chunk' alphabet (a, b, c) of (x1, x2, x3, x4) -> [x1, x2, x3, x4]
+encodeChunk :: Alphabet -> [Word8] -> [Char]
+encodeChunk alphabet (a : b : c : _) =
+  case encodeChunk' alphabet (a, b, c) of (x1, x2, x3, x4) -> [x1, x2, x3, x4]
 
-encode_last :: Alphabet -> Maybe Char -> [Word8] -> String
-encode_last _ _ [] = ""
-encode_last alphabet pad_char v =
+encodeLast :: Alphabet -> Maybe Char -> [Word8] -> String
+encodeLast _ _ [] = ""
+encodeLast alphabet pad_char v =
   -- Only take the _N+1_ chars that encode _N_ bytes of data.
   -- And up to 4 chars total, including padding.
   take
     4
-    ( ( take (n + 1) $
-          encode_chunk alphabet (v ++ repeat 0)
-      )
-        ++ maybe "" (repeat) pad_char
+    ( take (n + 1) (encodeChunk alphabet (v ++ repeat 0))
+        ++ maybe "" repeat pad_char
     )
   where
     n = length v
 
 encode alphabet pad_char v =
   case splitAt 3 v of
-    (v1, []) -> encode_last alphabet pad_char v1
+    (v1, []) -> encodeLast alphabet pad_char v1
     (v1, v2) ->
-      encode_chunk alphabet v1 ++ encode alphabet pad_char v2
+      encodeChunk alphabet v1 ++ encode alphabet pad_char v2
 
 alphaIndex :: [Char] -> Char -> Either String Word8
 alphaIndex alphabet' c =
@@ -58,8 +57,8 @@ alphaIndex alphabet' c =
     Just i -> Right . fromIntegral $ i
     Nothing -> Left ("Encoding character is not in alphabet " ++ show c)
 
-decode_chunk' :: [Char] -> (Char, Char, Char, Char) -> Either String (Word8, Word8, Word8)
-decode_chunk' alphabet' (x1, x2, x3, x4) =
+decodeChunk' :: [Char] -> (Char, Char, Char, Char) -> Either String (Word8, Word8, Word8)
+decodeChunk' alphabet' (x1, x2, x3, x4) =
   alphaIndex alphabet' x1
     >>= \i1 ->
       alphaIndex alphabet' x2
@@ -74,16 +73,16 @@ decode_chunk' alphabet' (x1, x2, x3, x4) =
                       i3 `shiftL` 6 .|. i4
                     )
 
-decode_chunk :: [Char] -> String -> Either String [Word8]
-decode_chunk alphabet' (x1 : x2 : x3 : x4 : _) =
-  fmap (\(a, b, c) -> [a, b, c]) $ decode_chunk' alphabet' (x1, x2, x3, x4)
+decodeChunk :: [Char] -> String -> Either String [Word8]
+decodeChunk alphabet' (x1 : x2 : x3 : x4 : _) =
+  (\(a, b, c) -> [a, b, c]) <$> decodeChunk' alphabet' (x1, x2, x3, x4)
 
-decode_last' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
-decode_last' _ _ _ [] = Right []
-decode_last' alphabet' zero_char pad_char v
+decodeLast' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
+decodeLast' _ _ _ [] = Right []
+decodeLast' alphabet' zero_char pad_char v
   | n >= 2 =
-    decode_chunk alphabet' (v' ++ repeat zero_char)
-      >>= return . (take (n - 1))
+    decodeChunk alphabet' (v' ++ repeat zero_char)
+      <&> take (n - 1)
   | otherwise = Left ("Bad last chunk length after discarding pad. " ++ show n)
   where
     v' = maybe v (\c -> dropWhileEnd (c ==) v) pad_char
@@ -92,11 +91,11 @@ decode_last' alphabet' zero_char pad_char v
 decode' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
 decode' alphabet' zero_char pad_char v =
   case splitAt 4 v of
-    (v1, []) -> decode_last' alphabet' zero_char pad_char v1
+    (v1, []) -> decodeLast' alphabet' zero_char pad_char v1
     (v1, v2) ->
-      decode_chunk alphabet' v1
+      decodeChunk alphabet' v1
         >>= \xs ->
           decode' alphabet' zero_char pad_char v2
             >>= \ys -> return (xs ++ ys)
 
-decode alphabet pad_char v = decode' (elems alphabet) (alphabet ! 0) pad_char v
+decode alphabet = decode' (elems alphabet) (alphabet ! 0)
