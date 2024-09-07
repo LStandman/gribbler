@@ -4,17 +4,18 @@
 
 module Main where
 
-import System.Exit
 --
 import CryptTest
-import MiscTest
 import JSONTest
 import Libtest
+import MiscTest
+import System.Exit
 
 main :: IO ()
 main =
-  runtests [
-    test_crypt,
-    test_misc,
-    test_json] >>=
-  \ x -> if x then exitSuccess else exitFailure
+  runtests
+    [ test_crypt,
+      test_misc,
+      test_json
+    ] ()
+    >>= \x -> if x then exitSuccess else exitFailure
