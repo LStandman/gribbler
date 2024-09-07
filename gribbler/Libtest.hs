@@ -38,20 +38,21 @@ assert_all (t : ts) =
 
 runtests ts = assert_all ts
 
-test'' :: (Maybe Int) -> [Assertion (Maybe Int)] -> IO Bool
-test'' _ [] = return True
-test'' ctr (e : es) =
-  e ctr >>= \x -> if not x then return False else test'' ctr' es
-  where
-    ctr' = fmap (+1) ctr
+run :: (Maybe Int) -> [Assertion (Maybe Int)] -> IO Bool
+run _ [] = return True
+run ctr (e : es) =
+  e ctr >>= \x -> 
+    case x of
+      False -> return False
+      True  -> run (fmap (1+) ctr) es
 
-test' :: Bool -> String -> [Assertion (Maybe Int)] -> Assertion ()
-test' use_ctr name es =
+show_run :: Bool -> String -> [Assertion (Maybe Int)] -> Assertion ()
+show_run use_ctr name es =
   \_ ->
   printf "[ RUN      ] %s\n" name
     >> getCPUTime
     >>= \start ->
-      test'' ctr es
+      run ctr es
         >>= \x ->
           getCPUTime
             >>= \end ->
@@ -68,7 +69,7 @@ test' use_ctr name es =
             False -> Nothing
             True -> Just 1
 
-test = test' False
+test = show_run False
 
 testsuite name tests =
   \_ ->
@@ -79,10 +80,9 @@ expect_that matcher = matcher
 
 dbgeq :: Integral a => String -> [a] -> [a] -> Assertion (Maybe Int)
 dbgeq varname expected actual =
-  if actual == expected
-    then \_ -> return True
-    else
-      \ctr ->
+  \ctr -> case actual == expected of
+    True  -> return True
+    False ->
       print ("Value of: " ++ varname ++ (maybe "" (\ i -> "@" ++ show i) ctr))
         >> print
           ( "  Actual: "
@@ -102,10 +102,9 @@ expect_dbgeq varname expected = expect_that (dbgeq varname expected)
 
 memeq :: (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
 memeq varname expected actual =
-  if actual == expected
-    then \_ -> return True
-    else
-      \ctr ->
+  \ctr -> case actual == expected of
+    True  -> return True
+    False ->
       print ("Value of: " ++ varname ++ (maybe "" (\ i -> "@" ++ show i) ctr))
         >> print ("  Actual: " ++ (show actual))
         >> print ("Expected: " ++ (show expected))
