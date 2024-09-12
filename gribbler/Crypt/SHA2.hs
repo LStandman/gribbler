@@ -64,17 +64,17 @@ ch x y z = (x .&. y) `xor` (complement x .&. z)
 maj :: Word32 -> Word32 -> Word32 -> Word32
 maj x y z = (x .&. y) `xor` (x .&. z) `xor` (y .&. z)
 
-big_sigma0 :: Word32 -> Word32
-big_sigma0 x = (x `rotateR` 2) `xor` (x `rotateR` 13) `xor` (x `rotateR` 22)
+bigSigma0 :: Word32 -> Word32
+bigSigma0 x = (x `rotateR` 2) `xor` (x `rotateR` 13) `xor` (x `rotateR` 22)
 
-big_sigma1 :: Word32 -> Word32
-big_sigma1 x = (x `rotateR` 6) `xor` (x `rotateR` 11) `xor` (x `rotateR` 25)
+bigSigma1 :: Word32 -> Word32
+bigSigma1 x = (x `rotateR` 6) `xor` (x `rotateR` 11) `xor` (x `rotateR` 25)
 
-lil_sigma0 :: Word32 -> Word32
-lil_sigma0 x = (x `rotateR` 7) `xor` (x `rotateR` 18) `xor` (x `shiftR` 3)
+lilSigma0 :: Word32 -> Word32
+lilSigma0 x = (x `rotateR` 7) `xor` (x `rotateR` 18) `xor` (x `shiftR` 3)
 
-lil_sigma1 :: Word32 -> Word32
-lil_sigma1 x = (x `rotateR` 17) `xor` (x `rotateR` 19) `xor` (x `shiftR` 10)
+lilSigma1 :: Word32 -> Word32
+lilSigma1 x = (x `rotateR` 17) `xor` (x `rotateR` 19) `xor` (x `shiftR` 10)
 
 sha256round :: Hash -> Word32 -> Hash
 sha256round v x =
@@ -98,8 +98,8 @@ sha256round v x =
     f = v ! 5
     g = v ! 6
     h = v ! 7
-    t1 = h + big_sigma1 e + ch e f g + x
-    t2 = big_sigma0 a + maj a b c
+    t1 = h + bigSigma1 e + ch e f g + x
+    t2 = bigSigma0 a + maj a b c
 
 sha256block :: Hash -> [Word32] -> Hash
 sha256block h v =
@@ -141,7 +141,7 @@ sha256sched' v i =
             >>= \c ->
               readArray v (i - 16)
                 >>= \d ->
-                  writeArray v i (lil_sigma1 a + b + lil_sigma0 c + d)
+                  writeArray v i (lilSigma1 a + b + lilSigma0 c + d)
 
 sha256sched :: IOUArray Int Word32 -> IO ()
 sha256sched v =
