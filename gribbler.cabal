@@ -38,6 +38,8 @@ library
       Crypt.MooMooTest
       Crypt.SHA256
       Crypt.SHA256Test
+      Crypt.SHA512
+      Crypt.SHA512Test
       CryptTest
       JSON
       JSON.BNF
