@@ -8,7 +8,7 @@ import Crypt.AES256Test
 import Crypt.Curve25519Test
 import Crypt.KDFTest
 import Crypt.MooMooTest
-import Crypt.SHA2Test
+import Crypt.SHA256Test
 import Libtest
 
 test_crypt =

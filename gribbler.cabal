@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -30,12 +30,14 @@ library
       Crypt.AES256Test
       Crypt.Curve25519
       Crypt.Curve25519Test
+      Crypt.Ed25519
+      Crypt.Ed25519Test
       Crypt.KDF
       Crypt.KDFTest
       Crypt.MooMoo
       Crypt.MooMooTest
-      Crypt.SHA2
-      Crypt.SHA2Test
+      Crypt.SHA256
+      Crypt.SHA256Test
       CryptTest
       JSON
       JSON.BNF

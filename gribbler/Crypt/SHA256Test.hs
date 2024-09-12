@@ -1,11 +1,11 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Crypt/SHA2Test.hs: Unit tests for SHA2
+-- Crypt/SHA256Test.hs: Unit tests for SHA256
 -- Copyright (C) 2021-2024 LStandman
 
-module Crypt.SHA2Test (testSha256) where
+module Crypt.SHA256Test (testSha256) where
 
 --
-import qualified Crypt.SHA2 as SHA2
+import qualified Crypt.SHA256 as SHA256
 import Data.List
 import Data.Word
 import Libtest
@@ -200,26 +200,26 @@ testSha256 =
         "SHA256"
         [ test
             "NIST0000"
-            [ expectMemEq "t1_digest" t1_digest $ SHA2.sha256sum t1_message t1_size
+            [ expectMemEq "t1_digest" t1_digest $ SHA256.sha256sum t1_message t1_size
             ],
           test
             "NIST0003"
-            [ expectMemEq "t2_digest" t2_digest $ SHA2.sha256sum t2_message t2_size
+            [ expectMemEq "t2_digest" t2_digest $ SHA256.sha256sum t2_message t2_size
             ],
           test
             "NIST0056"
-            [ expectMemEq "t3_digest" t3_digest $ SHA2.sha256sum t3_message t3_size
+            [ expectMemEq "t3_digest" t3_digest $ SHA256.sha256sum t3_message t3_size
             ],
           test
             "NIST0064"
-            [ expectMemEq "t4_digest" t4_digest $ SHA2.sha256sum t4_message t4_size
+            [ expectMemEq "t4_digest" t4_digest $ SHA256.sha256sum t4_message t4_size
             ],
           test
             "NIST1023"
-            [ expectMemEq "t5_digest" t5_digest $ SHA2.sha256sum t5_message t5_size
+            [ expectMemEq "t5_digest" t5_digest $ SHA256.sha256sum t5_message t5_size
             ],
           test
             "Rep160000"
-            [ expectMemEq "t6_digest" t6_digest $ foldl' (\m _ -> SHA2.sha256sum m SHA2.sha256SizeDigest) (SHA2.sha256sum t6_message t6_size) [2 .. 160000]
+            [ expectMemEq "t6_digest" t6_digest $ foldl' (\m _ -> SHA256.sha256sum m SHA256.sha256SizeDigest) (SHA256.sha256sum t6_message t6_size) [2 .. 160000]
             ]
         ]

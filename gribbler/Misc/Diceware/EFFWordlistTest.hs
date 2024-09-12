@@ -5,7 +5,7 @@
 
 module Misc.Diceware.EFFWordlistTest (test_effwordlist) where
 
-import Crypt.SHA2
+import Crypt.SHA256
 import Libtest
 import qualified Misc.Diceware as Diceware
 import qualified Misc.Diceware.EFFWordlist as EFFWordlist

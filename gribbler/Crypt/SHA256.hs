@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Crypt/SHA2.hs: SHA2 module
+-- Crypt/SHA256.hs: SHA256 module
 -- Copyright (C) 2021-2024 LStandman
 
-module Crypt.SHA2
+module Crypt.SHA256
   ( Hash,
     int_sha256hash0,
     int_sha256once,

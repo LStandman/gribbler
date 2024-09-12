@@ -10,7 +10,7 @@ module Crypt.KDFTest
 where
 
 import qualified Crypt.KDF as KDF
-import qualified Crypt.SHA2 as SHA2
+import qualified Crypt.SHA256 as SHA256
 import Libtest
 import Misc.MemUtils
 
