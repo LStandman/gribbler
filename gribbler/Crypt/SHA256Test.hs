@@ -200,26 +200,26 @@ testSha256 =
         "SHA256"
         [ test
             "NIST0000"
-            [ expectMemEq "t1_digest" t1_digest $ SHA256.sha256sum t1_message t1_size
+            [ expectMemEq "t1_digest" t1_digest $ SHA256.sha256Sum t1_message t1_size
             ],
           test
             "NIST0003"
-            [ expectMemEq "t2_digest" t2_digest $ SHA256.sha256sum t2_message t2_size
+            [ expectMemEq "t2_digest" t2_digest $ SHA256.sha256Sum t2_message t2_size
             ],
           test
             "NIST0056"
-            [ expectMemEq "t3_digest" t3_digest $ SHA256.sha256sum t3_message t3_size
+            [ expectMemEq "t3_digest" t3_digest $ SHA256.sha256Sum t3_message t3_size
             ],
           test
             "NIST0064"
-            [ expectMemEq "t4_digest" t4_digest $ SHA256.sha256sum t4_message t4_size
+            [ expectMemEq "t4_digest" t4_digest $ SHA256.sha256Sum t4_message t4_size
             ],
           test
             "NIST1023"
-            [ expectMemEq "t5_digest" t5_digest $ SHA256.sha256sum t5_message t5_size
+            [ expectMemEq "t5_digest" t5_digest $ SHA256.sha256Sum t5_message t5_size
             ],
           test
             "Rep160000"
-            [ expectMemEq "t6_digest" t6_digest $ foldl' (\m _ -> SHA256.sha256sum m SHA256.sha256SizeDigest) (SHA256.sha256sum t6_message t6_size) [2 .. 160000]
+            [ expectMemEq "t6_digest" t6_digest $ foldl' (\m _ -> SHA256.sha256Sum m SHA256.sha256SizeDigest) (SHA256.sha256Sum t6_message t6_size) [2 .. 160000]
             ]
         ]

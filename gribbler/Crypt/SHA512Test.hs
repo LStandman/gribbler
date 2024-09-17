@@ -57,14 +57,14 @@ testSha512 =
         "SHA512"
         [ test
             "NIST0000"
-            [ expectMemEq "t1_digest" t1_digest $ SHA512.sha512sum t1_message t1_size
+            [ expectMemEq "t1_digest" t1_digest $ SHA512.sha512Sum t1_message t1_size
             ],
           test
             "NIST0003"
-            [ expectMemEq "t2_digest" t2_digest $ SHA512.sha512sum t2_message t2_size
+            [ expectMemEq "t2_digest" t2_digest $ SHA512.sha512Sum t2_message t2_size
             ],
           test
             "NIST0112"
-            [ expectMemEq "t3_digest" t3_digest $ SHA512.sha512sum t3_message t3_size
+            [ expectMemEq "t3_digest" t3_digest $ SHA512.sha512Sum t3_message t3_size
             ]
          ]

@@ -42,11 +42,11 @@ a `div1` b = (a + b - 1) `div` b
 int_hmacSha256 :: (Hash, Hash) -> [Word8] -> Int -> Hash
 int_hmacSha256 (ihash, ohash) text text_size = ohash'
   where
-    ihash' = int_sha256sum ihash text (sha256SizeBlock + text_size)
+    ihash' = int_sha256Sum ihash text (sha256SizeBlock + text_size)
     ohash' =
-      int_sha256sum
+      int_sha256Sum
         ohash
-        (int_sha256toList ihash')
+        (int_sha256ToList ihash')
         (sha256SizeBlock + sha256SizeDigest)
 
 -- INFO: First block of any message is always the key _k_ after reducing and/or
@@ -56,27 +56,27 @@ int_hmacSha256 (ihash, ohash) text text_size = ohash'
 -- INFO: In the case of PBKDF2, the key is constant for all rounds.
 --   Prehashing once for all rounds saves us an amount of `2 * pbkdf2_rounds`
 --   redundant hash calculations.
-hmacSha256_prehash :: [Word8] -> Int -> (Hash, Hash)
-hmacSha256_prehash k k_size = (ihash, ohash)
+hmacSha256Prehash :: [Word8] -> Int -> (Hash, Hash)
+hmacSha256Prehash k k_size = (ihash, ohash)
   where
     k'
-      | k_size > sha256SizeBlock = sha256sum k k_size
+      | k_size > sha256SizeBlock = sha256Sum k k_size
       | otherwise = k
     k'' = take sha256SizeBlock $ k' ++ repeat 0
     ikey = fmap (xor 0x36) k''
     okey = fmap (xor 0x5C) k''
-    ihash = int_sha256once int_sha256hash0 ikey
-    ohash = int_sha256once int_sha256hash0 okey
+    ihash = int_sha256Once int_sha256Hash0 ikey
+    ohash = int_sha256Once int_sha256Hash0 okey
 
 hmacSha256 k k_size text text_size =
-  int_sha256toList $
-    int_hmacSha256 (hmacSha256_prehash k k_size) text text_size
+  int_sha256ToList $
+    int_hmacSha256 (hmacSha256Prehash k k_size) text text_size
 
 hmacSha256' k text = hmacSha256 k (length k) text (length text)
 
 int_pbkdf2HmacSha256 :: Prf -> [Word8] -> Int -> Int -> Int -> [Word8]
 int_pbkdf2HmacSha256 h s s_size c dk_len =
-  take dk_len $ concatMap (int_sha256toList . us . u1) [1 .. l]
+  take dk_len $ concatMap (int_sha256ToList . us . u1) [1 .. l]
   where
     split n =
       map
@@ -91,7 +91,7 @@ int_pbkdf2HmacSha256 h s s_size c dk_len =
     round :: Int -> Hash -> IOUArray Int Word32 -> IO ()
     round 1 u w = return ()
     round n u w =
-      case h (int_sha256toList u) sha256SizeDigest of
+      case h (int_sha256ToList u) sha256SizeDigest of
         u' ->
           mapM_
             (\i -> readArray w i >>= writeArray w i . xor (u' ! i))
@@ -108,14 +108,14 @@ int_pbkdf2HmacSha256 h s s_size c dk_len =
 
 pbkdf2HmacSha256 p p_size =
   int_pbkdf2HmacSha256
-    (int_hmacSha256 $! hmacSha256_prehash p p_size)
+    (int_hmacSha256 $! hmacSha256Prehash p p_size)
 
 pbkdf2HmacSha256' p s =
   pbkdf2HmacSha256 p (length p) s (length s)
 
 hkdfSha256Extract salt salt_size ikm ikm_size =
-  int_sha256toList $
-    (int_hmacSha256 $! hmacSha256_prehash salt salt_size) ikm ikm_size
+  int_sha256ToList $
+    (int_hmacSha256 $! hmacSha256Prehash salt salt_size) ikm ikm_size
 
 hkdfSha256Extract' salt ikm =
   hkdfSha256Extract salt (length salt) ikm (length ikm)
@@ -125,15 +125,15 @@ int_hkdfSha256Expand h info info_size l =
   take l $ concat $ scanl' ts t1 [2 .. n]
   where
     n = l `div1` sha256SizeDigest
-    t1 = int_sha256toList $ h (info ++ [1]) (info_size + 1)
+    t1 = int_sha256ToList $ h (info ++ [1]) (info_size + 1)
     ts :: [Word8] -> Int -> [Word8]
     ts t i =
-      int_sha256toList $
+      int_sha256ToList $
         h (t ++ info ++ [fromIntegral i]) (sha256SizeDigest + info_size + 1)
 
 hkdfSha256Expand prk prk_size =
   int_hkdfSha256Expand
-    (int_hmacSha256 $! hmacSha256_prehash prk prk_size)
+    (int_hmacSha256 $! hmacSha256Prehash prk prk_size)
 
 hkdfSha256Expand' prk info =
   hkdfSha256Expand prk (length prk) info (length info)

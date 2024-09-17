@@ -4,16 +4,16 @@
 
 module Crypt.SHA512
   ( Hash,
-    int_sha512hash0,
-    int_sha512once,
-    int_sha512sum,
-    int_sha512toList,
+    int_sha512Hash0,
+    int_sha512Once,
+    int_sha512Sum,
+    int_sha512ToList,
     sha512BoundsHash,
     sha512SizeBlock,
     sha512SizeDigest,
     sha512SizeHash,
-    sha512sum,
-    sha512sum1,
+    sha512Sum,
+    sha512Sum1,
   )
 where
 
@@ -27,16 +27,16 @@ import GHC.IO
 
 type Hash = UArray Int Word64
 
-int_sha512hash0 :: Hash
-int_sha512once :: Hash -> [Word8] -> Hash
-int_sha512sum :: Hash -> [Word8] -> Int -> Hash
-int_sha512toList :: Hash -> [Word8]
+int_sha512Hash0 :: Hash
+int_sha512Once :: Hash -> [Word8] -> Hash
+int_sha512Sum :: Hash -> [Word8] -> Int -> Hash
+int_sha512ToList :: Hash -> [Word8]
 sha512BoundsHash :: (Int, Int)
 sha512SizeBlock :: Int
 sha512SizeDigest :: Int
 sha512SizeHash :: Int
-sha512sum :: [Word8] -> Int -> [Word8]
-sha512sum1 :: [Word8] -> [Word8]
+sha512Sum :: [Word8] -> Int -> [Word8]
+sha512Sum1 :: [Word8] -> [Word8]
 
 sha512SizeBlock = 128
 
@@ -49,7 +49,7 @@ sizeBlock = 16
 sha512BoundsHash = (0, sha512SizeHash - 1)
 
 {- ORMOLU_DISABLE -}
-int_sha512hash0 =
+int_sha512Hash0 =
   listArray
     sha512BoundsHash
     [ 0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
@@ -78,8 +78,8 @@ lilSigma0 x = (x `rotateR` 1) `xor` (x `rotateR` 8) `xor` (x `shiftR` 7)
 lilSigma1 :: Word64 -> Word64
 lilSigma1 x = (x `rotateR` 19) `xor` (x `rotateR` 61) `xor` (x `shiftR` 6)
 
-sha512round :: Hash -> Word64 -> Hash
-sha512round v x =
+sha512Round :: Hash -> Word64 -> Hash
+sha512Round v x =
   array
     sha512BoundsHash
     [ (0, t1 + t2),
@@ -103,11 +103,11 @@ sha512round v x =
     t1 = h + bigSigma1 e + ch e f g + x
     t2 = bigSigma0 a + maj a b c
 
-sha512block :: Hash -> [Word64] -> Hash
-sha512block h v =
+sha512Block :: Hash -> [Word64] -> Hash
+sha512Block h v =
   array sha512BoundsHash [(i, h ! i + h' ! i) | i <- range sha512BoundsHash]
   where
-    h' = foldl' sha512round h v
+    h' = foldl' sha512Round h v
 
 {- ORMOLU_DISABLE -}
 k =
@@ -157,8 +157,8 @@ k =
     UArray Int Word64
 {- ORMOLU_ENABLE -}
 
-sha512sched' :: IOUArray Int Word64 -> Int -> IO ()
-sha512sched' v i =
+sha512Sched' :: IOUArray Int Word64 -> Int -> IO ()
+sha512Sched' v i =
   readArray v (i - 2)
     >>= \a ->
       readArray v (i - 7)
@@ -169,9 +169,9 @@ sha512sched' v i =
                 >>= \d ->
                   writeArray v i (lilSigma1 a + b + lilSigma0 c + d)
 
-sha512sched :: IOUArray Int Word64 -> IO ()
-sha512sched v =
-  mapM_ (sha512sched' v) [16 .. 79]
+sha512Sched :: IOUArray Int Word64 -> IO ()
+sha512Sched v =
+  mapM_ (sha512Sched' v) [16 .. 79]
     >> mapM_ (\i -> readArray v i >>= writeArray v i . (+ k ! i)) [0 .. 79]
 
 fromList :: [Word8] -> [Word64]
@@ -181,7 +181,7 @@ fromList m = foldl' f 0 m1 : fromList m2
     f a b = (a `shiftL` 8) .|. fromIntegral b
     (m1, m2) = splitAt 8 m
 
-int_sha512once h m = h'
+int_sha512Once h m = h'
   where
     -- WARN: Unsafe routine used to expand the schedule in place.
     --   Besides the speedy indexing/deindexing, this saves us 24 intermediate
@@ -191,20 +191,20 @@ int_sha512once h m = h'
       unsafePerformIO $
         newListArray (0, 79) (fromList m)
           >>= \v ->
-            sha512sched v
+            sha512Sched v
               >> getElems v
-    h' = sha512block h w
+    h' = sha512Block h w
 
-sha512sum' :: Hash -> [Word8] -> Int -> Hash
-sha512sum' h m l =
+sha512Sum' :: Hash -> [Word8] -> Int -> Hash
+sha512Sum' h m l =
   case splitAt sha512SizeBlock m of
     (m1, []) ->
       case splitAt
         sha512SizeBlock
         (m1 ++ [0x80] ++ replicate n 0 ++ split (l * 8)) of
-        (m1', []) -> int_sha512once h m1'
-        (m1', m2') -> int_sha512once (int_sha512once h m1') m2'
-    (m1, m2) -> sha512sum' (int_sha512once h m1) m2 l
+        (m1', []) -> int_sha512Once h m1'
+        (m1', m2') -> int_sha512Once (int_sha512Once h m1') m2'
+    (m1, m2) -> sha512Sum' (int_sha512Once h m1) m2 l
   where
     split x =
       map
@@ -229,7 +229,7 @@ sha512sum' h m l =
         [Word8]
     n = (sha512SizeBlock - 16 - (l + 1)) `mod` sha512SizeBlock
 
-int_sha512toList h =
+int_sha512ToList h =
   concatMap split $ elems h
   where
     split x =
@@ -246,8 +246,8 @@ int_sha512toList h =
         ] ::
         [Word8]
 
-int_sha512sum = sha512sum'
+int_sha512Sum = sha512Sum'
 
-sha512sum m l = int_sha512toList $ int_sha512sum int_sha512hash0 m l
+sha512Sum m l = int_sha512ToList $ int_sha512Sum int_sha512Hash0 m l
 
-sha512sum1 m = sha512sum m (length m)
+sha512Sum1 m = sha512Sum m (length m)
