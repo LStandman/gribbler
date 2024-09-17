@@ -14,9 +14,9 @@ import System.Exit
 main :: IO ()
 main =
   runtests
-    [ test_crypt,
-      test_misc,
-      test_json
+    [ testCrypt,
+      testMisc,
+      testJson
     ]
     ()
     >>= \x -> if x then exitSuccess else exitFailure

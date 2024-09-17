@@ -2,14 +2,14 @@
 -- Misc/Base64Test.hs: Unit tests for Base64
 -- Copyright (C) 2024 LStandman
 
-module Misc.Base64Test (test_base64) where
+module Misc.Base64Test (testBase64) where
 
 import Data.Either
 import Libtest
 import qualified Misc.Base64.RFC4648 as Base64
 import Misc.MemUtils
 
-test_base64 =
+testBase64 =
   let t01_plain = strBytes ""
       t01_encoded = ""
       t02_plain = strBytes "f"

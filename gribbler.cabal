@@ -33,6 +33,8 @@ library
       Crypt.KDF
       Crypt.KDFTest
       Crypt.MooMoo
+      Crypt.MooMoo.CBC
+      Crypt.MooMoo.CBCTest
       Crypt.MooMooTest
       Crypt.SHA256
       Crypt.SHA256Test

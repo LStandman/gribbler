@@ -2,14 +2,14 @@
 -- Misc/DicewareTest.hs: Unit tests for Diceware
 -- Copyright (C) 2021-2023 LStandman
 
-module Misc.DicewareTest (test_diceware) where
+module Misc.DicewareTest (testDiceware) where
 
 import Data.Either
 --
 import Libtest
 import qualified Misc.Diceware as Diceware
 
-test_diceware =
+testDiceware =
   let t1_dictionary =
         [ "blue",
           "cyan",

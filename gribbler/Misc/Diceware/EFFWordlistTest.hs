@@ -3,7 +3,7 @@
 -- https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt
 -- Copyright (C) 2023 LStandman
 
-module Misc.Diceware.EFFWordlistTest (test_effwordlist) where
+module Misc.Diceware.EFFWordlistTest (testEffwordlist) where
 
 import Crypt.SHA256
 import Libtest
@@ -12,7 +12,7 @@ import qualified Misc.Diceware.EFFWordlist as EFFWordlist
 import Misc.MemUtils
 
 {- ORMOLU_DISABLE -}
-test_effwordlist =
+testEffwordlist =
   let t1_result = Right ()
       t2_result =
         [ 0x6d, 0x55, 0x7f, 0x06, 0x93, 0x95, 0x8f, 0xb5,

@@ -2,7 +2,7 @@
 -- CryptTest.hs: Unit tests for cryptographic module.
 -- Copyright (C) 2023 LStandman
 
-module CryptTest (test_crypt) where
+module CryptTest (testCrypt) where
 
 import Crypt.AES256Test
 import Crypt.Curve25519Test
@@ -12,13 +12,13 @@ import Crypt.SHA256Test
 import Crypt.SHA512Test
 import Libtest
 
-test_crypt =
+testCrypt =
   runtests
     [ testAes256,
-      testAes256Cbc,
       testHkdfSha256,
       testHmacSha256,
       testPbkdf2HmacSha256,
+      testMoo,
       testSha256,
       testSha512,
       testX25519

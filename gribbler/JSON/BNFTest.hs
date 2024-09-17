@@ -2,7 +2,7 @@
 -- JSON/BNFTest.hs: Unit tests for BNF
 -- Copyright (C) 2022-2023 LStandman
 
-module JSON.BNFTest (test_bnf) where
+module JSON.BNFTest (testBnf) where
 
 import Data.Char
 --
@@ -22,7 +22,7 @@ getChar c =
         [] -> BNF.Miss
         (y : ys) -> (if c == y then return (difflist [c], ys) else BNF.Miss)
 
-test_bnf =
+testBnf =
   let errorX = BNF.Error "X" :: TextResult
       errorY = BNF.Error "Y" :: TextResult
       miss0 = BNF.Miss :: TextResult

@@ -2,12 +2,12 @@
 -- Misc/DiffListTest.hs: Unit tests for DiffList
 -- Copyright (C) 2023 LStandman
 
-module Misc.DiffListTest (test_difflist) where
+module Misc.DiffListTest (testDifflist) where
 
 import Libtest
 import Misc.DiffList
 
-test_difflist =
+testDifflist =
   let t1_listA = ['1', '2', '3', '4']
       t1_listB = ['a', 'b', 'c', 'd']
       t1_result = ['1', '2', '3', '4', 'a', 'b', 'c', 'd']

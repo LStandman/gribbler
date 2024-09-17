@@ -2,7 +2,7 @@
 -- MiscTest.hs: Unit tests for misc module.
 -- Copyright (C) 2023-2024 LStandman
 
-module MiscTest (test_misc) where
+module MiscTest (testMisc) where
 
 import Libtest
 import Misc.Base64Test
@@ -10,10 +10,10 @@ import Misc.Diceware.EFFWordlistTest
 import Misc.DicewareTest
 import Misc.DiffListTest
 
-test_misc =
+testMisc =
   runtests
-    [ test_base64,
-      test_diceware,
-      test_difflist,
-      test_effwordlist
+    [ testBase64,
+      testDiceware,
+      testDifflist,
+      testEffwordlist
     ]

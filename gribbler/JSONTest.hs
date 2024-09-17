@@ -2,7 +2,7 @@
 -- JSONTest.hs: Unit tests for JSON module.
 -- Copyright (C) 2023-2024 LStandman
 
-module JSONTest (test_json) where
+module JSONTest (testJson) where
 
 import Data.Either
 import GHC.Stack
@@ -11,13 +11,13 @@ import qualified JSON.BNF as BNF
 import JSON.BNFTest
 import Libtest
 
-test_json =
+testJson =
   runtests
-    [ test_bnf,
-      test_json'
+    [ testBnf,
+      testJson'
     ]
 
-test_json' =
+testJson' =
   let t01_string =
         "{\
         \  \"first_name\": \"John\",\
