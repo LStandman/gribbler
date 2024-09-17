@@ -4,7 +4,6 @@
 
 module Crypt.SHA256Test (testSha256) where
 
---
 import qualified Crypt.SHA256 as SHA256
 import Data.List
 import Data.Word

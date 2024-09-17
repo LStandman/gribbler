@@ -4,7 +4,6 @@
 
 module Crypt.AES256Test (testAes256) where
 
---
 import qualified Crypt.AES256 as AES256
 import Data.Word
 import Libtest
