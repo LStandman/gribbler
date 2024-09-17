@@ -266,11 +266,11 @@ test_json' =
         "JSON"
         [ test
             "DeserializationWikipedia"
-            [ expectMemEq "t01_json" (Right t01_json) $ deserialize t01_string
+            [ expectVarEq "t01_json" (Right t01_json) $ deserialize t01_string
             ],
           test
             "DeserializationGaloisIncPass"
-            [ expectMemEq "t02_json" (Right t02_json) $ deserialize t02_string
+            [ expectVarEq "t02_json" (Right t02_json) $ deserialize t02_string
             ],
           test
             "DeserializationGaloisIncFail"
@@ -308,7 +308,7 @@ test_json' =
             ],
           test
             "SerializationGaloisInc"
-            [ expectMemEq "t34_json" (Right t34_json) $ deserialize $ serialize True t34_json,
-              expectMemEq "t35_json" (Right t35_json) $ deserialize $ serialize False t35_json
+            [ expectVarEq "t34_json" (Right t34_json) $ deserialize $ serialize True t34_json,
+              expectVarEq "t35_json" (Right t35_json) $ deserialize $ serialize False t35_json
             ]
         ]

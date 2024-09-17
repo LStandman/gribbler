@@ -192,7 +192,7 @@ testAes256Cbc =
         "AES256CBC"
         [ test
             "EncryptNISTSP80038A"
-            [ expectMemEq "t1_ctext" (t1_ctext, t1_iv_out) $
+            [ expectVarEq "t1_ctext" (t1_ctext, t1_iv_out) $
                 MooMoo.cbcEncrypt1
                   AES256.encrypt
                     t1_iv
@@ -202,7 +202,7 @@ testAes256Cbc =
             ],
           test
             "EncryptTestmgr"
-            [ expectMemEq "t2_ctext" (t2_ctext, t2_iv_out) $
+            [ expectVarEq "t2_ctext" (t2_ctext, t2_iv_out) $
                 MooMoo.cbcEncrypt1
                   AES256.encrypt
                   t2_iv

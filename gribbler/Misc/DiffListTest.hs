@@ -15,7 +15,7 @@ test_difflist =
         "DiffList"
         [ test
             "Concat"
-            [ expectMemEq "t1_result" t1_result $
+            [ expectVarEq "t1_result" t1_result $
                 relist $
                   difflist t1_listA <> difflist t1_listB
             ]

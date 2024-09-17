@@ -1154,9 +1154,9 @@ testX25519 =
         ( fmap
             ( \((scalar, scalar_num, u_in, u_in_num, u_out), i) ->
                 test ("RFC7748@" ++ show i)
-                  [ expectMemEq "scalar_num" scalar_num $
+                  [ expectVarEq "scalar_num" scalar_num $
                       Curve25519.decodeScalar scalar,
-                    expectMemEq "u_in_num" u_in_num $
+                    expectVarEq "u_in_num" u_in_num $
                       Curve25519.decodeUcoord u_in,
                     expectMemEq "u_out" u_out $
                       Curve25519.x25519 scalar u_in

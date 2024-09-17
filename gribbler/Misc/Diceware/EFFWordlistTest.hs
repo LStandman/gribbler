@@ -24,7 +24,7 @@ test_effwordlist =
         "EFFWordlist"
         [ test
             "IsSanitized"
-            [ expectMemEq "t1_result" t1_result $
+            [ expectVarEq "t1_result" t1_result $
                 Diceware.isSanitized EFFWordlist.effLargeWordlist
             ],
           test

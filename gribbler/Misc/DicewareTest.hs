@@ -87,17 +87,17 @@ test_diceware =
         "Diceware"
         [ test
             "DecodePass"
-            [ expectMemEq "t1_number" (Just t1_number) $
+            [ expectVarEq "t1_number" (Just t1_number) $
                 Diceware.decode t1_dictionary t1_hits
             ],
           test
             "DecodeFailNotInDictionary"
-            [ expectMemEq "t1_number" Nothing $
+            [ expectVarEq "t1_number" Nothing $
                 Diceware.decode t1_dictionary t1_misses
             ],
           test
             "EncodePass"
-            [ expectMemEq "t1_hits" t1_hits $
+            [ expectVarEq "t1_hits" t1_hits $
                 Diceware.encode t1_dictionary (length t1_hits) t1_number
             ],
           test

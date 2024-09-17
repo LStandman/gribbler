@@ -3,11 +3,11 @@
 -- Copyright (C) 2021-2023 LStandman
 
 module Libtest
-  ( expectDbgEq,
-    expectFalse,
+  ( expectFalse,
     expectMemEq,
     expectThat,
     expectTrue,
+    expectVarEq,
     runtests,
     test,
     testsuite,
@@ -25,9 +25,11 @@ type Assertion s = s -> IO Bool
 
 expectFalse :: Bool -> Assertion s
 expectMemEq ::
-  (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
+  (Integral a, Eq a, Show a) => String -> [a] -> [a] -> Assertion (Maybe Int)
 expectThat :: (a -> Assertion s) -> a -> Assertion s
 expectTrue :: Bool -> Assertion s
+expectVarEq ::
+  (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
 runtests :: [Assertion ()] -> Assertion ()
 test :: String -> [Assertion (Maybe Int)] -> Assertion ()
 testsuite :: String -> [Assertion ()] -> Assertion ()
@@ -78,8 +80,8 @@ testsuite name tests _ =
 
 expectThat matcher = matcher
 
-dbgeq :: Integral a => String -> [a] -> [a] -> Assertion (Maybe Int)
-dbgeq varname expected actual ctr =
+memeq :: Integral a => String -> [a] -> [a] -> Assertion (Maybe Int)
+memeq varname expected actual ctr =
   if actual == expected
     then return True
     else
@@ -94,10 +96,10 @@ dbgeq varname expected actual ctr =
           )
         >> return False
 
-expectDbgEq varname expected = expectThat (dbgeq varname expected)
+expectMemEq varname expected = expectThat (memeq varname expected)
 
-memeq :: (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
-memeq varname expected actual ctr =
+memeq1 :: (Eq a, Show a) => String -> a -> a -> Assertion (Maybe Int)
+memeq1 varname expected actual ctr =
   if actual == expected
     then return True
     else
@@ -107,7 +109,7 @@ memeq varname expected actual ctr =
         >> print ("Expected: " ++ show expected)
         >> return False
 
-expectMemEq varname expected = expectThat (memeq varname expected)
+expectVarEq varname expected = expectThat (memeq1 varname expected)
 
 expectTrue = return . return
 
