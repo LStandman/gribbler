@@ -194,40 +194,36 @@ testAes256Cbc =
             "EncryptNISTSP80038A"
             [ expectVarEq "t1_ctext" (t1_ctext, t1_iv_out) $
                 CBC.encrypt1
-                  AES256.encrypt
-                    t1_iv
-                  t1_ptext
-                  t1_key
                   AES256.sizeBlock
+                  (AES256.encrypt t1_key)
+                  t1_iv
+                  t1_ptext
             ],
           test
             "EncryptTestmgr"
             [ expectVarEq "t2_ctext" (t2_ctext, t2_iv_out) $
                 CBC.encrypt1
-                  AES256.encrypt
+                  AES256.sizeBlock
+                  (AES256.encrypt t2_key)
                   t2_iv
                   t2_ptext
-                  t2_key
-                  AES256.sizeBlock
             ],
           test
             "DecryptNISTSP80038A"
             [ expectMemEq "t1_ptext" t1_ptext $
                 CBC.decrypt
-                  AES256.decrypt
+                  AES256.sizeBlock
+                  (AES256.decrypt t1_key)
                   t1_iv
                   t1_ctext
-                  t1_key
-                  AES256.sizeBlock
             ],
           test
             "DecryptTestmgr"
             [ expectMemEq "t2_ptext" t2_ptext $
                 CBC.decrypt
-                  AES256.decrypt
+                  AES256.sizeBlock
+                  (AES256.decrypt t2_key)
                   t2_iv
                   t2_ctext
-                  t2_key
-                  AES256.sizeBlock
             ]
         ]

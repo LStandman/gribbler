@@ -23,8 +23,7 @@ import Data.Bits
 import Data.List
 import Data.Word
 import GHC.IO
-
-infixl 7 `div1`
+import qualified Misc.Math as Math (div1)
 
 type Prf = [Word8] -> Int -> Hash
 
@@ -36,9 +35,6 @@ hmacSha256 :: [Word8] -> Int -> [Word8] -> Int -> [Word8]
 hmacSha256' :: [Word8] -> [Word8] -> [Word8]
 pbkdf2HmacSha256 :: [Word8] -> Int -> [Word8] -> Int -> Int -> Int -> [Word8]
 pbkdf2HmacSha256' :: [Word8] -> [Word8] -> Int -> Int -> [Word8]
-div1 :: Integral a => a -> a -> a
-a `div1` b = (a + b - 1) `div` b
-
 int_hmacSha256 :: (Hash, Hash) -> [Word8] -> Int -> Hash
 int_hmacSha256 (ihash, ohash) text text_size = ohash'
   where
@@ -104,7 +100,7 @@ int_pbkdf2HmacSha256 h s s_size c dk_len =
     us u =
       unsafePerformIO $
         thaw u >>= \u' -> round c u u' >> freeze u'
-    l = dk_len `div1` sha256SizeDigest
+    l = dk_len `Math.div1` sha256SizeDigest
 
 pbkdf2HmacSha256 p p_size =
   int_pbkdf2HmacSha256
@@ -124,7 +120,7 @@ int_hkdfSha256Expand :: Prf -> [Word8] -> Int -> Int -> [Word8]
 int_hkdfSha256Expand h info info_size l =
   take l $ concat $ scanl' ts t1 [2 .. n]
   where
-    n = l `div1` sha256SizeDigest
+    n = l `Math.div1` sha256SizeDigest
     t1 = int_sha256ToList $ h (info ++ [1]) (info_size + 1)
     ts :: [Word8] -> Int -> [Word8]
     ts t i =

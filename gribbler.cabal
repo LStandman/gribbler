@@ -60,6 +60,8 @@ library
       Misc.DicewareTest
       Misc.DiffList
       Misc.DiffListTest
+      Misc.Math
+      Misc.MathTest
       Misc.MemUtils
       Misc.MemUtilsTest
       MiscTest

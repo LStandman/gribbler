@@ -9,14 +9,14 @@ import Data.Word
 import Libtest
 
 nomodAes256 :: Bool -> [Word8] -> [Word8] -> [Word8]
-nomodAes256 _ [] _ = []
-nomodAes256 isEnc text key =
-  out ++ nomodAes256 isEnc text'' key
+nomodAes256 _ _ [] = []
+nomodAes256 isEnc key text =
+  out ++ nomodAes256 isEnc key text''
   where
     (text', text'') = splitAt AES256.sizeBlock text
     out
-      | isEnc = AES256.encrypt text' key
-      | otherwise = AES256.decrypt text' key
+      | isEnc = AES256.encrypt key text'
+      | otherwise = AES256.decrypt key text'
 
 {- ORMOLU_DISABLE -}
 testAes256 =
@@ -175,21 +175,21 @@ testAes256 =
         [ test
             "EncryptFIPS197"
             [ expectMemEq "t1_ctext" t1_ctext $
-                nomodAes256 True t1_ptext t1_key
+                nomodAes256 True t1_key t1_ptext
             ],
           test
             "EncryptTestmgr"
             [ expectMemEq "t2_ctext" t2_ctext $
-                nomodAes256 True t2_ptext t2_key
+                nomodAes256 True t2_key t2_ptext
             ],
           test
             "DecryptFIPS197"
             [ expectMemEq "t1_ptext" t1_ptext $
-                nomodAes256 False t1_ctext t1_key
+                nomodAes256 False t1_key t1_ctext
             ],
           test
             "DecryptTestmgr"
             [ expectMemEq "t2_ptext" t2_ptext $
-                nomodAes256 False t2_ctext t2_key
+                nomodAes256 False t2_key t2_ctext
             ]
         ]

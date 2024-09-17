@@ -85,14 +85,14 @@ memeq varname expected actual ctr =
   if actual == expected
     then return True
     else
-      print ("Value of: " ++ varname ++ maybe "" (\i -> "@" ++ show i) ctr)
-        >> print
+      putStrLn ("Value of: " ++ varname ++ maybe "" (\i -> "@" ++ show i) ctr)
+        >> putStrLn
           ( "  Actual: "
-              ++ show (map (\x -> "0x" ++ num2hex 2 (fromIntegral x)) actual)
+              ++ concatMap (num2hex 2 . fromIntegral) actual
           )
-        >> print
+        >> putStrLn
           ( "Expected: "
-              ++ show (map (\x -> "0x" ++ num2hex 2 (fromIntegral x)) expected)
+              ++ concatMap (num2hex 2 . fromIntegral) expected
           )
         >> return False
 
@@ -103,10 +103,10 @@ memeq1 varname expected actual ctr =
   if actual == expected
     then return True
     else
-      print
+      putStrLn
         ("Value of: " ++ varname ++ maybe "" (\i -> "@" ++ show i) ctr)
-        >> print ("  Actual: " ++ show actual)
-        >> print ("Expected: " ++ show expected)
+        >> putStrLn ("  Actual: " ++ show actual)
+        >> putStrLn ("Expected: " ++ show expected)
         >> return False
 
 expectVarEq varname expected = expectThat (memeq1 varname expected)

@@ -251,7 +251,7 @@ scheduleHelper :: HasCallStack => (Mat, Mat) -> (Mat, [Mat])
 scheduleHelper = MemUtils.runcons . tail . keyExpansion
 
 cipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
-cipher ptext key1 key2 = addRoundKey (shiftRows . subBytes $ ptext'') key15
+cipher key1 key2 ptext = addRoundKey (shiftRows . subBytes $ ptext'') key15
   where
     f p = addRoundKey (mixColumns . shiftRows . subBytes $ p)
     (key15, schedule) = scheduleHelper (key1, key2)
@@ -259,7 +259,7 @@ cipher ptext key1 key2 = addRoundKey (shiftRows . subBytes $ ptext'') key15
     ptext'' = foldl' f ptext' schedule
 
 invCipher :: HasCallStack => Mat -> Mat -> Mat -> Mat
-invCipher ctext key1 key2 =
+invCipher key1 key2 ctext =
   addRoundKey (invSubBytes . invShiftRows $ ctext'') key1
   where
     f k c = invMixColumns $ addRoundKey (invSubBytes . invShiftRows $ c) k
@@ -269,12 +269,12 @@ invCipher ctext key1 key2 =
 
 -- PUBLIC WRAPPERS
 
-encrypt ptext key =
-  toList $ cipher (fromList ptext) (fromList key1) (fromList key2)
+encrypt key ptext =
+  toList $ cipher (fromList key1) (fromList key2) (fromList ptext)
   where
     (key1, key2) = splitAt sizeState key
 
-decrypt ctext key =
-  toList $ invCipher (fromList ctext) (fromList key1) (fromList key2)
+decrypt key ctext =
+  toList $ invCipher (fromList key1) (fromList key2) (fromList ctext)
   where
     (key1, key2) = splitAt sizeState key
