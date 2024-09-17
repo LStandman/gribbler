@@ -44,21 +44,22 @@ sizeState = 16
 -- PRELIMINARY FUNCTIONS
 
 xtime :: Word8 -> Word8
-xtime a
-  | (a .&. 0x80) /= 0 = p `xor` 0x1B
-  | otherwise = p
+xtime a = (a `shiftL` 1) `xor` mask
   where
-    p = a `shiftL` 1
+    mask
+      | (a .&. 0x80) /= 0 = 0x1B
+      | otherwise = 0
+
+dot' :: Int -> Word8 -> Word8 -> Word8
+dot' 0 _ 0 = 0
+dot' i a b = a' `xor` dot' (i - 1) (xtime a) (b `shiftR` 1)
+  where
+    a'
+      | (b .&. 1) /= 0 = a
+      | otherwise = 0
 
 dot :: Word8 -> Word8 -> Word8
-a `dot` b
-  | b > a = b `dot'` a
-  | otherwise = a `dot'` b
-  where
-    infixl 7 `dot'`
-    _ `dot'` 0 = 0
-    a `dot'` 1 = a
-    a `dot'` b = (a `dot'` (b .&. 1)) `xor` (xtime a `dot'` (b `shiftR` 1))
+dot = dot' 8
 
 sub' :: Mat -> Word8 -> Word8
 sub' vv a = vv ! (a `shiftR` 4, a .&. 0x0F)
