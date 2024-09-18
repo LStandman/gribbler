@@ -5,9 +5,11 @@
 module Crypt.MooMooTest (testMoo) where
 
 import Crypt.MooMoo.CBCTest
+import Crypt.MooMoo.GCMTest
 import Libtest
 
 testMoo =
   runtests
-    [ testAes256Cbc
+    [ testAes256Cbc,
+      testAes256Gcm
     ]

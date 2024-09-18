@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Crypt/MooMoo/CBCTest.hs: Unit tests for MooMoo
+-- Crypt/MooMoo/CBCTest.hs: Unit tests for CBC
 -- Copyright (C) 2021-2023 LStandman
 
 module Crypt.MooMoo.CBCTest (testAes256Cbc) where

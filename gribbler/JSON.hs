@@ -219,7 +219,7 @@ putString s =
     f c
       | isPrintable c = [c]
       | c < '\x0020' = "\\u" ++ (num2hex 4 . fromEnum $ c)
-      | otherwise = error ("Unsupported character " ++ show c)
+      | otherwise = error ("JSON.putString: unsupported character " ++ show c)
 
 putJson :: HasCallStack => (Bool, Int) -> JSValue -> String
 putJson _ JSNull = "null"

@@ -21,21 +21,21 @@ encrypt1 ::
 decrypt ::
   Int -> BlockCipher -> [Word8] -> [Word8] -> [Word8]
 
-encrypt1 block_size _ iv [] = ([], iv)
-encrypt1 block_size f iv ptext = (ctext1 ++ ctext2, iv_out)
+encrypt1 blockSize _ iv [] = ([], iv)
+encrypt1 blockSize f iv ptext = (ctext1 ++ ctext2, ivOut)
   where
-    (ptext1, ptext2) = splitAt block_size ptext
+    (ptext1, ptext2) = splitAt blockSize ptext
     ptext1' = zipWith xor ptext1 iv
     ctext1 = f ptext1'
-    (ctext2, iv_out) = encrypt1 block_size f ctext1 ptext2
+    (ctext2, ivOut) = encrypt1 blockSize f ctext1 ptext2
 
-encrypt block_size f iv ptext =
-  fst $ encrypt1 block_size f iv ptext
+encrypt blockSize f iv ptext =
+  fst $ encrypt1 blockSize f iv ptext
 
 decrypt _ _ _ [] = []
-decrypt block_size f iv ctext =
-  ptext ++ decrypt block_size f ctext1 ctext2
+decrypt blockSize f iv ctext =
+  ptext ++ decrypt blockSize f ctext1 ctext2
   where
-    (ctext1, ctext2) = splitAt block_size ctext
+    (ctext1, ctext2) = splitAt blockSize ctext
     ptext' = f ctext1
     ptext = zipWith xor ptext' iv

@@ -35,6 +35,8 @@ library
       Crypt.MooMoo
       Crypt.MooMoo.CBC
       Crypt.MooMoo.CBCTest
+      Crypt.MooMoo.GCM
+      Crypt.MooMoo.GCMTest
       Crypt.MooMooTest
       Crypt.SHA256
       Crypt.SHA256Test
