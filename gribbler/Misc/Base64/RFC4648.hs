@@ -10,7 +10,6 @@ where
 
 import Data.Array.Unboxed
 import Data.Word
---
 import qualified Misc.Base64 as Base64
 
 decode :: String -> Either String [Word8]

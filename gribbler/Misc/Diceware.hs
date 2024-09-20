@@ -12,7 +12,6 @@ where
 import Data.Char
 import Data.List
 import Data.Maybe
---
 import Misc.DiffList
 
 -- Decodes a number from list `hits` of entries from `dictionary`.

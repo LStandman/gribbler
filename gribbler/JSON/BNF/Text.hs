@@ -23,7 +23,6 @@ where
 
 import Control.Monad (void)
 import Data.Functor ((<&>))
---
 import qualified JSON.BNF as BNF
 import Misc.DiffList
 

@@ -4,7 +4,6 @@
 
 module Crypt.MooMoo.GCMTest (testAes256Gcm) where
 
---
 import qualified Crypt.AES256 as AES256
 import qualified Crypt.MooMoo.GCM as GCM
 import Data.Either

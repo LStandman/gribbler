@@ -15,7 +15,6 @@ import Data.Foldable (foldr')
 import Data.List
 import Data.Word
 import GHC.Stack
---
 import qualified Misc.MemUtils as MemUtils (runcons)
 
 infixl 6 `add`

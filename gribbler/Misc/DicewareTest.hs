@@ -5,7 +5,6 @@
 module Misc.DicewareTest (testDiceware) where
 
 import Data.Either
---
 import Libtest
 import qualified Misc.Diceware as Diceware
 

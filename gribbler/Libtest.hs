@@ -16,7 +16,6 @@ module Libtest
 where
 
 import Data.Array
---
 import Misc.MemUtils
 import System.CPUTime
 import Text.Printf

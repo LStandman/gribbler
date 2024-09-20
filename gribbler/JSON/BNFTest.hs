@@ -5,7 +5,6 @@
 module JSON.BNFTest (testBnf) where
 
 import Data.Char
---
 import qualified JSON.BNF as BNF
 import Libtest
 import Misc.DiffList

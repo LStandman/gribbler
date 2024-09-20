@@ -15,7 +15,6 @@ import Data.Bits
 import Data.List
 import Data.Word
 import GHC.Stack
---
 import qualified Misc.MemUtils as MemUtils (runcons)
 
 infixl 7 `dot`
