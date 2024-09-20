@@ -120,14 +120,14 @@ xcrypt authPostText f iv ivLen auth authLen preText textLen = (postText, t)
           x
         ] ::
         [Word8]
-    n = (2 * gcmSizeBlock - 8 - ivLen) `mod` (2 * gcmSizeBlock)
+    n = (gcmSizeBlock - ivLen) `mod` gcmSizeBlock
     u = (gcmSizeBlock - textLen) `mod` gcmSizeBlock
     v = (gcmSizeBlock - authLen) `mod` gcmSizeBlock
     h = f $ replicate gcmSizeBlock 0
     j0
       | ivLen == 0 = error "Crypt.MooMoo.GCM.xcrypt: unsupported IV length <0>"
       | ivLen == 12 = iv ++ [0, 0, 0, 1]
-      | otherwise = ghash h (iv ++ replicate n 0 ++ split (ivLen * 8))
+      | otherwise = ghash h (iv ++ replicate (n + 8) 0 ++ split (ivLen * 8))
     postText = gctr f (inc32 j0) preText
     cc
       | authPostText = postText
