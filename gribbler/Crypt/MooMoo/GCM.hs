@@ -18,13 +18,39 @@ import GHC.Stack
 type BlockCipher = [Word8] -> [Word8]
 
 decrypt1 ::
-  HasCallStack => BlockCipher -> [Word8] -> Int -> [Word8] -> Int -> ([Word8], [Word8]) -> Int -> Either String [Word8]
+  HasCallStack =>
+  BlockCipher ->
+  [Word8] ->
+  Int ->
+  [Word8] ->
+  Int ->
+  ([Word8], [Word8]) ->
+  Int ->
+  Either String [Word8]
 decrypt ::
-  HasCallStack => BlockCipher -> [Word8] -> [Word8] -> ([Word8], [Word8]) -> Either String [Word8]
+  HasCallStack =>
+  BlockCipher ->
+  [Word8] ->
+  [Word8] ->
+  ([Word8], [Word8]) ->
+  Either String [Word8]
 encrypt1 ::
-  HasCallStack => BlockCipher -> [Word8] -> Int -> [Word8] -> Int -> [Word8] -> Int -> ([Word8], [Word8])
+  HasCallStack =>
+  BlockCipher ->
+  [Word8] ->
+  Int ->
+  [Word8] ->
+  Int ->
+  [Word8] ->
+  Int ->
+  ([Word8], [Word8])
 encrypt ::
-  HasCallStack => BlockCipher -> [Word8] -> [Word8] -> [Word8] -> ([Word8], [Word8])
+  HasCallStack =>
+  BlockCipher ->
+  [Word8] ->
+  [Word8] ->
+  [Word8] ->
+  ([Word8], [Word8])
 
 gcmSizeBlock = 16
 
