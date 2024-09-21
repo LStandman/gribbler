@@ -14,7 +14,7 @@ module Crypt.KDF
   )
 where
 
-import Control.Monad
+import Control.Monad (mapM_)
 import Crypt.SHA256
 import Data.Array.IO
 import Data.Array.Unboxed

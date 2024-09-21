@@ -13,7 +13,7 @@ import Data.Array.Unboxed
 import Data.Bits
 import Data.Functor ((<&>))
 import Data.List
-import Data.Maybe
+import Data.Maybe (maybe)
 import Data.Word
 
 type Alphabet = UArray Word8 Char

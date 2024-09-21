@@ -13,7 +13,7 @@ where
 import Data.Char
 import Data.Functor ((<&>))
 import Data.List
-import Data.Maybe
+import Data.Maybe (fromJust)
 import GHC.Stack
 import qualified JSON.BNF as BNF
 import JSON.BNF.Text

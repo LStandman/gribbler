@@ -11,7 +11,7 @@ where
 
 import Data.Char
 import Data.List
-import Data.Maybe
+import Data.Maybe (isNothing)
 import Misc.DiffList
 
 -- Decodes a number from list `hits` of entries from `dictionary`.
@@ -20,19 +20,12 @@ decode :: [String] -> [String] -> Maybe Int
 -- Encodes a number into a list of dictionary entries from `dictionary`.
 -- First entry represents the most significant digit.
 encode :: [String] -> Int -> Int -> [String]
-
 -- To avoid ambiguity the dictionary should be:
-
--- * Sorted.
-
--- * Unique.
-
--- * Alphabet caharacters and dashes (-) only.
-
--- * Lower case only.
-
+-- . Sorted.
+-- . Unique.
+-- . Alphabet caharacters and dashes (-) only.
+-- . Lower case only.
 isSanitized :: [String] -> Either String ()
-
 decode dictionary hits =
   mapM (`elemIndex` dictionary) hits
     >>= Just . foldl' (\a b -> a * length dictionary + b) 0

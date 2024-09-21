@@ -17,7 +17,7 @@ module Crypt.SHA512
   )
 where
 
-import Control.Monad
+import Control.Monad (mapM_)
 import Data.Array.IO
 import Data.Array.Unboxed
 import Data.Bits
