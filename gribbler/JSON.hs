@@ -181,13 +181,13 @@ ws =
 
 deserialize s =
   case BNF.evalParser
-    (element >>= \x -> assert_eof >> return x)
+    (element >>= \x -> assertEof >> return x)
     $ textState s of
     BNF.Hit j -> Right j
     BNF.Error e -> Left e
     BNF.Miss -> Left "Unspecified error"
   where
-    assert_eof =
+    assertEof =
       assertNoop
         "JSON is terminated but stream is not empty"
         (metaEof :: BNF.Parser TextState ())
@@ -244,14 +244,14 @@ putJson (pretty, depth) (JSObject v) =
     [] -> "{}"
     u ->
       "{" ++ putBr (pretty, deeper)
-        ++ intercalate ("," ++ putBr (pretty, deeper)) (map serialize_member u)
+        ++ intercalate ("," ++ putBr (pretty, deeper)) (map serializeMember u)
         ++ putBr (pretty, depth)
         ++ "}"
   where
     deeper = depth + 1
-    serialize_member (name, value) =
-      putString name ++ ":" ++ put_ws ++ putJson (pretty, deeper) value
-    put_ws
+    serializeMember (name, value) =
+      putString name ++ ":" ++ putWs ++ putJson (pretty, deeper) value
+    putWs
       | pretty = "\x0020"
       | otherwise = ""
 

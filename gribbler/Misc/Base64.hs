@@ -34,22 +34,22 @@ encodeChunk alphabet (a : b : c : _) =
 
 encodeLast :: Alphabet -> Maybe Char -> [Word8] -> String
 encodeLast _ _ [] = ""
-encodeLast alphabet pad_char v =
+encodeLast alphabet padChar v =
   -- Only take the _N+1_ chars that encode _N_ bytes of data.
   -- And up to 4 chars total, including padding.
   take
     4
     ( take (n + 1) (encodeChunk alphabet (v ++ repeat 0))
-        ++ maybe "" repeat pad_char
+        ++ maybe "" repeat padChar
     )
   where
     n = length v
 
-encode alphabet pad_char v =
+encode alphabet padChar v =
   case splitAt 3 v of
-    (v1, []) -> encodeLast alphabet pad_char v1
+    (v1, []) -> encodeLast alphabet padChar v1
     (v1, v2) ->
-      encodeChunk alphabet v1 ++ encode alphabet pad_char v2
+      encodeChunk alphabet v1 ++ encode alphabet padChar v2
 
 alphaIndex :: [Char] -> Char -> Either String Word8
 alphaIndex alphabet' c =
@@ -79,23 +79,23 @@ decodeChunk alphabet' (x1 : x2 : x3 : x4 : _) =
 
 decodeLast' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
 decodeLast' _ _ _ [] = Right []
-decodeLast' alphabet' zero_char pad_char v
+decodeLast' alphabet' zeroChar padChar v
   | n >= 2 =
-    decodeChunk alphabet' (v' ++ repeat zero_char)
+    decodeChunk alphabet' (v' ++ repeat zeroChar)
       <&> take (n - 1)
   | otherwise = Left ("Bad last chunk length after discarding pad. " ++ show n)
   where
-    v' = maybe v (\c -> dropWhileEnd (c ==) v) pad_char
+    v' = maybe v (\c -> dropWhileEnd (c ==) v) padChar
     n = length v'
 
 decode' :: [Char] -> Char -> Maybe Char -> String -> Either String [Word8]
-decode' alphabet' zero_char pad_char v =
+decode' alphabet' zeroChar padChar v =
   case splitAt 4 v of
-    (v1, []) -> decodeLast' alphabet' zero_char pad_char v1
+    (v1, []) -> decodeLast' alphabet' zeroChar padChar v1
     (v1, v2) ->
       decodeChunk alphabet' v1
         >>= \xs ->
-          decode' alphabet' zero_char pad_char v2
+          decode' alphabet' zeroChar padChar v2
             >>= \ys -> return (xs ++ ys)
 
 decode alphabet = decode' (elems alphabet) (alphabet ! 0)

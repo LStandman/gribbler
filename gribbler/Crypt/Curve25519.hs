@@ -32,9 +32,9 @@ decodeLe :: [Word8] -> Integer
 decodeLe = foldr' (\y x -> (x `shiftL` 8) .|. fromIntegral y) 0
 
 decodeUcoord :: HasCallStack => [Word8] -> Integer
-decodeUcoord u = decodeLe (u_lsbs ++ [u_msb .&. 0x7F])
+decodeUcoord u = decodeLe (uLsbs ++ [uMsb .&. 0x7F])
   where
-    (u_msb, u_lsbs) = MemUtils.runcons u
+    (uMsb, uLsbs) = MemUtils.runcons u
 
 encodeUcoord :: Integer -> [Word8]
 encodeUcoord u =
@@ -43,10 +43,10 @@ encodeUcoord u =
     u' = u `mod` constP
 
 decodeScalar :: HasCallStack => [Word8] -> Integer
-decodeScalar (k_lsb : ks) =
-  decodeLe ((k_lsb .&. 0xF8) : (ks' ++ [(k_msb .&. 0x7F) .|. 0x40]))
+decodeScalar (kLsb : ks) =
+  decodeLe ((kLsb .&. 0xF8) : (ks' ++ [(kMsb .&. 0x7F) .|. 0x40]))
   where
-    (k_msb, ks') = MemUtils.runcons ks
+    (kMsb, ks') = MemUtils.runcons ks
 
 add :: Integer -> Integer -> Integer
 a `add` b = (a + b) `mod` constP
@@ -66,55 +66,55 @@ a `pow` 1 = a
 a `pow` b = (sqr a `pow` (b `shiftR` 1)) `dot` (a `pow` (b .&. 1))
 
 cswap :: Bool -> (Integer, Integer) -> (Integer, Integer)
-cswap swap (x_2, x_3) = (x_2', x_3')
+cswap swap (x2, x3) = (x2', x3')
   where
     mask
       | swap =
         0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       | otherwise = 0
-    dummy = mask .&. (x_2 `xor` x_3)
-    x_2' = x_2 `xor` dummy
-    x_3' = x_3 `xor` dummy
+    dummy = mask .&. (x2 `xor` x3)
+    x2' = x2 `xor` dummy
+    x3' = x3 `xor` dummy
 
 type Mont = (Int, Integer, Integer, Integer, Integer, Bool)
 
 montgomery :: Integer -> Integer -> Mont -> Mont
-montgomery _ _ (0, x_2, z_2, x_3, z_3, swap) =
-  (0, x_2, z_2, x_3, z_3, swap)
-montgomery x_1 k (t, x_2, z_2, x_3, z_3, swap) =
+montgomery _ _ (0, x2, z2, x3, z3, swap) =
+  (0, x2, z2, x3, z3, swap)
+montgomery x1 k (t, x2, z2, x3, z3, swap) =
   montgomery
-    x_1
+    x1
     k
     ( t',
       aa `dot` bb,
       e `dot` (aa `add` a24 `dot` e),
       sqr (da `add` cb),
-      x_1 `dot` sqr (da `sub` cb),
-      k_t
+      x1 `dot` sqr (da `sub` cb),
+      kt
     )
   where
     a24 = 121665
     t' = t - 1
-    k_t = ((k `shiftR` t') .&. 1) /= 0
-    swap' = swap `xor` k_t
-    (x_2', x_3') = cswap swap' (x_2, x_3)
-    (z_2', z_3') = cswap swap' (z_2, z_3)
-    a = x_2' `add` z_2'
+    kt = ((k `shiftR` t') .&. 1) /= 0
+    swap' = swap `xor` kt
+    (x2', x3') = cswap swap' (x2, x3)
+    (z2', z3') = cswap swap' (z2, z3)
+    a = x2' `add` z2'
     aa = sqr a
-    b = x_2' `sub` z_2'
+    b = x2' `sub` z2'
     bb = sqr b
     e = aa `sub` bb
-    c = x_3' `add` z_3'
-    d = x_3' `sub` z_3'
+    c = x3' `add` z3'
+    d = x3' `sub` z3'
     da = d `dot` a
     cb = c `dot` b
 
 x25519 :: HasCallStack => [Word8] -> [Word8] -> [Word8]
-x25519 k u = encodeUcoord (x_2' `dot` (z_2' `pow` (constP - 2)))
+x25519 k u = encodeUcoord (x2' `dot` (z2' `pow` (constP - 2)))
   where
     u' = decodeUcoord u
     k' = decodeScalar k
-    (_, x_2, z_2, x_3, z_3, swap) =
+    (_, x2, z2, x3, z3, swap) =
       montgomery u' k' (255, 1, 0, u', 1, False)
-    (x_2', x_3') = cswap swap (x_2, x_3)
-    (z_2', z_3') = cswap swap (z_2, z_3)
+    (x2', x3') = cswap swap (x2, x3)
+    (z2', z3') = cswap swap (z2, z3)

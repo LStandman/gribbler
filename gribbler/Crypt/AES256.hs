@@ -145,18 +145,18 @@ mixColumns' f vv =
     ]
 
 mixColumns :: Mat -> Mat
-mixColumns = mixColumns' mix_byte
+mixColumns = mixColumns' mixByte
   where
-    mix_byte a b c d = (0x02 `dot` a) `xor` (0x03 `dot` b) `xor` c `xor` d
+    mixByte a b c d = (0x02 `dot` a) `xor` (0x03 `dot` b) `xor` c `xor` d
 
 -- INVERSE CIPHER OPERATIONS
 
 {- ORMOLU_DISABLE -}
 invSubBytes :: Mat -> Mat
-invSubBytes = amap (sub' inv_sbox)
+invSubBytes = amap (sub' invSbox)
   where
     -- Fig. 14.
-    inv_sbox =
+    invSbox =
       listArray
         boundsSbox
         [ 0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38,
@@ -201,9 +201,9 @@ invShiftRows = ixmap boundsState f
     f (i, j) = (i, (j + sizeSide - i) `mod` sizeSide)
 
 invMixColumns :: Mat -> Mat
-invMixColumns = mixColumns' mix_byte
+invMixColumns = mixColumns' mixByte
   where
-    mix_byte a b c d =
+    mixByte a b c d =
       (0x0E `dot` a) `xor` (0x0B `dot` b)
         `xor` (0x0D `dot` c)
         `xor` (0x09 `dot` d)
@@ -222,11 +222,11 @@ keyExpansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
 keyExpansion' (key1, key2) rcon = (key3, key4)
   where
     -- Even rounds.
-    rot_word : rot_words =
+    rotWord : rotWords =
       [ sub $ key2 ! ((i + 1) `mod` sizeSide, sizeSide - 1)
         | i <- range boundsSide
       ]
-    col2 = rot_word `xor` rcon : rot_words
+    col2 = rotWord `xor` rcon : rotWords
     key3 = keyExpansion'' key1 col2
     -- Odd rounds.
     col3 =
