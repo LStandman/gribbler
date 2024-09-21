@@ -57,13 +57,11 @@ getSymbol =
         [] -> BNF.Miss
         (y : ys) -> BNF.Hit (y, (ys, (line, col + 1), stack))
 
-getChar c =
-  getSymbol
-    >>= \y -> (if c == y then return c else BNF.miss)
-
 getCharWith f =
   getSymbol
     >>= \y -> (if f y then return y else BNF.miss)
+
+getChar c = getCharWith (c ==)
 
 stripPrefix' :: Eq a => [a] -> [a] -> Maybe ([a], Int)
 stripPrefix' [] ys = Just (ys, 0)
