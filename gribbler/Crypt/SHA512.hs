@@ -176,10 +176,17 @@ sha512Sched v =
 
 fromList :: [Word8] -> [Word64]
 fromList [] = []
-fromList m = foldl' f 0 m1 : fromList m2
-  where
-    f a b = (a `shiftL` 8) .|. fromIntegral b
-    (m1, m2) = splitAt 8 m
+fromList (x1 : x2 : x3 : x4 : x5 : x6 : x7 : x8 : xs) =
+  ( (fromIntegral x1 `shiftL` 56)
+      .|. (fromIntegral x2 `shiftL` 48)
+      .|. (fromIntegral x3 `shiftL` 40)
+      .|. (fromIntegral x4 `shiftL` 32)
+      .|. (fromIntegral x5 `shiftL` 24)
+      .|. (fromIntegral x6 `shiftL` 16)
+      .|. (fromIntegral x7 `shiftL` 8)
+      .|. fromIntegral x8
+  ) :
+  fromList xs
 
 int_sha512Once h m = h'
   where

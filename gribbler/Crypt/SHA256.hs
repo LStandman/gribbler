@@ -150,10 +150,13 @@ sha256Sched v =
 
 fromList :: [Word8] -> [Word32]
 fromList [] = []
-fromList m = foldl' f 0 m1 : fromList m2
-  where
-    f a b = (a `shiftL` 8) .|. fromIntegral b
-    (m1, m2) = splitAt 4 m
+fromList (x1 : x2 : x3 : x4 : xs) =
+  ( (fromIntegral x1 `shiftL` 24)
+      .|. (fromIntegral x2 `shiftL` 16)
+      .|. (fromIntegral x3 `shiftL` 8)
+      .|. fromIntegral x4
+  ) :
+  fromList xs
 
 int_sha256Once h m = h'
   where
