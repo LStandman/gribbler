@@ -76,17 +76,22 @@ cswap swap (x2, x3) = (x2', x3')
     x2' = x2 `xor` dummy
     x3' = x3 `xor` dummy
 
-type Mont = (Int, Integer, Integer, Integer, Integer, Bool)
-
-montgomery :: Integer -> Integer -> Mont -> Mont
-montgomery _ _ (0, x2, z2, x3, z3, swap) =
-  (0, x2, z2, x3, z3, swap)
-montgomery x1 k (t, x2, z2, x3, z3, swap) =
+montgomery ::
+  Integer ->
+  Integer ->
+  Int ->
+  (Integer, Integer, Integer, Integer, Bool) ->
+  (Integer, Integer)
+montgomery _ _ 0 (x2, z2, x3, z3, swap) = (x2', z2')
+  where
+    (x2', x3') = cswap swap (x2, x3)
+    (z2', z3') = cswap swap (z2, z3)
+montgomery x1 k t (x2, z2, x3, z3, swap) =
   montgomery
     x1
     k
-    ( t',
-      aa `dot` bb,
+    t'
+    ( aa `dot` bb,
       e `dot` (aa `add` a24 `dot` e),
       sqr (da `add` cb),
       x1 `dot` sqr (da `sub` cb),
@@ -110,11 +115,8 @@ montgomery x1 k (t, x2, z2, x3, z3, swap) =
     cb = c `dot` b
 
 x25519 :: HasCallStack => [Word8] -> [Word8] -> [Word8]
-x25519 k u = encodeUcoord (x2' `dot` (z2' `pow` (constP - 2)))
+x25519 k u = encodeUcoord (x2 `dot` (z2 `pow` (constP - 2)))
   where
     u' = decodeUcoord u
     k' = decodeScalar k
-    (_, x2, z2, x3, z3, swap) =
-      montgomery u' k' (255, 1, 0, u', 1, False)
-    (x2', x3') = cswap swap (x2, x3)
-    (z2', z3') = cswap swap (z2, z3)
+    (x2, z2) = montgomery u' k' 255 (1, 0, u', 1, False)

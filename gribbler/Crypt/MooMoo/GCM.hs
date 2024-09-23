@@ -76,7 +76,40 @@ dot :: Integer -> Integer -> Integer
 dot x y = dot' x y 128
 
 blockToInt :: [Word8] -> Integer
-blockToInt = foldl' (\a b -> (a `shiftL` 8) .|. fromIntegral b) 0
+blockToInt
+  [ x1,
+    x2,
+    x3,
+    x4,
+    x5,
+    x6,
+    x7,
+    x8,
+    x9,
+    x10,
+    x11,
+    x12,
+    x13,
+    x14,
+    x15,
+    x16
+    ] =
+    (fromIntegral x1 `shiftL` 120)
+      .|. (fromIntegral x2 `shiftL` 112)
+      .|. (fromIntegral x3 `shiftL` 104)
+      .|. (fromIntegral x4 `shiftL` 96)
+      .|. (fromIntegral x5 `shiftL` 88)
+      .|. (fromIntegral x6 `shiftL` 80)
+      .|. (fromIntegral x7 `shiftL` 72)
+      .|. (fromIntegral x8 `shiftL` 64)
+      .|. (fromIntegral x9 `shiftL` 56)
+      .|. (fromIntegral x10 `shiftL` 48)
+      .|. (fromIntegral x11 `shiftL` 40)
+      .|. (fromIntegral x12 `shiftL` 32)
+      .|. (fromIntegral x13 `shiftL` 24)
+      .|. (fromIntegral x14 `shiftL` 16)
+      .|. (fromIntegral x15 `shiftL` 8)
+      .|. fromIntegral x16
 
 intToBlock :: Integer -> [Word8]
 intToBlock x =
@@ -130,7 +163,16 @@ gctr f cb x = zipWith xor x1 (f cb) ++ gctr f cb' x2
     cb' = inc32 cb
 
 xcrypt ::
-  HasCallStack => Bool -> BlockCipher -> [Word8] -> Int -> [Word8] -> Int -> [Word8] -> Int -> ([Word8], [Word8])
+  HasCallStack =>
+  Bool ->
+  BlockCipher ->
+  [Word8] ->
+  Int ->
+  [Word8] ->
+  Int ->
+  [Word8] ->
+  Int ->
+  ([Word8], [Word8])
 xcrypt authPostText f iv ivLen auth authLen preText textLen = (postText, t)
   where
     split x =
