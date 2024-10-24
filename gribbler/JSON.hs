@@ -142,10 +142,7 @@ number =
 --   short-circuit on first digit.
 integer :: BNF.Parser TextState DiffString
 integer =
-  (onenine `BNF.and` digits)
-    `BNF.or` digit
-    `BNF.or` (getChar1 '-' `BNF.and` onenine `BNF.and` digits)
-    `BNF.or` (getChar1 '-' `BNF.and` digit)
+  BNF.zoo (getChar1 '-') `BNF.and` ((onenine `BNF.and` digits) `BNF.or` digit)
 
 digits :: BNF.Parser TextState DiffString
 digits = BNF.oom digit
