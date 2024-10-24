@@ -498,6 +498,6 @@ testAes256Gcm =
             "NegativeTests"
             $ fmap
               (\(key, iv, auth, ptext, ct) ->
-                expectFalse $ isRight $ GCM.decrypt (AES256.encrypt key) iv auth ct)
+                expectFalse . isRight $ GCM.decrypt (AES256.encrypt key) iv auth ct)
               negativeTests
         ]

@@ -101,30 +101,30 @@ testDiceware =
             ],
           test
             "IsSanitizedPass"
-            [ expectTrue $ isRight $ Diceware.isSanitized t1_dictionary
+            [ expectTrue . isRight $ Diceware.isSanitized t1_dictionary
             ],
           test
             "IsSanitizedFailUnsorted"
-            [ expectFalse $ isRight $ Diceware.isSanitized t1_unsorted
+            [ expectFalse . isRight $ Diceware.isSanitized t1_unsorted
             ],
           test
             "IsSanitizedFailRepeating"
-            [ expectFalse $ isRight $ Diceware.isSanitized t1_repeating
+            [ expectFalse . isRight $ Diceware.isSanitized t1_repeating
             ],
           test
             "IsSanitizedFailUppercase"
-            [ expectFalse $ isRight $ Diceware.isSanitized t1_uppercase
+            [ expectFalse . isRight $ Diceware.isSanitized t1_uppercase
             ],
           test
             "IsSanitizedFailNumeric"
-            [ expectFalse $ isRight $ Diceware.isSanitized t1_numeric
+            [ expectFalse . isRight $ Diceware.isSanitized t1_numeric
             ],
           test
             "IsSanitizedFailSpace"
-            [ expectFalse $ isRight $ Diceware.isSanitized t1_space
+            [ expectFalse . isRight $ Diceware.isSanitized t1_space
             ],
           test
             "IsSanitizedFailSymbol"
-            [ expectFalse $ isRight $ Diceware.isSanitized t1_symbol
+            [ expectFalse . isRight $ Diceware.isSanitized t1_symbol
             ]
         ]

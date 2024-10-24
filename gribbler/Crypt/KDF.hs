@@ -117,7 +117,7 @@ hkdfSha256Extract' salt ikm =
 
 int_hkdfSha256Expand :: Prf -> [Word8] -> Int -> Int -> [Word8]
 int_hkdfSha256Expand h info infoSize l =
-  take l $ concat $ scanl' ts t1 [2 .. n]
+  take l . concat $ scanl' ts t1 [2 .. n]
   where
     n = l `Math.div1` sha256SizeDigest
     t1 = int_sha256ToList $ h (info ++ [1]) (infoSize + 1)

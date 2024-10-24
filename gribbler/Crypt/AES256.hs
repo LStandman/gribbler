@@ -216,7 +216,7 @@ addRoundKey vv uu =
 
 keyExpansion'' :: Mat -> [Word8] -> Mat
 keyExpansion'' key1 col2 =
-  fromCols . tail $ scanl (zipWith xor) col2 $ toCols key1
+  (fromCols . tail) . scanl (zipWith xor) col2 $ toCols key1
 
 keyExpansion' :: (Mat, Mat) -> Word8 -> (Mat, Mat)
 keyExpansion' (key1, key2) rcon = (key3, key4)

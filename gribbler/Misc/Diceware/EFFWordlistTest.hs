@@ -29,7 +29,7 @@ testEffwordlist =
             ],
           test
             "SHA256"
-            [ expectMemEq "t2_result" t2_result $
-                sha256Sum1 $ strBytes $ unlines EFFWordlist.effLargeWordlist
+            [ expectMemEq "t2_result" t2_result .
+                sha256Sum1 . strBytes $ unlines EFFWordlist.effLargeWordlist
             ]
         ]

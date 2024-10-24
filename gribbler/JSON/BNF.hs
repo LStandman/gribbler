@@ -95,7 +95,7 @@ and f g =
   f >>= \x -> g >>= \x' -> return (x <> x')
 
 err :: String -> Parser s a
-err e = Parser $ return $ Error e
+err e = Parser . return $ Error e
 
 miss :: Parser s a
 miss = Parser $ return Miss
