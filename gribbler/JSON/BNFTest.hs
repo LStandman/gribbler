@@ -28,76 +28,70 @@ testBnf =
       emit_errX = BNF.Parser (return errorX)
       emit_errY = BNF.Parser (return errorY)
       emit_miss0 = BNF.Parser (return miss0)
+      getA = JSON.BNFTest.getChar 'a'
+      getB = JSON.BNFTest.getChar 'b'
       t1_in = "a"
-      t1_successA = BNF.Hit (difflist "a", "")
-      t1_successB = BNF.Hit (difflist "b", "")
-      t1_hitA = JSON.BNFTest.getChar 'a'
-      t1_hitB = JSON.BNFTest.getChar 'a' >> return (difflist "b")
-      t1_hitxhit = t1_successA
-      t1_hitxmiss = t1_successA
-      t1_hitxerr = t1_successA
-      t1_missxhit = t1_successB
-      t1_missxmiss = miss0
-      t1_missxerr = errorY
-      t1_errxhit = errorX
-      t1_errxmiss = errorX
-      t1_errxerr = errorX
+      t1_resultA = BNF.Hit (difflist "a", "")
+      t1_resultB = BNF.Hit (difflist "b", "")
+      t1_onAreturnB = JSON.BNFTest.getChar 'a' >> return (difflist "b")
+      t1_hitXhit = t1_resultA
+      t1_hitXmiss = t1_resultA
+      t1_hitXerr = t1_resultA
+      t1_missXhit = t1_resultB
+      t1_missXmiss = miss0
+      t1_missXerr = errorY
+      t1_errXhit = errorX
+      t1_errXmiss = errorX
+      t1_errXerr = errorX
       t2_in = "ab"
       t2_success = BNF.Hit (difflist "ab", "")
-      t2_hitA = JSON.BNFTest.getChar 'a'
-      t2_hitB = JSON.BNFTest.getChar 'b'
-      t2_hitxhit = t2_success
-      t2_hitxmiss = miss0
-      t2_hitxerr = errorY
-      t2_missxhit = miss0
-      t2_missxmiss = miss0
-      t2_missxerr = miss0
-      t2_errxhit = errorX
-      t2_errxmiss = errorX
-      t2_errxerr = errorX
+      t2_hitXhit = t2_success
+      t2_hitXmiss = miss0
+      t2_hitXerr = errorY
+      t2_missXhit = miss0
+      t2_missXmiss = miss0
+      t2_missXerr = miss0
+      t2_errXhit = errorX
+      t2_errXmiss = errorX
+      t2_errXerr = errorX
       t3_in = "a"
       t3_success = BNF.Hit (difflist "a", "")
-      t3_hitA = JSON.BNFTest.getChar 'a'
-      t3_hitB = JSON.BNFTest.getChar 'a'
-      t3_hitxhit = miss0
-      t3_hitxmiss = t3_success
-      t3_hitxerr = errorY
-      t3_missxhit = miss0
-      t3_missxmiss = miss0
-      t3_missxerr = miss0
-      t3_errxhit = errorX
-      t3_errxmiss = errorX
-      t3_errxerr = errorX
-      t4_hit = JSON.BNFTest.getChar 'a'
+      t3_hitXhit = miss0
+      t3_hitXmiss = t3_success
+      t3_hitXerr = errorY
+      t3_missXhit = miss0
+      t3_missXmiss = miss0
+      t3_missXerr = miss0
+      t3_errXhit = errorX
+      t3_errXmiss = errorX
+      t3_errXerr = errorX
       t4_reps = 2
-      t4_inA = "abb"
-      t4_outA = BNF.Miss
-      t4_inB = "aab"
-      t4_outB = BNF.Hit (difflist "aa", "b")
-      t4_inC = "aaa"
-      t4_outC = BNF.Hit (difflist "aa", "a")
+      t4_in1 = "abb"
+      t4_out1 = BNF.Miss
+      t4_in2 = "aab"
+      t4_out2 = BNF.Hit (difflist "aa", "b")
+      t4_in3 = "aaa"
+      t4_out3 = BNF.Hit (difflist "aa", "a")
       t5_hit = JSON.BNFTest.getChar 'a'
-      t5_inA = "aa"
-      t5_outA = BNF.Hit (difflist "a", "a")
-      t5_inB = "ba"
-      t5_outB = BNF.Hit (difflist "", "ba")
+      t5_in1 = "aa"
+      t5_out1 = BNF.Hit (difflist "a", "a")
+      t5_in2 = "ba"
+      t5_out2 = BNF.Hit (difflist "", "ba")
       t6_hit = JSON.BNFTest.getChar 'a'
-      t6_inA = "bbb"
-      t6_outA = BNF.Hit (difflist "", "bbb")
-      t6_inB = "abb"
-      t6_outB = BNF.Hit (difflist "a", "bb")
-      t6_inC = "aab"
-      t6_outC = BNF.Hit (difflist "aa", "b")
-      t7_hit = JSON.BNFTest.getChar 'a'
-      t7_inA = "bbb"
-      t7_outA = BNF.Miss
-      t7_inB = "abb"
-      t7_outB = BNF.Hit (difflist "a", "bb")
-      t7_inC = "aab"
-      t7_outC = BNF.Hit (difflist "aa", "b")
+      t6_in1 = "bbb"
+      t6_out1 = BNF.Hit (difflist "", "bbb")
+      t6_in2 = "abb"
+      t6_out2 = BNF.Hit (difflist "a", "bb")
+      t6_in3 = "aab"
+      t6_out3 = BNF.Hit (difflist "aa", "b")
+      t7_in1 = "bbb"
+      t7_out1 = BNF.Miss
+      t7_in2 = "abb"
+      t7_out2 = BNF.Hit (difflist "a", "bb")
+      t7_in3 = "aab"
+      t7_out3 = BNF.Hit (difflist "aa", "b")
       t8_in = "a"
       t8_e = "Z"
-      t8_hitA = JSON.BNFTest.getChar 'a'
       t8_hit = BNF.Hit (difflist "a", "")
       t8_miss = BNF.Error t8_e :: BNF.Result (DiffString, String)
       t8_error = errorX
@@ -105,105 +99,105 @@ testBnf =
         "BNF"
         [ test
             "Or"
-            [ expectVarEq "t1_hitxhit" t1_hitxhit $
-                BNF.runParser (t1_hitA `BNF.or` t1_hitB) t1_in,
-              expectVarEq "t1_hitxmiss" t1_hitxmiss $
-                BNF.runParser (t1_hitA `BNF.or` emit_miss0) t1_in,
-              expectVarEq "t1_hitxerr" t1_hitxerr $
-                BNF.runParser (t1_hitA `BNF.or` emit_errY) t1_in,
-              expectVarEq "t1_missxhit" t1_missxhit $
-                BNF.runParser (emit_miss0 `BNF.or` t1_hitB) t1_in,
-              expectVarEq "t1_missxmiss" t1_missxmiss $
+            [ expectVarEq "t1_hitXhit" t1_hitXhit $
+                BNF.runParser (getA `BNF.or` t1_onAreturnB) t1_in,
+              expectVarEq "t1_hitXmiss" t1_hitXmiss $
+                BNF.runParser (getA `BNF.or` emit_miss0) t1_in,
+              expectVarEq "t1_hitXerr" t1_hitXerr $
+                BNF.runParser (getA `BNF.or` emit_errY) t1_in,
+              expectVarEq "t1_missXhit" t1_missXhit $
+                BNF.runParser (emit_miss0 `BNF.or` t1_onAreturnB) t1_in,
+              expectVarEq "t1_missXmiss" t1_missXmiss $
                 BNF.runParser (emit_miss0 `BNF.or` emit_miss0) t1_in,
-              expectVarEq "t1_missxerr" t1_missxerr $
+              expectVarEq "t1_missXerr" t1_missXerr $
                 BNF.runParser (emit_miss0 `BNF.or` emit_errY) t1_in,
-              expectVarEq "t1_errxhit" t1_errxhit $
-                BNF.runParser (emit_errX `BNF.or` t1_hitB) t1_in,
-              expectVarEq "t1_errxmiss" t1_errxmiss $
+              expectVarEq "t1_errXhit" t1_errXhit $
+                BNF.runParser (emit_errX `BNF.or` t1_onAreturnB) t1_in,
+              expectVarEq "t1_errXmiss" t1_errXmiss $
                 BNF.runParser (emit_errX `BNF.or` emit_miss0) t1_in,
-              expectVarEq "t1_errxerr" t1_errxerr $
+              expectVarEq "t1_errXerr" t1_errXerr $
                 BNF.runParser (emit_errX `BNF.or` emit_errY) t1_in
             ],
           test
             "And"
-            [ expectVarEq "t2_hitxhit" t2_hitxhit $
-                BNF.runParser (t2_hitA `BNF.and` t2_hitB) t2_in,
-              expectVarEq "t2_hitxmiss" t2_hitxmiss $
-                BNF.runParser (t2_hitA `BNF.and` emit_miss0) t2_in,
-              expectVarEq "t2_hitxerr" t2_hitxerr $
-                BNF.runParser (t2_hitA `BNF.and` emit_errY) t2_in,
-              expectVarEq "t2_missxhit" t2_missxhit $
-                BNF.runParser (emit_miss0 `BNF.and` t2_hitB) t2_in,
-              expectVarEq "t2_missxmiss" t2_missxmiss $
+            [ expectVarEq "t2_hitXhit" t2_hitXhit $
+                BNF.runParser (getA `BNF.and` getB) t2_in,
+              expectVarEq "t2_hitXmiss" t2_hitXmiss $
+                BNF.runParser (getA `BNF.and` emit_miss0) t2_in,
+              expectVarEq "t2_hitXerr" t2_hitXerr $
+                BNF.runParser (getA `BNF.and` emit_errY) t2_in,
+              expectVarEq "t2_missXhit" t2_missXhit $
+                BNF.runParser (emit_miss0 `BNF.and` getB) t2_in,
+              expectVarEq "t2_missXmiss" t2_missXmiss $
                 BNF.runParser (emit_miss0 `BNF.and` emit_miss0) t2_in,
-              expectVarEq "t2_missxerr" t2_missxerr $
+              expectVarEq "t2_missXerr" t2_missXerr $
                 BNF.runParser (emit_miss0 `BNF.and` emit_errY) t2_in,
-              expectVarEq "t2_errxhit" t2_errxhit $
-                BNF.runParser (emit_errX `BNF.and` t2_hitB) t2_in,
-              expectVarEq "t2_errxmiss" t2_errxmiss $
+              expectVarEq "t2_errXhit" t2_errXhit $
+                BNF.runParser (emit_errX `BNF.and` getB) t2_in,
+              expectVarEq "t2_errXmiss" t2_errXmiss $
                 BNF.runParser (emit_errX `BNF.and` emit_miss0) t2_in,
-              expectVarEq "t2_errxerr" t2_errxerr $
+              expectVarEq "t2_errXerr" t2_errXerr $
                 BNF.runParser (emit_errX `BNF.and` emit_errY) t2_in
             ],
           test
             "Excl"
-            [ expectVarEq "t3_hitxhit" t3_hitxhit $
-                BNF.runParser (t3_hitA `BNF.excl` t3_hitB) t3_in,
-              expectVarEq "t3_hitxmiss" t3_hitxmiss $
-                BNF.runParser (t3_hitA `BNF.excl` emit_miss0) t3_in,
-              expectVarEq "t3_hitxerr" t3_hitxerr $
-                BNF.runParser (t3_hitA `BNF.excl` emit_errY) t3_in,
-              expectVarEq "t3_missxhit" t3_missxhit $
-                BNF.runParser (emit_miss0 `BNF.excl` t3_hitB) t3_in,
-              expectVarEq "t3_missxmiss" t3_missxmiss $
+            [ expectVarEq "t3_hitXhit" t3_hitXhit $
+                BNF.runParser (getA `BNF.excl` getA) t3_in,
+              expectVarEq "t3_hitXmiss" t3_hitXmiss $
+                BNF.runParser (getA `BNF.excl` emit_miss0) t3_in,
+              expectVarEq "t3_hitXerr" t3_hitXerr $
+                BNF.runParser (getA `BNF.excl` emit_errY) t3_in,
+              expectVarEq "t3_missXhit" t3_missXhit $
+                BNF.runParser (emit_miss0 `BNF.excl` getA) t3_in,
+              expectVarEq "t3_missXmiss" t3_missXmiss $
                 BNF.runParser (emit_miss0 `BNF.excl` emit_miss0) t3_in,
-              expectVarEq "t3_missxerr" t3_missxerr $
+              expectVarEq "t3_missXerr" t3_missXerr $
                 BNF.runParser (emit_miss0 `BNF.excl` emit_errY) t3_in,
-              expectVarEq "t3_errxhit" t3_errxhit $
-                BNF.runParser (emit_errX `BNF.excl` t3_hitB) t3_in,
-              expectVarEq "t3_errxmiss" t3_errxmiss $
+              expectVarEq "t3_errXhit" t3_errXhit $
+                BNF.runParser (emit_errX `BNF.excl` getA) t3_in,
+              expectVarEq "t3_errXmiss" t3_errXmiss $
                 BNF.runParser (emit_errX `BNF.excl` emit_miss0) t3_in,
-              expectVarEq "t3_errxerr" t3_errxerr $
+              expectVarEq "t3_errXerr" t3_errXerr $
                 BNF.runParser (emit_errX `BNF.excl` emit_errY) t3_in
             ],
           test
             "Rep"
-            [ expectVarEq "t4_outA" t4_outA $
-                BNF.runParser (BNF.rep t4_reps t4_hit) t4_inA,
-              expectVarEq "t4_outB" t4_outB $
-                BNF.runParser (BNF.rep t4_reps t4_hit) t4_inB,
-              expectVarEq "t4_outC" t4_outC $
-                BNF.runParser (BNF.rep t4_reps t4_hit) t4_inC
+            [ expectVarEq "t4_out1" t4_out1 $
+                BNF.runParser (BNF.rep t4_reps getA) t4_in1,
+              expectVarEq "t4_out2" t4_out2 $
+                BNF.runParser (BNF.rep t4_reps getA) t4_in2,
+              expectVarEq "t4_out3" t4_out3 $
+                BNF.runParser (BNF.rep t4_reps getA) t4_in3
             ],
           test
             "ZOO"
-            [ expectVarEq "t5_outA" t5_outA $
-                BNF.runParser (BNF.zoo t5_hit) t5_inA,
-              expectVarEq "t5_outB" t5_outB $
-                BNF.runParser (BNF.zoo t5_hit) t5_inB
+            [ expectVarEq "t5_out1" t5_out1 $
+                BNF.runParser (BNF.zoo t5_hit) t5_in1,
+              expectVarEq "t5_out2" t5_out2 $
+                BNF.runParser (BNF.zoo t5_hit) t5_in2
             ],
           test
             "ZOM"
-            [ expectVarEq "t6_outA" t6_outA $
-                BNF.runParser (BNF.zom t6_hit) t6_inA,
-              expectVarEq "t6_outB" t6_outB $
-                BNF.runParser (BNF.zom t6_hit) t6_inB,
-              expectVarEq "t6_outC" t6_outC $
-                BNF.runParser (BNF.zom t6_hit) t6_inC
+            [ expectVarEq "t6_out1" t6_out1 $
+                BNF.runParser (BNF.zom t6_hit) t6_in1,
+              expectVarEq "t6_out2" t6_out2 $
+                BNF.runParser (BNF.zom t6_hit) t6_in2,
+              expectVarEq "t6_out3" t6_out3 $
+                BNF.runParser (BNF.zom t6_hit) t6_in3
             ],
           test
             "OOM"
-            [ expectVarEq "t7_outA" t7_outA $
-                BNF.runParser (BNF.oom t7_hit) t7_inA,
-              expectVarEq "t7_outB" t7_outB $
-                BNF.runParser (BNF.oom t7_hit) t7_inB,
-              expectVarEq "t7_outC" t7_outC $
-                BNF.runParser (BNF.oom t7_hit) t7_inC
+            [ expectVarEq "t7_out1" t7_out1 $
+                BNF.runParser (BNF.oom getA) t7_in1,
+              expectVarEq "t7_out2" t7_out2 $
+                BNF.runParser (BNF.oom getA) t7_in2,
+              expectVarEq "t7_out3" t7_out3 $
+                BNF.runParser (BNF.oom getA) t7_in3
             ],
           test
             "Assert"
             [ expectVarEq "t8_hit" t8_hit $
-                BNF.runParser (BNF.assert t8_e t8_hitA) t8_in,
+                BNF.runParser (BNF.assert t8_e getA) t8_in,
               expectVarEq "t8_miss" t8_miss $
                 BNF.runParser (BNF.assert t8_e emit_miss0) t8_in,
               expectVarEq "t8_error" t8_error $
